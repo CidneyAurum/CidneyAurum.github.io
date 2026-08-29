@@ -132,6 +132,32 @@ document.addEventListener("DOMContentLoaded", () => {
   $("p-body").addEventListener("input", refresh);
   refresh();
 
+  // 去 GitHub 发布（免令牌）：打开已预填内容的新建文件页
+  $("btn-gh").addEventListener("click", () => {
+    const md = buildMarkdown();
+    if (!md.title || md.title === "无题") { status("先起个标题吧", false); return; }
+    const url = "https://github.com/CidneyAurum/CidneyAurum.github.io/new/main"
+      + "?filename=" + encodeURIComponent("_posts/" + md.slug + ".md")
+      + "&value=" + encodeURIComponent(md.text);
+    if (url.length > 60000) {
+      status("正文太长，预填链接放不下，请用「下载 .md」后手动上传", false);
+      return;
+    }
+    window.open(url, "_blank");
+    status("已在 GitHub 打开预填页面 —— 拉到底点绿色 Commit changes 即完成发文 ✅", true);
+  });
+
+  // 复制 Markdown 全文
+  $("btn-copy").addEventListener("click", async () => {
+    const md = buildMarkdown();
+    try {
+      await navigator.clipboard.writeText(md.text);
+      status("已复制全文，可粘贴到 GitHub 的 _posts/ 新建文件里", true);
+    } catch (e) {
+      status("复制失败：" + e.message, false);
+    }
+  });
+
   // 下载 .md
   $("btn-download").addEventListener("click", () => {
     const md = buildMarkdown();
@@ -200,6 +226,11 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     drop.classList.remove("drag");
     addFiles(e.dataTransfer.files);
+  });
+
+  $("btn-uploadpage").addEventListener("click", () => {
+    window.open("https://github.com/CidneyAurum/CidneyAurum.github.io/upload/main/assets/gallery", "_blank");
+    status("已打开 GitHub 上传页：把图片拖进去 → Commit，照片墙自动更新 ✅", true);
   });
 
   $("btn-upload").addEventListener("click", async () => {

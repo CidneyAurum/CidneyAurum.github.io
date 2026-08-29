@@ -150,14 +150,15 @@
       </div>
 
       <div class="actions">
-        <button class="ctrl-btn ghost" id="btn-download">💾 下载 .md（手动传仓库）</button>
-        <button class="ctrl-btn" id="btn-publish">🚀 一键发布到 GitHub</button>
+        <button class="ctrl-btn" id="btn-gh">🚀 去 GitHub 发布（免令牌，已预填）</button>
+        <button class="ctrl-btn ghost" id="btn-download">💾 下载 .md</button>
+        <button class="ctrl-btn ghost" id="btn-copy">📋 复制全文</button>
+        <button class="ctrl-btn ghost" id="btn-publish">🔑 令牌一键发布</button>
         <span class="js-status"></span>
       </div>
       <p class="hint">
-        发布后 GitHub Actions 会自动生成文章页并更新归档，约 1~2 分钟后线上可见 ·
-        首次使用请先到「设置」粘贴一次 GitHub 令牌（<a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">点此创建</a>，
-        只勾选本仓库的 Contents: Read and write 即可）
+        「去 GitHub 发布」会打开一个<b>已经替你填好一切</b>的 GitHub 页面，拉到底点绿色 <b>Commit changes</b> 即完成发文，全程不需要令牌；
+        「令牌一键发布」是进阶选项（设置页配置后可跳过 GitHub 页面）。发布后约 1~2 分钟上线。
       </p>
     </div>
 
@@ -173,10 +174,11 @@
         <p class="audio-state">还没有选择图片</p>
       </div>
       <div class="actions">
-        <button class="ctrl-btn" id="btn-upload">🚀 全部上传到 GitHub</button>
+        <button class="ctrl-btn" id="btn-uploadpage">📂 打开上传页（免令牌，拖图就发）</button>
+        <button class="ctrl-btn ghost" id="btn-upload">⚡ 令牌批量上传</button>
         <span class="js-status"></span>
       </div>
-      <p class="hint">上传成功后 GitHub Actions 会自动重建照片墙，约 1~2 分钟后线上可见。</p>
+      <p class="hint">免令牌方式：点「打开上传页」→ 把图片拖进 GitHub 页面 → Commit，标题默认取文件名、日期自动取当月；令牌方式则在本页拖拽上传，一步到位。</p>
     </div>
 
     <!-- ============ 设置 ============ -->

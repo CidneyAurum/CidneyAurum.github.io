@@ -135,7 +135,6 @@ const Ambient = (function () {
   }
 
   function toggle() { running ? stop() : start(); }
-
   function setFile(file) {
     if (!audioEl) {
       audioEl = new Audio();
@@ -185,8 +184,10 @@ const Ambient = (function () {
     }
   }
 
-  return { toggle, setFile, isRunning: () => running };
+  return { toggle, stop, setFile, isRunning: () => running };
 })();
+
+window.Ambient = Ambient; // 供音乐模块联动（点歌时让位）
 
 /* ---------- 绑定页面上所有播放控件 ---------- */
 document.addEventListener("DOMContentLoaded", () => {

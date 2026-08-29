@@ -87,10 +87,11 @@
         </div>
       </div>
       <div class="kb-set" id="kb-set">
-        <div class="side-label">AI 设置（存本机浏览器）</div>
+        <div class="side-label">AI / 音乐设置（存本机浏览器）</div>
         <div class="field"><label>接口地址 BaseURL</label><input id="kb-base" placeholder="https://api.deepseek.com"></div>
         <div class="field"><label>模型名</label><input id="kb-model" placeholder="deepseek-chat"></div>
         <div class="field"><label>API Key</label><input id="kb-key" type="password" placeholder="sk-…"></div>
+        <div class="field"><label>音乐 API（可选，Meting 格式自建源，VIP 全曲）</label><input id="kb-musicapi" placeholder="https://你的-meting-源/"></div>
         <label style="font-size:12.5px;color:var(--text-light);display:flex;gap:8px;align-items:center;">
           <input type="checkbox" id="kb-tts" style="width:auto;"> 语音朗读回复
         </label>
@@ -112,6 +113,15 @@
     });
     document.body.appendChild(min);
 
+    // 恢复上次拖拽的位置
+    try {
+      const pos = JSON.parse(localStorage.getItem("kb_pos") || "null");
+      if (pos && window.innerWidth > 900) {
+        el.style.left = Math.max(4, Math.min(window.innerWidth - 120, pos.left)) + "px";
+        el.style.bottom = Math.max(0, Math.min(window.innerHeight - 100, pos.bottom)) + "px";
+      }
+    } catch (e) {}
+
     el.querySelector('[data-act="hide"]').addEventListener("click", () => {
       el.classList.add("hidden");
       min.classList.add("show");
@@ -127,6 +137,7 @@
       $("kb-base").value = store.base;
       $("kb-model").value = store.model;
       $("kb-key").value = store.key;
+      $("kb-musicapi").value = localStorage.getItem("kb_musicapi") || "";
       $("kb-tts").checked = store.tts;
     });
     el.querySelector("[data-close]").addEventListener("click", () => $("kb-chat").classList.remove("open"));
@@ -134,8 +145,9 @@
       localStorage.setItem("kb_base", $("kb-base").value.trim() || "https://api.deepseek.com");
       localStorage.setItem("kb_model", $("kb-model").value.trim() || "deepseek-chat");
       localStorage.setItem("kb_key", $("kb-key").value.trim());
+      localStorage.setItem("kb_musicapi", $("kb-musicapi").value.trim());
       localStorage.setItem("kb_tts", $("kb-tts").checked ? "1" : "0");
-      bubble("设置好啦！现在可以跟我聊天了 ♪", true);
+      bubble("设置好啦！现在可以跟我聊天、点歌了 ♪", true);
     });
     $("kb-cls").addEventListener("click", () => {
       localStorage.removeItem("kb_key");
@@ -216,6 +228,23 @@
     if (!text) return;
     input.value = "";
     addMsg("me", text);
+
+    // 音乐点播指令优先（本地处理）
+    try {
+      const musicReply = await tryMusicCommand(text);
+      if (musicReply) {
+        addMsg("ai", musicReply);
+        bubble(musicReply.slice(0, 50));
+        speak(musicReply);
+        return;
+      }
+    } catch (err) {
+      const msg = "呜…放歌失败了：" + err.message;
+      addMsg("ai", msg);
+      bubble(msg.slice(0, 50));
+      return;
+    }
+
     react(text);
     const thinking = addMsg("ai", "…");
 
@@ -305,21 +334,21 @@
       $("kb-loading").remove();
 
       model = await PIXI.live2d.Live2DModel.from(CFG.modelUrl, { autoInteract: false });
-      const s = (H / model.internalModel.height) * 1.06;
+      const s = (H * 0.96) / model.internalModel.height; // 留 4% 头顶空隙，完整显示全身
       model.scale.set(s);
       model.x = (W - model.width) / 2;
-      model.y = H - model.height + H * 0.015;
+      model.y = H - model.height;
       app.stage.addChild(model);
       window.__kb = { model, app }; // 调试出口
 
-      // 关闭作者水印：该模型 Param137 默认 0=显示、1=隐藏（与桌面助手同款做法，
-      // 在动作更新后每帧覆写，避免被参数快照恢复冲掉）。模型出处已在 README 标明。
+      // 关闭作者水印 + 驱动唱歌口型：在动作更新后每帧覆写
       const internalModel = model.internalModel;
       const originalMotionUpdate = internalModel.motionManager.update.bind(internalModel.motionManager);
       internalModel.motionManager.update = (m, now) => {
         const result = originalMotionUpdate(m, now);
         try {
           internalModel.coreModel.setParameterValueById("Param137", 1);
+          core_setMouth(internalModel.coreModel);
         } catch (e) { /* ignore */ }
         return result;
       };
@@ -348,7 +377,14 @@
         host.style.left = Math.max(4, Math.min(window.innerWidth - 120, nx)) + "px";
         host.style.bottom = Math.max(0, Math.min(window.innerHeight - 100, nb)) + "px";
       });
-      stage.addEventListener("pointerup", () => (dragging = null));
+      stage.addEventListener("pointerup", () => {
+        if (dragging) {
+          // 记住拖拽后的位置
+          const rect = host.getBoundingClientRect();
+          localStorage.setItem("kb_pos", JSON.stringify({ left: rect.left, bottom: window.innerHeight - rect.bottom }));
+        }
+        dragging = null;
+      });
       stage.addEventListener("wheel", (e) => {
         e.preventDefault();
         const cur = model.scale.x;
@@ -363,7 +399,14 @@
           bubble(CFG.idleLines[Math.floor(Math.random() * CFG.idleLines.length)]);
         }, 26000);
       }
-      setTimeout(() => bubble("嗨～我是 Miku，点我聊天哦 ♪"), 1800);
+      setTimeout(() => bubble("嗨～我是 Miku，点我聊天、点歌哦 ♪"), 1800);
+
+      // 放歌时切换到「唱歌」表情
+      document.addEventListener("mikumusic", (e) => {
+        if (e.detail && e.detail.playing) {
+          try { model.expression("唱歌"); } catch (err) {}
+        }
+      });
     } catch (err) {
       window.__kbErr = String((err && err.message) || err);
       const l = $("kb-loading");
@@ -376,6 +419,41 @@
     }
   }
   function esc2(s) { return String(s).replace(/[<>&]/g, ""); }
+  function core_setMouth(core) {
+    const v = Number(window.__kbMouth || 0);
+    if (v > 0.02) core.setParameterValueById("ParamMouthOpenY", Math.min(1, v));
+  }
+
+  /* ---------- 音乐点播指令（本地处理，不进 AI） ---------- */
+  async function tryMusicCommand(text) {
+    if (!window.MikuMusic) return null;
+    const t = text.trim();
+    const M = window.MikuMusic;
+    if (/^(下一首|换一首|切歌)/.test(t)) {
+      return M.next() ? "换歌啦，继续听 ♪" : "还没在播歌哦，先说「放 歌名」吧";
+    }
+    if (/^暂停/.test(t)) {
+      if (M.getState().playing) { M.toggle(); return "好，先停一下"; }
+      return "本来就没在放呀";
+    }
+    if (/^(继续|恢复)/.test(t)) {
+      if (!M.getState().playing && M.getState().hasQueue) { M.toggle(); return "继续播放 ♪"; }
+      return null;
+    }
+    if (/(播放|来点|放|打开)歌单/.test(t)) {
+      const n = await M.playPlaylist();
+      return "打开你的歌单啦，一共 " + n + " 首 ♪";
+    }
+    const m = t.match(/^(?:放|来一首|来首|播放|点播|唱)\s*[一]?[首个]?\s*[「『“"]?([^「『”"』」]{1,30})[」』”"]?$/);
+    if (m) {
+      const name = m[1].replace(/这首歌|这首|吧|呀|哦$/g, "").trim();
+      if (name && !name.includes("歌单")) {
+        const s = await M.searchAndPlay(name);
+        return "正在为你播放《" + s.name + "》- " + s.artist + " ♪";
+      }
+    }
+    return null;
+  }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();

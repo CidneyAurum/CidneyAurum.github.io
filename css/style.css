@@ -1160,7 +1160,7 @@ body.light .copy-btn { background: rgba(255, 255, 255, 0.85); }
 }
 .kb-bubble.show { opacity: 1; transform: none; }
 .kb-stage {
-  width: 250px; height: 330px;
+  width: 250px; height: 350px;
   position: relative;
   cursor: grab;
   touch-action: none;
@@ -1290,3 +1290,28 @@ body.light .kb-set input { background: rgba(255,255,255,.6); }
   .kb-stage { width: 190px; height: 260px; }
   .kb-chat, .kb-set { left: 190px; width: min(300px, calc(100vw - 210px)); }
 }
+
+/* ============ v5：音乐卡标签 / 点播状态行 ============ */
+.card-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+.ctab {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--chip-bg);
+  color: var(--text-light);
+  font-size: 12.5px;
+  cursor: pointer;
+  font-family: var(--font-serif);
+  transition: all .25s;
+}
+.ctab.on { background: var(--accent); color: #fff; border-color: transparent; box-shadow: 0 4px 14px rgba(143,123,255,.4); }
+.music-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-light);
+}
+.music-line .icon-btn { width: 30px; height: 30px; font-size: 12px; flex-shrink: 0; }
+.music-line .js-mm-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

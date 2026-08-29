@@ -130,6 +130,10 @@ summary: 一句话摘要
 - **AI 对话**：点她的 💬 打开对话框。首次使用点 ⚙️ 填三个东西：接口地址（默认 DeepSeek 官方，可换任何 OpenAI 兼容接口）、模型名、API Key（只存你自己浏览器的 localStorage）。没有 Key 也能用本地卖萌语料聊天。
 - **互动**：点她触发比心、拖拽移动、滚轮缩放、🙈 可以让她躲起来。
 - **技术**：pixi.js + pixi-live2d-display 渲染，AI 走 OpenAI 兼容 `/chat/completions`，回复支持触发表情（让她带【表情:比心】标记即可）。
+- **🎵 音乐点播**：跟她聊就行——「放 晴天」「来一首atu」「播放歌单」「下一首」「暂停」。她会搜索网易云并**开口唱**（口型同步）。
+  - 歌单卡在首页「🎵 我的歌单」标签（官方外链播放器）
+  - VIP 歌曲在公共源下只能试听；想全曲点播看 [docs/music-api.md](docs/music-api.md)（Cloudflare Workers 自建 API，可选）
+  - 公共源偶尔不稳，可在 ⚙️ 设置里填自己的 Meting 格式 API 地址
 
 ### 模型版权说明
 

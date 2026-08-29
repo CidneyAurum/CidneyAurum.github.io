@@ -401,14 +401,27 @@
       }
       setTimeout(() => bubble("嗨～我是 Miku，点我聊天、点歌哦 ♪"), 1800);
 
-      // 滚动/切页时补一帧渲染（保险）
-      let scrollRaf = 0;
+      // 滚动/切页时的呈现兜底：补帧 + 强制画布重新合成（治"滚动后不显示"）
+      let scrollRaf = 0, visT = 0;
+      const forceRecomposite = () => {
+        const c = stage.querySelector("canvas");
+        if (!c) return;
+        c.style.visibility = "hidden";
+        void c.offsetHeight;
+        c.style.visibility = "visible";
+      };
       window.addEventListener("scroll", () => {
         if (scrollRaf) return;
-        scrollRaf = requestAnimationFrame(() => { app.render(); scrollRaf = 0; });
+        scrollRaf = requestAnimationFrame(() => {
+          app.render();
+          forceRecomposite();
+          clearTimeout(visT);
+          visT = setTimeout(() => { app.render(); forceRecomposite(); }, 220);
+          scrollRaf = 0;
+        });
       }, { passive: true });
       document.addEventListener("visibilitychange", () => {
-        if (!document.hidden) app.render();
+        if (!document.hidden) { app.render(); forceRecomposite(); }
       });
 
       // 窗口尺寸变化：重设渲染器与模型位置

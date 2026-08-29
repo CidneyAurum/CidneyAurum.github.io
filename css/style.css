@@ -737,6 +737,40 @@ input[type="range"].speed {
 .project-card li::before { content: "◆"; position: absolute; left: 2px; color: var(--gold); font-size: 10px; top: 12px; }
 .credit { font-size: 12.5px; color: var(--text-light); line-height: 2; margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--border); }
 
+/* ---------- 照片墙 ---------- */
+.gallery-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.gallery-item {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  aspect-ratio: 3 / 4;
+  position: relative;
+  box-shadow: var(--shadow);
+}
+.gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.5s ease;
+}
+.gallery-item:hover img { transform: scale(1.07); }
+.gallery-item .cap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 26px 14px 10px;
+  font-family: var(--font-latin, Georgia, serif);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  color: rgba(255, 255, 255, 0.85);
+  background: linear-gradient(180deg, transparent, rgba(5, 6, 14, 0.75));
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.gallery-item:hover .cap { opacity: 1; }
+
 /* ---------- 页脚 ---------- */
 footer {
   text-align: center;
@@ -765,6 +799,7 @@ footer .heart { color: var(--accent-pink); display: inline-block; animation: hea
 @media (max-width: 680px) {
   .home-grid { grid-template-columns: 1fr; }
   .side-stack { grid-column: span 1; flex-direction: column; }
+  .gallery-grid { grid-template-columns: 1fr 1fr; }
   .clock-time { font-size: 22px; padding: 12px 18px; }
   .profile-top { flex-direction: column; text-align: center; }
   .social-row { justify-content: center; }

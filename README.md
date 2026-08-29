@@ -17,7 +17,7 @@
 ├── css/style.css       # 全站样式（主题色在这里改）
 ├── js/main.js          # 流萤粒子 / 打字横幅 / 时钟 / 博客渲染
 ├── js/limbus.js        # 歌词演出引擎（手动 / 自动 / 音乐同步）
-└── assets/             # 头像、favicon、文章图片都放这里
+└── assets/             # 头像、favicon、照片墙（gallery/）、文章图片都放这里
 ```
 
 ## 本地预览
@@ -42,6 +42,7 @@ npx serve .
 | 站名（logo） | 每个 HTML 的 `<a class="logo">` |
 | 联系方式 / GitHub 链接 | 各页面 `<nav>` 和资料卡 |
 | 头像 | 头像文件是 `assets/avatar.jpg`，想换就同名替换它 |
+| 照片墙 | 同名替换 `assets/gallery/p1~p4.jpg`（想加更多就照着 index.html 的 gallery 板块复制一个 figure） |
 | 打字横幅文案 / 网站生日 / 粒子开关 | `js/main.js` 顶部的 `SITE_CONFIG` |
 | 主题配色 | `css/style.css` 顶部的 `:root` 变量（默认夜间，`body.light` 为日间） |
 

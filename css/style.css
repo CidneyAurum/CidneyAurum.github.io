@@ -1383,6 +1383,35 @@ body.light .kb-set input { background: rgba(255,255,255,.6); }
 .kanban { will-change: transform; }
 .kb-stage canvas { transform: translateZ(0); }
 
+/* ============ 边狱巴士 · 横幅歌词舞台（播放时接管打字横幅） ============ */
+.slogan-bar.limbus-on {
+  background: rgba(5, 5, 7, 0.92);
+  border-color: rgba(217, 185, 108, 0.42);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55), inset 0 0 70px rgba(120, 20, 20, 0.14);
+}
+.slogan-bar.limbus-on .slogan-dots,
+.slogan-bar.limbus-on .slogan-cat,
+.slogan-bar.limbus-on .slogan-text { visibility: hidden; }
+.slogan-bar.limbus-on .slogan-text { display: none; }
+.lyric-takeover { width: 100%; text-align: center; position: relative; min-height: 1.5em; }
+.lyric-takeover .lyric-line {
+  font-family: var(--font-body);
+  font-weight: 900;
+  font-size: clamp(20px, 3vw, 32px);
+  color: #ece5d3;
+  letter-spacing: 0.06em;
+  white-space: pre-wrap;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.8), 0 0 24px rgba(212, 69, 58, 0.4);
+}
+.lyric-takeover .stage-idle { color: rgba(236, 229, 211, 0.45); font-size: 15px; letter-spacing: 0.3em; }
+.slogan-bar .slash { top: 50%; left: 20%; width: 60%; }
+.slogan-bar.slam { animation: stageShake 0.28s linear 0.4s both; }
+
+/* 看板娘画布：强制独立合成层，防滚动时丢帧 */
+/* 看板娘画布：强制独立合成层，防滚动时丢帧 */
+.kanban { will-change: transform; }
+.kb-stage canvas { transform: translateZ(0); }
+
 /* ============ 边狱巴士 · 主界面歌词舞台 ============ */
 .desk-stage {
   position: fixed;

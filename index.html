@@ -121,6 +121,7 @@
       <div class="slogan-bar">
         <div class="slogan-dots"><i></i><i></i><i></i></div>
         <div class="slogan-text"><span id="slogan-text"></span><span class="caret"></span></div>
+        <div class="lyric-takeover" hidden></div>
         <svg class="slogan-cat" viewBox="0 0 11 8" aria-hidden="true"><g fill="#e8e5f2"><rect x="1" y="0" width="1" height="1"/><rect x="2" y="1" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/><rect x="1" y="2" width="8" height="4"/><rect x="2" y="6" width="6" height="2"/><rect x="9" y="5" width="2" height="1"/></g><g fill="#ff8fb7"><rect x="2" y="0" width="1" height="1"/><rect x="7" y="0" width="1" height="1"/></g><g fill="#2a2a3e"><rect x="3" y="3" width="1" height="1"/><rect x="6" y="3" width="1" height="1"/></g></svg>
       </div>
     </header>
@@ -225,7 +226,7 @@
       };
       render();
       document.addEventListener("mikumusic", render);
-      document.querySelector(".js-lyric").addEventListener("click", () => window.MikuMusic.deskStage.show());
+      document.querySelector(".js-lyric").addEventListener("click", () => window.MikuMusic.lyricOverlay.open());
     }, 0));
     // Miku 点播队列控制
     const mmBtn = document.querySelector(".js-mm-toggle");

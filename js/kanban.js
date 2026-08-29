@@ -401,29 +401,14 @@
       }
       setTimeout(() => bubble("嗨～我是 Miku，点我聊天、点歌哦 ♪"), 1800);
 
-      // 修复：滚动后透明 WebGL 画布的合成层会停止呈现 → 强制重合成
-      let scrollRaf = 0, nudge = 0, visT = 0;
-      const hardenCanvas = () => {
-        const c = stage.querySelector("canvas");
-        if (!c) return;
-        nudge = 1 - nudge;
-        c.style.transform = "translateZ(" + (nudge ? "0.01" : "0") + "px)";
-        c.style.visibility = "hidden";
-        void c.offsetHeight;
-        c.style.visibility = "visible";
-      };
+      // 滚动/切页时补一帧渲染（保险）
+      let scrollRaf = 0;
       window.addEventListener("scroll", () => {
         if (scrollRaf) return;
-        scrollRaf = requestAnimationFrame(() => {
-          app.render();
-          hardenCanvas();
-          clearTimeout(visT);
-          visT = setTimeout(hardenCanvas, 200); // 滚动结束后再兜底一次
-          scrollRaf = 0;
-        });
+        scrollRaf = requestAnimationFrame(() => { app.render(); scrollRaf = 0; });
       }, { passive: true });
       document.addEventListener("visibilitychange", () => {
-        if (!document.hidden) { app.render(); hardenCanvas(); }
+        if (!document.hidden) app.render();
       });
 
       // 窗口尺寸变化：重设渲染器与模型位置
@@ -434,11 +419,9 @@
         model.scale.set(sc);
         model.x = (w - model.width) / 2;
         model.y = h - model.height;
-        vctx.clearRect(0, 0, view.width, view.height);
-        vctx.drawImage(appCanvas, 0, 0, view.width, view.height);
       });
 
-      // 放歌时切换到「唱歌」表情
+            // 放歌时切换到「唱歌」表情
       document.addEventListener("mikumusic", (e) => {
         if (e.detail && e.detail.playing) {
           try { model.expression("唱歌"); } catch (err) {}

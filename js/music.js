@@ -270,56 +270,30 @@ const MikuMusic = (function () {
     listeners.forEach((fn) => { try { fn(st); } catch (e) {} });
     document.dispatchEvent(new CustomEvent("mikumusic", { detail: st }));
     try { loTick(); } catch (e) {}
-    try { deskTick(); } catch (e) {}
+    try { sloganTick(); } catch (e) {}
   }
   function on(fn) { listeners.add(fn); }
 
-  /* ---------- 边狱巴士风格 · 主界面舞台面板（随播放自动显示） ---------- */
-  let deskBuilt = false, lastDLine = -2;
-  let deskHidden = sessionStorage.getItem("mm_desk_off") === "1";
+  /* ---------- 主界面横幅 · 边狱巴士歌词舞台（播放时接管打字横幅） ---------- */
+  let lastSLine = -2;
 
-  function buildDesk() {
-    if (deskBuilt) return;
-    deskBuilt = true;
-    const el = document.createElement("div");
-    el.className = "desk-stage";
-    el.id = "desk-stage";
-    el.innerHTML = `
-      <div class="ds-head"><span>LIMBUS · LIKE · LYRIC</span><button class="ds-close" title="关闭演出">✕</button></div>
-      <div class="lyric-area" id="desk-area">
-        <div class="stage-idle">— LYRIC SHOW —</div>
-      </div>`;
-    document.body.appendChild(el);
-    el.querySelector(".ds-close").addEventListener("click", () => {
-      deskHidden = true;
-      sessionStorage.setItem("mm_desk_off", "1");
-      renderDeskVis();
-    });
-  }
-
-  function renderDeskVis() {
-    const el = document.getElementById("desk-stage");
-    if (!el) return;
+  function sloganTick(force) {
+    const bar = document.getElementById("slogan-bar");
+    if (!bar) return;
     const st = getState();
-    const show = !deskHidden && st.playing && st.lrc.length > 0;
-    el.classList.toggle("show", show);
-  }
-
-  function deskTick(force) {
-    if (deskHidden) return;
-    buildDesk();
-    const st = getState();
-    renderDeskVis();
-    const area = document.getElementById("desk-area");
-    if (!area) return;
-    if (st.lrcLine !== lastDLine || force) {
-      lastDLine = st.lrcLine;
-      area.innerHTML = "";
-      const stage = document.getElementById("desk-stage");
-      stage.classList.remove("slam");
-      document.querySelectorAll("#desk-area .slash").forEach((x) => x.remove());
+    const show = st.playing && st.lrc.length > 0;
+    bar.classList.toggle("limbus-on", show);
+    const take = document.getElementById("lyric-takeover");
+    if (!take) return;
+    take.hidden = !show;
+    if (!show) return;
+    if (st.lrcLine !== lastSLine || force) {
+      lastSLine = st.lrcLine;
+      take.innerHTML = "";
+      bar.classList.remove("slam");
+      bar.querySelectorAll(".slash").forEach((x) => x.remove());
       if (st.lrcLine < 0 || !st.lrc[st.lrcLine]) {
-        area.innerHTML = '<div class="stage-idle">— ' + esc(st.current ? st.current.name : "MUSIC") + ' —</div>';
+        take.innerHTML = '<div class="stage-idle">♪ ' + esc(st.current ? st.current.name : "MUSIC") + '</div>';
         return;
       }
       const line = st.lrc[st.lrcLine];
@@ -335,13 +309,13 @@ const MikuMusic = (function () {
         el.appendChild(sp);
         k++;
       }
-      area.appendChild(el);
+      take.appendChild(el);
       if (st.lrcLine % 3 === 2) {
         const slash = document.createElement("div");
         slash.className = "slash go";
-        area.appendChild(slash);
-        void stage.offsetWidth;
-        stage.classList.add("slam");
+        take.appendChild(slash);
+        void bar.offsetWidth;
+        bar.classList.add("slam");
       }
     }
   }
@@ -434,10 +408,7 @@ const MikuMusic = (function () {
     searchAndPlay, playPlaylist, loadPlaylist, playIndex, next, toggle,
     getState, getQueue: () => queue.slice(), on, playlistId: CFG.playlistId,
     lyricOverlay: { toggle: loToggle, open: () => setOverlay(true), close: () => setOverlay(false) },
-    deskStage: {
-      toggle: () => { deskHidden = !deskHidden; sessionStorage.setItem("mm_desk_off", deskHidden ? "1" : "0"); renderDeskVis(); },
-      show: () => { deskHidden = false; sessionStorage.setItem("mm_desk_off", "0"); renderDeskVis(); deskTick(true); },
-    },
+
   };
 })();
 

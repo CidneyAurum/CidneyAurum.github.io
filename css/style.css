@@ -1315,3 +1315,66 @@ body.light .kb-set input { background: rgba(255,255,255,.6); }
 }
 .music-line .icon-btn { width: 30px; height: 30px; font-size: 12px; flex-shrink: 0; }
 .music-line .js-mm-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ============ v6：暗色歌单列表 + 歌词演出浮层 ============ */
+.track-list { display: flex; flex-direction: column; gap: 3px; max-height: 200px; overflow-y: auto; }
+.track-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: var(--text);
+  font-size: 13px;
+  transition: background .2s;
+}
+.track-item:hover { background: var(--chip-bg); }
+.track-item.on { background: var(--chip-bg); color: var(--accent); }
+.track-item .n { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.track-item .a { font-size: 11px; color: var(--text-light); max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; }
+.track-item .eq { font-size: 10px; color: var(--accent); width: 16px; text-align: center; }
+
+.lyric-overlay {
+  position: fixed; inset: 0; z-index: 150;
+  display: none;
+  background: #050507;
+  overflow: hidden;
+}
+.lyric-overlay.open { display: block; }
+.lyric-overlay .lo-head {
+  position: absolute; top: 0; left: 0; right: 0;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 24px;
+  z-index: 5;
+  font-family: var(--font-latin, Georgia, serif);
+  font-size: 11px; letter-spacing: .3em;
+  color: rgba(217, 185, 108, 0.55);
+}
+.lyric-overlay .lo-stage {
+  position: absolute; inset: 0;
+  box-shadow: inset 0 0 140px rgba(120, 20, 20, 0.14);
+}
+.lyric-overlay .lo-stage::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: radial-gradient(75% 90% at 50% 45%, transparent 55%, rgba(0, 0, 0, 0.75));
+  pointer-events: none; z-index: 3;
+}
+.lyric-overlay .lo-stage.slam { animation: stageShake 0.28s linear 0.4s both; }
+.lyric-overlay .lo-close {
+  position: absolute; right: 24px; bottom: 24px; z-index: 6;
+  padding: 10px 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(217, 185, 108, 0.4);
+  background: rgba(10, 10, 18, 0.7);
+  color: rgba(236, 229, 211, 0.85);
+  font-family: var(--font-serif);
+  font-size: 13.5px;
+  letter-spacing: .12em;
+  cursor: pointer;
+  transition: all .25s;
+}
+.lyric-overlay .lo-close:hover { border-color: #d4453a; color: #fff; box-shadow: 0 6px 20px rgba(212, 69, 58, .35); }
+
+/* 看板娘画布：强制独立合成层，防滚动时丢帧 */
+.kanban { will-change: transform; }
+.kb-stage canvas { transform: translateZ(0); }

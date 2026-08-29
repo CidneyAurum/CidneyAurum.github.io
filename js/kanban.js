@@ -401,6 +401,16 @@
       }
       setTimeout(() => bubble("嗨～我是 Miku，点我聊天、点歌哦 ♪"), 1800);
 
+      // 修复：滚动/遮挡后 WebGL 层偶尔空白，强制补帧
+      let scrollRaf = 0;
+      window.addEventListener("scroll", () => {
+        if (scrollRaf) return;
+        scrollRaf = requestAnimationFrame(() => { app.render(); scrollRaf = 0; });
+      }, { passive: true });
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) app.render();
+      });
+
       // 放歌时切换到「唱歌」表情
       document.addEventListener("mikumusic", (e) => {
         if (e.detail && e.detail.playing) {

@@ -1,11 +1,13 @@
 /* ============================================
    Miku 点播 · 网易云音乐搜索与播放
-   - 搜索/取链：Meting 协议公共源，多源轮询自动换源
-   - 播放：自建 <audio>，暂停/下一首/队列可控
-   - 口型：播放时把音量电平写到 window.__kbMouth，看板娘渲染循环每帧读取驱动嘴巴
+   - 歌单：Meting 协议拉取（播放地址直接用源返回的流链接）
+   - 点播：多源搜索，失败时在已加载歌单里模糊匹配
+   - 口型：播放电平写入 window.__kbMouth，看板娘渲染循环每帧读取驱动嘴巴
    - 可选自建 API（VIP 全曲）：设置里填 Meting 格式自建源即可优先使用
    ============================================ */
 "use strict";
+
+function esc(s) { return String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
 
 const MikuMusic = (function () {
   const CFG = {
@@ -18,9 +20,10 @@ const MikuMusic = (function () {
   };
 
   let audio = null;
-  let queue = [];        // [{name, artist, id}]
-  let qi = -1;           // 当前播放索引
+  let queue = [];        // [{name, artist, id, stream}]
+  let qi = -1;
   let playing = false;
+  let currentLrc = [];   // [{t, text}]
   const listeners = new Set();
   let mouthRaf = 0;
 
@@ -39,16 +42,32 @@ const MikuMusic = (function () {
           signal: ctrl.signal,
         });
         clearTimeout(timer);
-        if (!res.ok) { errors.push(base + " -> " + res.status); continue; }
+        if (!res.ok) { errors.push(res.status); continue; }
         const data = await res.json();
         const ok = Array.isArray(data) ? data.length > 0 : !!data;
         if (ok) return data;
-        errors.push(base + " -> 空结果");
+        errors.push("empty");
       } catch (e) {
-        errors.push(base + " -> " + e.message);
+        errors.push(e.name);
       }
     }
-    throw new Error("音乐源全部失败（" + errors.length + " 个源都试过了）");
+    throw new Error("音乐源全部失败");
+  }
+
+  /* Meting 条目 → 统一格式（数字 id 从流链接里抠出来） */
+  function normalize(list) {
+    return (list || [])
+      .map((s) => {
+        const raw = String(s.url || "");
+        const m = raw.match(/[?&]id=(\d+)/);
+        return {
+          name: s.name || s.title || "未知",
+          artist: s.artist || s.artists || "",
+          id: m ? m[1] : String(s.id || ""),
+          stream: /^https?:\/\//.test(raw) ? raw : "",
+        };
+      })
+      .filter((s) => s.id || s.stream);
   }
 
   /* ---------- 播放核心 ---------- */
@@ -58,6 +77,11 @@ const MikuMusic = (function () {
     audio.addEventListener("ended", () => next(true));
     audio.addEventListener("play", () => { playing = true; emit(); });
     audio.addEventListener("pause", () => { playing = false; emit(); });
+    let lastLine = -2;
+    audio.addEventListener("timeupdate", () => {
+      const line = lrcIndexAt(audio.currentTime || 0);
+      if (line !== lastLine) { lastLine = line; emit(); }
+    });
     return audio;
   }
 
@@ -81,14 +105,22 @@ const MikuMusic = (function () {
       };
       mouthRaf = requestAnimationFrame(tick);
     } catch (e) {
-      // 音频图创建失败（比如 CORS）就只播放不同步口型
-      mouthRaf = 0;
+      mouthRaf = 0; // 音频图失败时降级为无口型播放
     }
   }
   function stopMouth() {
     if (mouthRaf) cancelAnimationFrame(mouthRaf);
     mouthRaf = 0;
     window.__kbMouth = 0;
+  }
+
+  /* 取一个能播的地址：优先源返回的流链接，其次按 id 再取一次 */
+  async function resolveStream(item) {
+    if (item.stream) return item.stream;
+    const data = await api("url", item.id);
+    const url = (Array.isArray(data) ? data[0] : data).url;
+    if (!url) throw new Error("拿不到播放地址（可能是 VIP 或版权限制）");
+    return url;
   }
 
   async function play(item) {
@@ -98,37 +130,98 @@ const MikuMusic = (function () {
     ensureAudio();
     playing = false;
     emit();
-    const data = await api("url", item.id);
-    const url = (Array.isArray(data) ? data[0] : data).url;
-    if (!url) throw new Error("这首歌暂时拿不到播放地址（可能是 VIP 或版权限制）");
-    audio.src = url;
-    await audio.play();
+    const stream = await resolveStream(item);
+    // 先尝试带 CORS（口型同步可用），失败降级直连（牺牲口型保出声）
+    try {
+      audio.crossOrigin = "anonymous";
+      audio.src = stream;
+      await audio.play();
+    } catch (e) {
+      audio.removeAttribute("crossorigin");
+      audio.src = stream;
+      await audio.play();
+    }
     startMouth();
+    loadLrc(item).then(() => { emit(); if (!sessionLyricOff) setOverlay(true); });
     emit();
+  }
+
+  /* ---------- 歌词 ---------- */
+  function parseLrc(text) {
+    const out = [];
+    const tagRe = /\[(\d{1,2}):(\d{1,2})(?:[.:](\d{1,3}))?\]/g;
+    for (const raw of text.replace(/\r/g, "").split("\n")) {
+      tagRe.lastIndex = 0;
+      const times = [];
+      let m;
+      while ((m = tagRe.exec(raw)) !== null) {
+        const frac = m[3] ? parseInt(m[3].padEnd(3, "0"), 10) / 1000 : 0;
+        times.push(parseInt(m[1], 10) * 60 + parseInt(m[2], 10) + frac);
+      }
+      const content = raw.replace(tagRe, "").trim();
+      if (!content) continue;
+      (times.length ? times : [0]).forEach((t) => out.push({ t, text: content }));
+    }
+    return out.sort((a, b) => a.t - b.t);
+  }
+
+  async function loadLrc(item) {
+    currentLrc = [];
+    try {
+      if (!item.id) return;
+      const data = await api("lrc", item.id);
+      const lrc = (Array.isArray(data) ? data[0] : data).lrc || "";
+      currentLrc = parseLrc(lrc);
+    } catch (e) { /* 无歌词照常播 */ }
+  }
+
+  function lrcIndexAt(time) {
+    let idx = -1;
+    for (let i = 0; i < currentLrc.length; i++) {
+      if (currentLrc[i].t <= time) idx = i;
+      else break;
+    }
+    return idx;
   }
 
   /* ---------- 对外能力 ---------- */
   async function searchAndPlay(name) {
-    const list = await api("search", name);
-    const songs = list
-      .map((s) => ({ name: s.name || s.title || "未知", artist: s.artist || s.artists || "", id: String(s.url || s.id) }))
-      .filter((s) => s.id && s.id !== "[object Object]");
-    if (!songs.length) throw new Error("没搜到「" + name + "」这首歌");
-    queue = songs.slice(0, 15);
+    let songs = [];
+    try {
+      const list = await api("search", name);
+      songs = normalize(list);
+    } catch (e) { /* 源不支持搜索就靠歌单匹配 */ }
+    if (!songs.length && queue.length) {
+      const key = name.toLowerCase();
+      songs = queue.filter((s) => (s.name + " " + s.artist).toLowerCase().includes(key));
+    }
+    if (!songs.length) throw new Error("没找到「" + name + "」，换个歌名或说「播放歌单」试试");
+    queue = songs.concat(queue.filter((q) => !songs.some((s) => s.id === q.id)));
     qi = 0;
     await play(queue[0]);
     return queue[0];
   }
 
-  async function playPlaylist() {
+  async function loadPlaylist() {
+    if (queue.length) return queue.length;
     const list = await api("playlist", CFG.playlistId);
-    queue = list
-      .map((s) => ({ name: s.name || s.title || "未知", artist: s.artist || s.artists || "", id: String(s.url || s.id) }))
-      .filter((s) => s.id);
+    queue = normalize(list);
     if (!queue.length) throw new Error("歌单读取失败了");
-    qi = 0;
-    await play(queue[0]);
+    qi = -1;
+    emit();
     return queue.length;
+  }
+
+  async function playPlaylist() {
+    const n = await loadPlaylist();
+    await playIndex(0);
+    return n;
+  }
+
+  async function playIndex(i) {
+    if (!queue[i]) return;
+    qi = i;
+    await play(queue[i]);
   }
 
   function next(auto) {
@@ -150,16 +243,107 @@ const MikuMusic = (function () {
       index: qi,
       total: queue.length,
       hasQueue: queue.length > 0,
+      lrc: currentLrc,
+      lrcLine: audio ? lrcIndexAt(audio.currentTime || 0) : -1,
+      time: audio ? audio.currentTime || 0 : 0,
     };
   }
   function emit() {
     const st = getState();
     listeners.forEach((fn) => { try { fn(st); } catch (e) {} });
     document.dispatchEvent(new CustomEvent("mikumusic", { detail: st }));
+    try { loTick(); } catch (e) {}
   }
   function on(fn) { listeners.add(fn); }
 
-  return { searchAndPlay, playPlaylist, next, toggle, getState, on, playlistId: CFG.playlistId };
+  /* ---------- 边狱巴士风格 · 歌词演出浮层 ---------- */
+  let overlayBuilt = false, overlayOpen = false, lastLoLine = -2;
+  let sessionLyricOff = sessionStorage.getItem("mm_lyric_off") === "1";
+
+  function buildOverlay() {
+    if (overlayBuilt) return;
+    overlayBuilt = true;
+    const el = document.createElement("div");
+    el.className = "lyric-overlay";
+    el.id = "lyric-overlay";
+    el.innerHTML = `
+      <div class="lo-head"><span>LIMBUS · LIKE · LYRIC</span><span id="lo-song">♪</span></div>
+      <div class="lo-stage" id="lo-stage">
+        <div class="stage-line"></div>
+        <div class="lyric-area" id="lo-area">
+          <div class="stage-idle">— LYRIC SHOW —</div>
+        </div>
+      </div>
+      <button class="lo-close" title="关闭演出（Esc）">✕ 关闭演出</button>`;
+    document.body.appendChild(el);
+    el.querySelector(".lo-close").addEventListener("click", () => {
+      sessionLyricOff = true;
+      sessionStorage.setItem("mm_lyric_off", "1");
+      setOverlay(false);
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") setOverlay(false);
+    });
+  }
+
+  function setOverlay(open) {
+    buildOverlay();
+    overlayOpen = open;
+    document.getElementById("lyric-overlay").classList.toggle("open", open);
+    if (open) { lastLoLine = -2; loTick(true); }
+  }
+  function loToggle() { setOverlay(!overlayOpen); if (overlayOpen) sessionLyricOff = false; }
+
+  function loRender(idx, name) {
+    const area = document.getElementById("lo-area");
+    if (!area) return;
+    area.innerHTML = "";
+    const stage = document.getElementById("lo-stage");
+    stage.classList.remove("slam");
+    document.querySelectorAll("#lo-area .slash").forEach((x) => x.remove());
+    const headSong = document.getElementById("lo-song");
+    if (headSong) headSong.textContent = "♪ " + (name || "MUSIC");
+    if (idx < 0 || !currentLrc[idx]) {
+      area.innerHTML = '<div class="stage-idle">— ' + esc(name || "MUSIC") + ' —</div>';
+      return;
+    }
+    const line = currentLrc[idx];
+    const el = document.createElement("div");
+    el.className = "lyric-line";
+    if (idx % 3 === 2) el.classList.add("shake");
+    let k = 0;
+    for (const ch of line.text) {
+      const sp = document.createElement("span");
+      sp.className = "char " + (k % 2 === 0 ? "in-left" : "in-right");
+      sp.style.animationDelay = (k % 2 === 0 ? 0 : 0.05) + k * 0.016 + "s";
+      sp.textContent = ch === " " ? "\u00A0" : ch;
+      el.appendChild(sp);
+      k++;
+    }
+    area.appendChild(el);
+    if (idx % 3 === 2) {
+      const slash = document.createElement("div");
+      slash.className = "slash go";
+      area.appendChild(slash);
+      void stage.offsetWidth;
+      stage.classList.add("slam");
+    }
+  }
+
+  function loTick(force) {
+    if (!overlayOpen) return;
+    const st = getState();
+    if (st.lrcLine !== lastLoLine || force) {
+      lastLoLine = st.lrcLine;
+      loRender(st.lrcLine, st.current ? st.current.name : "");
+    }
+  }
+
+  return {
+    searchAndPlay, playPlaylist, loadPlaylist, playIndex, next, toggle,
+    getState, getQueue: () => queue.slice(), on, playlistId: CFG.playlistId,
+    lyricOverlay: { toggle: loToggle, open: () => setOverlay(true), close: () => setOverlay(false) },
+  };
 })();
 
 window.MikuMusic = MikuMusic;

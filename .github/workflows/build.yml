@@ -23,6 +23,9 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: 计算照片默认日期（取提交年月）
+        run: echo "PHOTO_DATE=$(git log -1 --format=%cd --date=format:%Y-%m)" >> "$GITHUB_ENV"
+
       - name: 构建文章与照片墙
         run: python tools/build.py
 

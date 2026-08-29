@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>写作台 · CidneyAurum の 小窝</title>
+  <meta name="description" content="站主专用发文发图工具。">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.loli.net" crossorigin>
+  <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* 写作台专用布局 */
+    .desk { padding: 120px 0 40px; position: relative; z-index: 5; }
+    .tabs { display: flex; gap: 10px; margin: 26px 0 20px; }
+    .tab-btn {
+      padding: 10px 24px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--chip-bg);
+      color: var(--text-light);
+      font-family: var(--font-serif);
+      font-size: 15px;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .tab-btn.on { background: linear-gradient(120deg, var(--accent), var(--accent-2)); color: #fff; border-color: transparent; box-shadow: 0 6px 20px rgba(143,123,255,.4); }
+    .pane-card { padding: 24px 26px; }
+    .field-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 14px; }
+    .field-grid .wide { grid-column: span 3; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 12px; letter-spacing: .14em; color: var(--text-light); }
+    .field input {
+      padding: 11px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(4,5,12,.5);
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      font-family: var(--font-body);
+    }
+    body.light .field input { background: rgba(255,255,255,.6); }
+    .field input:focus { border-color: var(--accent); }
+    .editor-split { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px; }
+    #p-body {
+      width: 100%; min-height: 340px; resize: vertical;
+      border-radius: 12px; border: 1px solid var(--border);
+      background: rgba(4,5,12,.5); color: var(--text);
+      font-family: Consolas, "JetBrains Mono", monospace;
+      font-size: 13.5px; line-height: 1.9; padding: 14px 16px; outline: none;
+    }
+    body.light #p-body { background: rgba(255,255,255,.6); }
+    #p-body:focus { border-color: var(--accent); }
+    .preview-box {
+      min-height: 340px; max-height: 520px; overflow-y: auto;
+      border-radius: 12px; border: 1px dashed var(--border);
+      padding: 6px 18px;
+    }
+    .actions { display: flex; gap: 12px; margin-top: 18px; flex-wrap: wrap; align-items: center; }
+    #status-line { margin-left: auto; font-size: 13px; color: var(--text-light); }
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 16px;
+      padding: 46px 20px;
+      text-align: center;
+      color: var(--text-light);
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .drop-zone:hover, .drop-zone.drag { border-color: var(--accent); background: var(--chip-bg); color: var(--text); }
+    .drop-zone .big { font-size: 34px; display: block; margin-bottom: 10px; }
+    .img-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; margin-top: 10px;
+    }
+    .img-item img { width: 46px; height: 46px; border-radius: 8px; object-fit: cover; }
+    .img-item input {
+      flex: 1; min-width: 0; padding: 9px 12px;
+      border-radius: 9px; border: 1px solid var(--border);
+      background: rgba(4,5,12,.5); color: var(--text); outline: none;
+    }
+    body.light .img-item input { background: rgba(255,255,255,.6); }
+    .img-name { font-size: 11.5px; color: var(--text-light); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hint { font-size: 12.5px; color: var(--text-light); line-height: 2; margin-top: 14px; }
+    .hint a { border-bottom: 1px dashed var(--accent); }
+    @media (max-width: 800px) {
+      .field-grid { grid-template-columns: 1fr 1fr; }
+      .field-grid .wide { grid-column: span 2; }
+      .editor-split { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body class="page-enter" data-page="admin">
+  <div class="scene" aria-hidden="true">
+    <img class="scene-bg" src="assets/background.png" alt="">
+    <div class="scene-overlay"></div>
+    <div class="scene-grass"></div>
+  </div>
+  <canvas id="firefly-canvas" aria-hidden="true"></canvas>
+
+  <nav class="nav">
+    <a class="logo" href="index.html">CidneyAurum<span class="no">の</span>小窝</a>
+    <div class="nav-links" id="nav-links">
+      <a class="nav-link" href="index.html">首页</a>
+      <a class="nav-link" href="blog.html">归档</a>
+      <a class="nav-link" href="photos.html">照片墙</a>
+      <a class="nav-link" href="limbus.html">歌词模拟器</a>
+      <a class="nav-link" href="about.html">关于</a>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button id="theme-toggle" class="icon-btn" aria-label="切换主题">✨</button>
+      <button id="hamburger" class="icon-btn" aria-label="菜单">☰</button>
+    </div>
+  </nav>
+
+  <main class="wrap desk">
+    <header class="page-head left" style="padding:0;">
+      <h1 class="page-title" style="font-size:36px;">写作台</h1>
+      <p class="page-sub" style="letter-spacing:.12em;">✍️ 仅站主使用 · 内容与令牌只保存在你自己的浏览器里</p>
+    </header>
+
+    <div class="tabs">
+      <button class="tab-btn on" data-tab="post">✍️ 发文</button>
+      <button class="tab-btn" data-tab="photo">🖼️ 发图</button>
+      <button class="tab-btn" data-tab="setup">⚙️ 设置</button>
+    </div>
+
+    <!-- ============ 发文 ============ -->
+    <div class="tab-pane card pane-card" id="tab-post">
+      <div class="field-grid">
+        <div class="field"><label>标题（必填）</label><input id="p-title" type="text" placeholder="文章标题"></div>
+        <div class="field"><label>日期</label><input id="p-date" type="date"></div>
+        <div class="field"><label>文件名 slug（留空自动）</label><input id="p-slug" type="text" placeholder="my-first-note"></div>
+        <div class="field wide"><label>标签（逗号分隔，可空）</label><input id="p-tags" type="text" placeholder="日常, 笔记"></div>
+        <div class="field"><label>封面 emoji（可空）</label><input id="p-emoji" type="text" maxlength="4" placeholder="🪐"></div>
+        <div class="field wide" style="grid-column: span 2;"><label>摘要（可空，自动截取正文）</label><input id="p-summary" type="text" placeholder="显示在归档列表里的一句话"></div>
+      </div>
+
+      <div class="editor-split">
+        <div class="field">
+          <label>正文（Markdown）</label>
+          <textarea id="p-body" placeholder="## 小标题&#10;**加粗**、*斜体*、`代码`&#10;- 列表&#10;> 引用"></textarea>
+        </div>
+        <div class="field">
+          <label>实时预览</label>
+          <div class="preview-box prose" id="preview"></div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="ctrl-btn ghost" id="btn-download">💾 下载 .md（手动传仓库）</button>
+        <button class="ctrl-btn" id="btn-publish">🚀 一键发布到 GitHub</button>
+        <span class="js-status"></span>
+      </div>
+      <p class="hint">
+        发布后 GitHub Actions 会自动生成文章页并更新归档，约 1~2 分钟后线上可见 ·
+        首次使用请先到「设置」粘贴一次 GitHub 令牌（<a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">点此创建</a>，
+        只勾选本仓库的 Contents: Read and write 即可）
+      </p>
+    </div>
+
+    <!-- ============ 发图 ============ -->
+    <div class="tab-pane card pane-card" id="tab-photo" style="display:none;">
+      <div class="drop-zone" id="drop-zone">
+        <span class="big">🖼️</span>
+        把图片拖到这里，或点击选择（可多选）<br>
+        标题和日期会自动处理，上传后照片墙自动更新
+      </div>
+      <input id="img-input" type="file" accept="image/*" multiple style="display:none;">
+      <div id="img-queue" style="margin-top:14px;">
+        <p class="audio-state">还没有选择图片</p>
+      </div>
+      <div class="actions">
+        <button class="ctrl-btn" id="btn-upload">🚀 全部上传到 GitHub</button>
+        <span class="js-status"></span>
+      </div>
+      <p class="hint">上传成功后 GitHub Actions 会自动重建照片墙，约 1~2 分钟后线上可见。</p>
+    </div>
+
+    <!-- ============ 设置 ============ -->
+    <div class="tab-pane card pane-card" id="tab-setup" style="display:none;">
+      <div class="field" style="max-width:520px;">
+        <label>GitHub 令牌（Fine-grained PAT）</label>
+        <input id="token-input" type="password" placeholder="github_pat_… 或 ghp_…">
+      </div>
+      <div class="actions">
+        <button class="ctrl-btn" id="btn-save-token">💾 保存令牌</button>
+        <button class="ctrl-btn ghost" id="btn-verify">🔍 验证令牌</button>
+        <button class="ctrl-btn ghost" id="btn-clear-token">🗑️ 清除令牌</button>
+      </div>
+      <p class="hint">
+        创建方法：<a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → Settings → Fine-grained tokens</a>
+        → Repository access 选「Only select repositories」并选择 <b>CidneyAurum/CidneyAurum.github.io</b>
+        → Permissions 里给 <b>Contents: Read and write</b> → 生成后复制粘贴到这里。<br>
+        安全说明：令牌只保存在你当前浏览器的 localStorage，只发往 api.github.com；建议设置较短的过期时间，不用时点「清除令牌」。
+      </p>
+    </div>
+  </main>
+
+  <footer>
+    <a href="admin.html">✍️ 写作台</a> · Made with <span class="heart">♡</span> &amp; 星光 · © 2026 CidneyAurum · Powered by GitHub Pages
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

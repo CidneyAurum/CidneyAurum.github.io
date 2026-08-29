@@ -51,9 +51,13 @@ npx serve .
 | 打字横幅文案 / 网站生日 / 粒子开关 | `js/main.js` 顶部的 `SITE_CONFIG` |
 | 主题配色 | `css/style.css` 顶部的 `:root` 变量（默认夜间，`body.light` 为日间） |
 
-## 怎么发新文章（两种方式）
+## 怎么发新文章（三种方式，从易到难）
 
-**方式一：GitHub 网页上直接写（推荐，零工具）**
+**方式零：写作台（最简单）**
+
+打开网站页脚的 [✍️ 写作台](https://cidneyaurum.github.io/admin.html)：填标题、写 Markdown（带实时预览）、点「一键发布」；发图则直接拖拽上传，标题日期自动处理。首次使用需在「设置」粘贴一次 GitHub 令牌（Fine-grained PAT，仅授权本仓库 Contents: Read and write）。
+
+**方式一：GitHub 网页上直接写（无需令牌）**
 
 1. 打开本仓库 → `_posts/` 文件夹 → **Add file → Create new file**
 2. 文件名用英文，如 `my-first-note.md`，按这个格式写：

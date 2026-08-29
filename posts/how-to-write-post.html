@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>如何发布一篇新文章 / 新照片 · CidneyAurum の 小窝</title>
-  <meta name="description" content="两种发文方式和零门槛的发图方式：GitHub 网页直接写，或本地一条命令。">
+  <meta name="description" content="三种方式从易到难：站内写作台一键发布、本地一条命令、GitHub 网页直接写。">
   <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
   <link rel="preconnect" href="https://fonts.loli.net" crossorigin>
   <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
@@ -46,51 +46,38 @@
         </div>
 
         <div class="prose">
-<p>这个博客没有后台、没有数据库，但发文发图已经被优化到<strong>几乎零门槛</strong>——不用写 HTML、不用手动登记目录。</p>
-<h2>方式一：在 GitHub 网页上发文（推荐，零工具）</h2>
-<ol>
-<li>打开本仓库，进入 <code>_posts/</code> 文件夹，点 <strong>Add file → Create new file</strong></li>
-<li>文件名用英文加 <code>.md</code> 后缀，比如 <code>my-first-note.md</code></li>
-<li>按下面的格式写（<code>---</code> 之间的信息会被自动读取）：</li>
-</ol>
+<p>发文发图已经做到最简单了，按顺手程度选一种：</p>
+<h2>方式零：写作台（最简单，推荐）</h2>
+<p>打开网站的 <a href="admin.html" target="_blank" rel="noopener">✍️ 写作台</a>：</p>
+<ul>
+<li><strong>发文</strong>：填标题 → 写 Markdown（右边实时预览）→ 点「一键发布到 GitHub」。发布后 Actions 自动生成文章页并更新归档，约 1~2 分钟上线。</li>
+<li><strong>发图</strong>：把图片拖进虚线框（可多选）→ 每张图可以改标题 → 点「全部上传」。照片墙自动更新，连文件名都不用改。</li>
+</ul>
+<p>首次使用需要到写作台的「设置」页粘贴一次 GitHub 令牌（Fine-grained PAT，只授权本仓库的 Contents: Read and write），之后浏览器会记住。</p>
+<h2>方式一：本地一条命令</h2>
+<p>在 <code>_posts/</code> 里写一个 <code>xxx.md</code>（格式见下），然后：</p>
+<pre><code>python tools/build.py
+git add -A &amp;&amp; git commit -m "发布新文章" &amp;&amp; git push</code></pre>
+<h2>方式二：GitHub 网页直接写</h2>
+<p>仓库 → <code>_posts/</code> → Add file → Create new file → 文件名用英文（如 <code>my-first-note.md</code>）→ 写完提交即可。</p>
+<h2>Markdown 文件格式</h2>
 <pre><code>---
 title: 文章标题
 date: 2026-09-01
 tags: 日常, 笔记
 emoji: 🪐
-summary: 显示在归档列表里的一句话摘要
+summary: 一句话摘要
 ---
 
-这里开始写正文，**Markdown 语法**都支持：
-
-- 小标题用 `##`
-- **加粗**、*斜体*、`行内代码`
-- 列表、引用、[链接](https://example.com)、图片都可以</code></pre>
-<ol>
-<li>点 <strong>Commit changes</strong> 提交 → GitHub Actions 会自动把它变成排版好的文章页、更新归档目录 → 一两分钟后线上就能看到</li>
-</ol>
-<h2>方式二：本地发文</h2>
-<p>在 <code>_posts/</code> 里写好 <code>.md</code> 文件，然后：</p>
-<pre><code>python tools/build.py
-git add -A &amp;&amp; git commit -m "发布新文章" &amp;&amp; git push</code></pre>
-<h2>发照片：丢图就行</h2>
-<p>把图片传进仓库的 <code>assets/gallery/</code> 文件夹（GitHub 网页上 Add file → Upload 就能拖拽上传），构建时会<strong>自动扫描</strong>生成照片墙。</p>
-<p>文件名建议用「标题_年-月」的格式，标题和日期会自动识别：</p>
+正文用 Markdown 写。</code></pre>
+<p><strong>其实只有标题是必须的</strong>：不写日期默认今天，不写摘要会自动截取正文第一段，标签/emoji/封面都能省略。</p>
+<p>常用语法：<code>## 标题</code>、<code><strong>加粗</strong></code>、`<code> </code>代码<code> </code><code>、</code>&gt; 引用<code>、</code><a href="网址" target="_blank" rel="noopener">链接</a><code>、</code><img src="图片路径" alt="图" loading="lazy">`、代码块用三个反引号包裹。</p>
+<h2>发照片的补充说明</h2>
 <ul>
-<li><code>泡面_2026-08.jpg</code> → 标题「泡面」，日期 2026 · 08</li>
-<li><code>summer.png</code> → 标题「summer」，日期显示 MEMORY</li>
+<li>图片标题默认取文件名，想改可以在写作台上传时填写</li>
+<li>不写日期的图片会自动使用上传当月</li>
+<li>封面进阶：front-matter 里写 <code>cover: assets/xxx.jpg</code> 可以用图片当文章封面</li>
 </ul>
-<h2>正文常用 Markdown 语法</h2>
-<p>| 写法 | 效果 |</p>
-<p>|---|---|</p>
-<p>| <code>## 标题</code> | 小标题 |</p>
-<p>| <code><strong>加粗</strong></code> | <strong>加粗</strong> |</p>
-<p>| `<code> </code>代码<code> </code>` | 行内代码 |</p>
-<p>| <code>&gt; 引用</code> | 引用块 |</p>
-<p>| ``<code> 代码块 </code>`` | 代码块 |</p>
-<p>| <code><a href="链接" target="_blank" rel="noopener">文字</a></code> | 超链接 |</p>
-<p>| <code><img src="图片路径" alt="描述" loading="lazy"></code> | 插图（图片放 <code>assets/</code> 再引用） |</p>
-<blockquote>进阶：文章的封面默认用 <code>emoji</code>，也可以在 front-matter 里写 <code>cover: assets/xxx.jpg</code> 用图片当封面。</blockquote>
         </div>
 
         <p class="article-end">— 谢谢你看到这里 ✧ —</p>

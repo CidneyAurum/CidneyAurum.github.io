@@ -18,6 +18,7 @@
                 没有日期就用 MEMORY。
 """
 import json
+import os
 import re
 import sys
 from datetime import date
@@ -248,10 +249,21 @@ def build_posts() -> list:
         meta, body = parse_front_matter(md_file.read_text(encoding="utf-8"))
         slug = md_file.stem
         title = meta.get("title") or slug
-        d = meta.get("date") or date.today().isoformat()
+        # 日期：front-matter 优先，否则取文件里第一个 2026-09-01 样式的日期，再否则用今天
+        d = meta.get("date") or ""
+        if not d:
+            m = re.search(r"\d{4}-\d{2}-\d{2}", body[:400])
+            d = m.group(0) if m else date.today().isoformat()
         tags = [t.strip() for t in (meta.get("tags") or "").split(",") if t.strip()]
         emoji = meta.get("emoji", "")
         summary = meta.get("summary", "")
+        if not summary:
+            # 摘要自动截取：正文第一段非标题文本的前 60 字
+            for line in body.split("\n"):
+                line = line.strip()
+                if line and not line.startswith(("#", ">", "-", "*", "!", "```", "---")):
+                    summary = re.sub(r"[*`!\[]\(.*?\)", "", line)[:60]
+                    break
         cover = meta.get("cover", "")
 
         if cover:
@@ -294,13 +306,15 @@ def build_posts() -> list:
 def build_photos() -> list:
     if not GALLERY_DIR.exists():
         GALLERY_DIR.mkdir(parents=True)
+    # 没写日期的图片：优先用环境变量 PHOTO_DATE（CI 里=提交年月），本地则 MEMORY
+    fallback_when = os.environ.get("PHOTO_DATE", "").strip() or "MEMORY"
     items = []
     for f in sorted(GALLERY_DIR.iterdir()):
         if f.suffix.lower() not in IMG_EXT:
             continue
         stem = f.stem
         m = re.search(r"_(\d{4})-(\d{1,2})", stem)
-        when = f"{m.group(1)} · {int(m.group(2)):02d}" if m else "MEMORY"
+        when = f"{m.group(1)} · {int(m.group(2)):02d}" if m else fallback_when
         caption = re.sub(r"_?\d{4}-\d{1,2}$", "", stem) or "无题"
         items.append({"src": f"assets/gallery/{f.name}", "caption": caption, "when": when})
         print(f"  照片  {f.name}  →  「{caption}」 {when}")

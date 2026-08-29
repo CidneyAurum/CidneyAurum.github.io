@@ -253,8 +253,51 @@ const MikuMusic = (function () {
     listeners.forEach((fn) => { try { fn(st); } catch (e) {} });
     document.dispatchEvent(new CustomEvent("mikumusic", { detail: st }));
     try { loTick(); } catch (e) {}
+    try { dbarTick(); } catch (e) {}
   }
   function on(fn) { listeners.add(fn); }
+
+  /* ---------- 桌面歌词条（主界面常驻） ---------- */
+  let dbarBuilt = false, lastDLine = -2;
+  function buildDbar() {
+    if (dbarBuilt) return;
+    dbarBuilt = true;
+    const el = document.createElement("div");
+    el.className = "d-lyric";
+    el.id = "d-lyric";
+    el.innerHTML = '<span class="d-text"></span><button class="d-close" title="关闭桌面歌词">✕</button>';
+    document.body.appendChild(el);
+    el.querySelector(".d-close").addEventListener("click", () => {
+      sessionLyricOff = true;
+      sessionStorage.setItem("mm_lyric_off", "1");
+      el.classList.remove("show");
+    });
+  }
+
+  function dbarTick(force) {
+    if (sessionLyricOff) return;
+    buildDbar();
+    const el = document.getElementById("d-lyric");
+    const st = getState();
+    const show = st.playing && st.lrc.length > 0 && !overlayOpen;
+    el.classList.toggle("show", show);
+    if (!show) return;
+    if (st.lrcLine !== lastDLine || force) {
+      lastDLine = st.lrcLine;
+      const text = st.lrcLine >= 0 ? st.lrc[st.lrcLine].text : "♪ 准备中";
+      const t = el.querySelector(".d-text");
+      t.innerHTML = "";
+      let k = 0;
+      for (const ch of text) {
+        const sp = document.createElement("span");
+        sp.className = "d-char";
+        sp.style.animationDelay = (k * 0.028) + "s";
+        sp.textContent = ch === " " ? " " : ch;
+        t.appendChild(sp);
+        k++;
+      }
+    }
+  }
 
   /* ---------- 边狱巴士风格 · 歌词演出浮层 ---------- */
   let overlayBuilt = false, overlayOpen = false, lastLoLine = -2;
@@ -291,6 +334,7 @@ const MikuMusic = (function () {
     overlayOpen = open;
     document.getElementById("lyric-overlay").classList.toggle("open", open);
     if (open) { lastLoLine = -2; loTick(true); }
+    try { dbarTick(true); } catch (e) {}
   }
   function loToggle() { setOverlay(!overlayOpen); if (overlayOpen) sessionLyricOff = false; }
 

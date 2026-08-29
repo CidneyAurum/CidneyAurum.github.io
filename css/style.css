@@ -1378,3 +1378,46 @@ body.light .kb-set input { background: rgba(255,255,255,.6); }
 /* 看板娘画布：强制独立合成层，防滚动时丢帧 */
 .kanban { will-change: transform; }
 .kb-stage canvas { transform: translateZ(0); }
+
+/* ============ 桌面歌词条（主界面常驻歌词） ============ */
+.d-lyric {
+  position: fixed;
+  left: 50%; bottom: 88px;
+  transform: translateX(-50%);
+  z-index: 120;
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 22px;
+  border-radius: 14px;
+  background: rgba(5, 5, 7, 0.78);
+  border: 1px solid rgba(217, 185, 108, 0.28);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.5);
+  max-width: 72vw;
+}
+.d-lyric.show { display: flex; }
+.d-lyric .d-text {
+  font-family: var(--font-body);
+  font-weight: 900;
+  font-size: 20px;
+  color: #ece5d3;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.8), 0 0 18px rgba(212, 69, 58, 0.35);
+}
+.d-char { display: inline-block; animation: dIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes dIn { from { transform: translateX(26px) skewX(-8deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.d-lyric .d-close {
+  background: none; border: none;
+  color: rgba(236, 229, 211, 0.5);
+  cursor: pointer; font-size: 12px;
+  flex-shrink: 0;
+}
+.d-lyric .d-close:hover { color: #fff; }
+@media (max-width: 680px) {
+  .d-lyric { bottom: auto; top: 74px; max-width: 90vw; }
+  .d-lyric .d-text { font-size: 15px; }
+}

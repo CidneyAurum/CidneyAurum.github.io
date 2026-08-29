@@ -128,7 +128,11 @@ body.light .scene-overlay {
 
 /* ============ 载入动画 ============ */
 .page-enter { animation: pageIn 0.9s ease both; }
+/* ⚠️ body 不能带 transform：会给所有 position:fixed 子元素
+   （看板娘/舞台面板/像素猫）创建包含块，滚动时会跟着页面跑掉 */
+body.page-enter { animation: bodyFade 0.8s ease both; }
 @keyframes pageIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes bodyFade { from { opacity: 0; } to { opacity: 1; } }
 
 /* ============ 导航 ============ */
 .nav {
@@ -1379,6 +1383,45 @@ body.light .kb-set input { background: rgba(255,255,255,.6); }
 .kanban { will-change: transform; }
 .kb-stage canvas { transform: translateZ(0); }
 
+/* ============ 边狱巴士 · 主界面歌词舞台 ============ */
+.desk-stage {
+  position: fixed;
+  right: 24px; bottom: 96px;
+  z-index: 110;
+  width: 420px; height: 170px;
+  display: none;
+  background: #050507;
+  border: 1px solid rgba(217, 185, 108, 0.3);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), inset 0 0 90px rgba(120, 20, 20, 0.12);
+}
+.desk-stage.show { display: block; animation: pageIn 0.35s ease both; }
+.desk-stage .ds-head {
+  position: absolute; top: 0; left: 0; right: 0;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 14px;
+  z-index: 5;
+  font-family: var(--font-latin, Georgia, serif);
+  font-size: 10px; letter-spacing: .28em;
+  color: rgba(217, 185, 108, 0.55);
+}
+.desk-stage .ds-close {
+  background: none; border: none;
+  color: rgba(236, 229, 211, 0.5);
+  cursor: pointer; font-size: 12px;
+}
+.desk-stage .ds-close:hover { color: #fff; }
+.desk-stage .lyric-area { position: absolute; inset: 0; padding: 30px 24px; }
+.desk-stage .lyric-line { font-size: clamp(18px, 2.4vw, 27px); }
+.desk-stage.slam { animation: stageShake 0.28s linear 0.4s both; }
+.desk-stage .slash { top: 58%; }
+
+/* 看板娘画布：强制独立合成层，防滚动时丢帧 */
+/* 看板娘画布：强制独立合成层，防滚动时丢帧 */
+.kanban { will-change: transform; }
+.kb-stage canvas { transform: translateZ(0); }
+
 /* ============ 桌面歌词条（主界面常驻歌词） ============ */
 .d-lyric {
   position: fixed;
@@ -1420,4 +1463,7 @@ body.light .kb-set input { background: rgba(255,255,255,.6); }
 @media (max-width: 680px) {
   .d-lyric { bottom: auto; top: 74px; max-width: 90vw; }
   .d-lyric .d-text { font-size: 15px; }
+}
+@media (max-width: 680px) {
+  .desk-stage { left: auto; right: 12px; bottom: 140px; width: min(420px, calc(100vw - 220px)); height: 150px; }
 }

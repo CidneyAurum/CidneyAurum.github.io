@@ -142,7 +142,7 @@ const MikuMusic = (function () {
       await audio.play();
     }
     startMouth();
-    loadLrc(item).then(() => { emit(); if (!sessionLyricOff) setOverlay(true); });
+    loadLrc(item).then(() => emit());
     emit();
   }
 
@@ -167,12 +167,29 @@ const MikuMusic = (function () {
 
   async function loadLrc(item) {
     currentLrc = [];
-    try {
-      if (!item.id) return;
-      const data = await api("lrc", item.id);
-      const lrc = (Array.isArray(data) ? data[0] : data).lrc || "";
-      currentLrc = parseLrc(lrc);
-    } catch (e) { /* 无歌词照常播 */ }
+    if (!item.id) return;
+    // lrc 接口有的源返回原始 LRC 文本、有的返回 JSON（{lrc:"..."}），都兼容
+    for (const base of apiSources()) {
+      try {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 8000);
+        const res = await fetch(base + "?type=lrc&server=netease&id=" + encodeURIComponent(item.id), {
+          signal: ctrl.signal,
+        });
+        clearTimeout(timer);
+        if (!res.ok) continue;
+        const text = (await res.text()).trim();
+        if (!text || text.startsWith("{\"error")) continue;
+        if (text.startsWith("[") || text.includes("[00:")) {
+          currentLrc = parseLrc(text);   // 原始 LRC
+        } else {
+          const data = JSON.parse(text);
+          const lrc = (Array.isArray(data) ? data[0] : data).lrc || "";
+          currentLrc = parseLrc(lrc);
+        }
+        if (currentLrc.length) { emit(); return; }
+      } catch (e) { /* 试下一个源 */ }
+    }
   }
 
   function lrcIndexAt(time) {
@@ -253,53 +270,83 @@ const MikuMusic = (function () {
     listeners.forEach((fn) => { try { fn(st); } catch (e) {} });
     document.dispatchEvent(new CustomEvent("mikumusic", { detail: st }));
     try { loTick(); } catch (e) {}
-    try { dbarTick(); } catch (e) {}
+    try { deskTick(); } catch (e) {}
   }
   function on(fn) { listeners.add(fn); }
 
-  /* ---------- 桌面歌词条（主界面常驻） ---------- */
-  let dbarBuilt = false, lastDLine = -2;
-  function buildDbar() {
-    if (dbarBuilt) return;
-    dbarBuilt = true;
+  /* ---------- 边狱巴士风格 · 主界面舞台面板（随播放自动显示） ---------- */
+  let deskBuilt = false, lastDLine = -2;
+  let deskHidden = sessionStorage.getItem("mm_desk_off") === "1";
+
+  function buildDesk() {
+    if (deskBuilt) return;
+    deskBuilt = true;
     const el = document.createElement("div");
-    el.className = "d-lyric";
-    el.id = "d-lyric";
-    el.innerHTML = '<span class="d-text"></span><button class="d-close" title="关闭桌面歌词">✕</button>';
+    el.className = "desk-stage";
+    el.id = "desk-stage";
+    el.innerHTML = `
+      <div class="ds-head"><span>LIMBUS · LIKE · LYRIC</span><button class="ds-close" title="关闭演出">✕</button></div>
+      <div class="lyric-area" id="desk-area">
+        <div class="stage-idle">— LYRIC SHOW —</div>
+      </div>`;
     document.body.appendChild(el);
-    el.querySelector(".d-close").addEventListener("click", () => {
-      sessionLyricOff = true;
-      sessionStorage.setItem("mm_lyric_off", "1");
-      el.classList.remove("show");
+    el.querySelector(".ds-close").addEventListener("click", () => {
+      deskHidden = true;
+      sessionStorage.setItem("mm_desk_off", "1");
+      renderDeskVis();
     });
   }
 
-  function dbarTick(force) {
-    if (sessionLyricOff) return;
-    buildDbar();
-    const el = document.getElementById("d-lyric");
+  function renderDeskVis() {
+    const el = document.getElementById("desk-stage");
+    if (!el) return;
     const st = getState();
-    const show = st.playing && st.lrc.length > 0 && !overlayOpen;
+    const show = !deskHidden && st.playing && st.lrc.length > 0;
     el.classList.toggle("show", show);
-    if (!show) return;
+  }
+
+  function deskTick(force) {
+    if (deskHidden) return;
+    buildDesk();
+    const st = getState();
+    renderDeskVis();
+    const area = document.getElementById("desk-area");
+    if (!area) return;
     if (st.lrcLine !== lastDLine || force) {
       lastDLine = st.lrcLine;
-      const text = st.lrcLine >= 0 ? st.lrc[st.lrcLine].text : "♪ 准备中";
-      const t = el.querySelector(".d-text");
-      t.innerHTML = "";
+      area.innerHTML = "";
+      const stage = document.getElementById("desk-stage");
+      stage.classList.remove("slam");
+      document.querySelectorAll("#desk-area .slash").forEach((x) => x.remove());
+      if (st.lrcLine < 0 || !st.lrc[st.lrcLine]) {
+        area.innerHTML = '<div class="stage-idle">— ' + esc(st.current ? st.current.name : "MUSIC") + ' —</div>';
+        return;
+      }
+      const line = st.lrc[st.lrcLine];
+      const el = document.createElement("div");
+      el.className = "lyric-line";
+      if (st.lrcLine % 3 === 2) el.classList.add("shake");
       let k = 0;
-      for (const ch of text) {
+      for (const ch of line.text) {
         const sp = document.createElement("span");
-        sp.className = "d-char";
-        sp.style.animationDelay = (k * 0.028) + "s";
+        sp.className = "char " + (k % 2 === 0 ? "in-left" : "in-right");
+        sp.style.animationDelay = (k % 2 === 0 ? 0 : 0.05) + k * 0.014 + "s";
         sp.textContent = ch === " " ? " " : ch;
-        t.appendChild(sp);
+        el.appendChild(sp);
         k++;
+      }
+      area.appendChild(el);
+      if (st.lrcLine % 3 === 2) {
+        const slash = document.createElement("div");
+        slash.className = "slash go";
+        area.appendChild(slash);
+        void stage.offsetWidth;
+        stage.classList.add("slam");
       }
     }
   }
 
-  /* ---------- 边狱巴士风格 · 歌词演出浮层 ---------- */
+    /* ---------- 边狱巴士风格 · 歌词演出浮层 ---------- */
   let overlayBuilt = false, overlayOpen = false, lastLoLine = -2;
   let sessionLyricOff = sessionStorage.getItem("mm_lyric_off") === "1";
 
@@ -387,6 +434,10 @@ const MikuMusic = (function () {
     searchAndPlay, playPlaylist, loadPlaylist, playIndex, next, toggle,
     getState, getQueue: () => queue.slice(), on, playlistId: CFG.playlistId,
     lyricOverlay: { toggle: loToggle, open: () => setOverlay(true), close: () => setOverlay(false) },
+    deskStage: {
+      toggle: () => { deskHidden = !deskHidden; sessionStorage.setItem("mm_desk_off", deskHidden ? "1" : "0"); renderDeskVis(); },
+      show: () => { deskHidden = false; sessionStorage.setItem("mm_desk_off", "0"); renderDeskVis(); deskTick(true); },
+    },
   };
 })();
 

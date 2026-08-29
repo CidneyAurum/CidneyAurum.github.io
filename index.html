@@ -225,7 +225,7 @@
       };
       render();
       document.addEventListener("mikumusic", render);
-      document.querySelector(".js-lyric").addEventListener("click", () => window.MikuMusic.lyricOverlay.toggle());
+      document.querySelector(".js-lyric").addEventListener("click", () => window.MikuMusic.deskStage.show());
     }, 0));
     // Miku 点播队列控制
     const mmBtn = document.querySelector(".js-mm-toggle");

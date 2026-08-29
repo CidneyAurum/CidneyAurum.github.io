@@ -426,6 +426,18 @@
         if (!document.hidden) { app.render(); hardenCanvas(); }
       });
 
+      // 窗口尺寸变化：重设渲染器与模型位置
+      window.addEventListener("resize", () => {
+        const w = stage.clientWidth, h = stage.clientHeight;
+        app.renderer.resize(w, h);
+        const sc = (h * 0.96) / model.internalModel.height;
+        model.scale.set(sc);
+        model.x = (w - model.width) / 2;
+        model.y = h - model.height;
+        vctx.clearRect(0, 0, view.width, view.height);
+        vctx.drawImage(appCanvas, 0, 0, view.width, view.height);
+      });
+
       // 放歌时切换到「唱歌」表情
       document.addEventListener("mikumusic", (e) => {
         if (e.detail && e.detail.playing) {

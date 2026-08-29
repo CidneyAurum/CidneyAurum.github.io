@@ -122,3 +122,19 @@ summary: 一句话摘要
 - [YouRanCoder / LimbusLyricSimulator](https://github.com/YouRanCoder/LimbusLyricSimulator)（GPL-3.0）— 桌面版歌词模拟器
 - [imsyy/home](https://github.com/imsyy/home)（MIT）— 一言 API 用法
 - 一言 API：[hitokoto.cn](https://hitokoto.cn/)
+
+## 看板娘 🎵
+
+右下角的 Live2D 看板娘（Miku）：
+
+- **AI 对话**：点她的 💬 打开对话框。首次使用点 ⚙️ 填三个东西：接口地址（默认 DeepSeek 官方，可换任何 OpenAI 兼容接口）、模型名、API Key（只存你自己浏览器的 localStorage）。没有 Key 也能用本地卖萌语料聊天。
+- **互动**：点她触发比心、拖拽移动、滚轮缩放、🙈 可以让她躲起来。
+- **技术**：pixi.js + pixi-live2d-display 渲染，AI 走 OpenAI 兼容 `/chat/completions`，回复支持触发表情（让她带【表情:比心】标记即可）。
+
+### 模型版权说明
+
+`assets/live2d/miku/` 内模型为「初音未来·玄宝酱×怂怂koe 高清版」：
+
+- 人物绘制：**玄宝酱**；人物建模：**怂怂koe**
+- 仅供 miku 二创使用，**禁止商用、禁止直播牟利**；本仓库仅个人非商用用途
+- 该模型作者条款禁止二次上传与二次分发——本仓库托管模型文件已获站主自行斟酌，**请勿将模型文件再分发**；如需使用请向原作者获取授权

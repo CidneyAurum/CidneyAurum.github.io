@@ -7,6 +7,7 @@
 /* ---------- 可调参数（✏️ 想改效果就动这里） ---------- */
 const SITE_CONFIG = {
   fireflies: { enabled: true, count: 26 },   // 流萤粒子
+  clickFx: true,                              // 点击彩蛋（蹦爱心星星）
   sloganLines: [                              // 首页横幅打字文案
     "直面过去，创造未来",
     "慢慢来，比较快",
@@ -276,6 +277,135 @@ document.addEventListener("DOMContentLoaded", async () => {
     .join("");
 });
 
+/* ---------- 点击彩蛋：光标处爆出小爱心 ---------- */
+(function clickFx() {
+  if (!SITE_CONFIG.clickFx || reduceMotion) return;
+  if (window.matchMedia("(hover: none)").matches) return;
+  const glyphs = ["♡", "✦", "💗", "✧"];
+  const colors = ["#ff9dc0", "#c4a8ff", "#8ecbff", "#ffb7d5"];
+  document.addEventListener("click", (e) => {
+    if (e.target.closest("input, textarea, button, a")) return;
+    for (let i = 0; i < 6; i++) {
+      const s = document.createElement("span");
+      s.className = "mouse-particle";
+      s.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
+      s.style.left = e.clientX - 4 + "px";
+      s.style.top = e.clientY - 4 + "px";
+      s.style.color = colors[Math.floor(Math.random() * colors.length)];
+      s.style.fontSize = 9 + Math.random() * 8 + "px";
+      s.style.setProperty("--dx", (Math.random() * 90 - 45).toFixed(0) + "px");
+      s.style.setProperty("--rot", (Math.random() * 120 - 60).toFixed(0) + "deg");
+      s.style.animationDuration = 0.7 + Math.random() * 0.5 + "s";
+      document.body.appendChild(s);
+      setTimeout(() => s.remove(), 1300);
+    }
+  });
+})();
+
+/* ---------- 文章代码块一键复制 ---------- */
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".prose pre").forEach((pre) => {
+    pre.querySelectorAll(".copy-btn").forEach((b) => b.remove());
+    const btn = document.createElement("button");
+    btn.className = "copy-btn";
+    btn.type = "button";
+    btn.textContent = "复制";
+    btn.addEventListener("click", async () => {
+      const code = pre.querySelector("code");
+      const text = (code || pre).innerText;
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+      }
+      btn.textContent = "✓ 已复制";
+      setTimeout(() => (btn.textContent = "复制"), 1600);
+    });
+    pre.appendChild(btn);
+  });
+});
+
+/* ---------- 图片灯箱（文章图片 + 照片墙） ---------- */
+document.addEventListener("DOMContentLoaded", () => {
+  const box = document.createElement("div");
+  box.className = "lightbox";
+  box.innerHTML = '<img alt=""><div class="cap"></div>';
+  document.body.appendChild(box);
+  const img = box.querySelector("img");
+  const cap = box.querySelector(".cap");
+  const close = () => { box.classList.remove("open"); img.src = ""; };
+  box.addEventListener("click", close);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
+  document.addEventListener("click", (e) => {
+    const t = e.target;
+    const isPhoto = t.matches(".prose img, .photo-grid .ph img, .kb-msg img");
+    if (!isPhoto || !t.src || t.src.startsWith("blob:")) return;
+    e.preventDefault();
+    e.stopPropagation();
+    img.src = t.src;
+    cap.textContent = t.alt || "";
+    box.classList.add("open");
+  });
+});
+
+/* ---------- 文章目录滚动高亮 ---------- */
+document.addEventListener("DOMContentLoaded", () => {
+  const tocLinks = document.querySelectorAll(".toc-list a");
+  if (!tocLinks.length || !("IntersectionObserver" in window)) return;
+  const map = new Map();
+  tocLinks.forEach((a) => {
+    const id = a.getAttribute("href").slice(1);
+    const h = document.getElementById(id);
+    if (h) map.set(h, a);
+  });
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((en) => {
+      if (en.isIntersecting) {
+        tocLinks.forEach((a) => a.classList.remove("on"));
+        const link = map.get(en.target);
+        if (link) link.classList.add("on");
+      }
+    });
+  }, { rootMargin: "-80px 0px -70% 0px" });
+  map.forEach((_, h) => io.observe(h));
+});
+
+/* ---------- Ctrl+K / / 唤起归档搜索 ---------- */
+document.addEventListener("DOMContentLoaded", () => {
+  document.addEventListener("keydown", (e) => {
+    const tag = (document.activeElement && document.activeElement.tagName) || "";
+    if (tag === "INPUT" || tag === "TEXTAREA") return;
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+      e.preventDefault();
+      if (location.pathname.endsWith("blog.html")) {
+        const input = document.getElementById("search-input");
+        if (input) input.focus();
+      } else {
+        sessionStorage.setItem("focus-search", "1");
+        location.href = (document.body.dataset.page === "post" ? "../" : "") + "blog.html";
+      }
+    } else if (e.key === "/" && document.getElementById("search-input")) {
+      e.preventDefault();
+      document.getElementById("search-input").focus();
+    }
+  });
+  if (sessionStorage.getItem("focus-search") === "1") {
+    sessionStorage.removeItem("focus-search");
+    setTimeout(() => {
+      const input = document.getElementById("search-input");
+      if (input) {
+        input.focus();
+        input.scrollIntoView({ block: "center" });
+      }
+    }, 600);
+  }
+});
+
 /* ---------- 归档页：双视图 + 搜索 + 标签 ---------- */
 document.addEventListener("DOMContentLoaded", async () => {
   const gridEl = document.getElementById("post-grid");
@@ -325,17 +455,25 @@ document.addEventListener("DOMContentLoaded", async () => {
             <span class="post-arrow">→</span>
           </a>`).join("")
       : empty;
-    tlEl.innerHTML = shown.length
-      ? shown.map((p, i) => `
-          <div class="tl-item">
-            <a class="tl-card card" href="posts/${encodeURIComponent(p.slug)}.html">
-              <div class="tl-meta">${p.date}</div>
-              <div class="tl-title">${p.title}</div>
-              <div class="tl-summary">${p.summary || ""}</div>
-              <div class="tl-tags">${tagsHTML(p)}</div>
-            </a>
-          </div>`).join("")
-      : empty;
+    // 时间轴：按年份插入分隔徽章
+    let tl = "", lastYear = "";
+    shown.forEach((p, i) => {
+      const year = (p.date || "").slice(0, 4);
+      if (year && year !== lastYear) {
+        tl += `<header class="tl-year">${year}</header>`;
+        lastYear = year;
+      }
+      tl += `
+        <div class="tl-item">
+          <a class="tl-card card" href="posts/${encodeURIComponent(p.slug)}.html">
+            <div class="tl-meta">${p.date}</div>
+            <div class="tl-title">${p.title}</div>
+            <div class="tl-summary">${p.summary || ""}</div>
+            <div class="tl-tags">${tagsHTML(p)}</div>
+          </a>
+        </div>`;
+    });
+    tlEl.innerHTML = shown.length ? tl : empty;
   }
 
   if (searchInput) searchInput.addEventListener("input", () => { keyword = searchInput.value; render(); });

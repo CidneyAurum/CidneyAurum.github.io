@@ -21,7 +21,8 @@ import json
 import os
 import re
 import sys
-from datetime import date
+from datetime import date, datetime, timezone
+from email.utils import format_datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -29,11 +30,13 @@ POSTS_SRC = ROOT / "_posts"
 POSTS_OUT = ROOT / "posts"
 GALLERY_DIR = ROOT / "assets" / "gallery"
 IMG_EXT = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+BASE_URL = "https://cidneyaurum.github.io"  # ✏️ 换域名时改这里
 
 SITE = {
     "name": "CidneyAurum の 小窝",
     "owner": "CidneyAurum",
     "motto": "直面过去，创造未来",
+    "desc": "CidneyAurum 的数字小窝：博客、照片墙，还有 Limbus 风格歌词演出模拟器。",
 }
 
 # ---------------- Markdown → HTML（覆盖博客常用子集） ----------------
@@ -52,7 +55,8 @@ def inline(md: str) -> str:
     return s
 
 
-def md_to_html(md: str) -> str:
+def md_to_html(md: str, headings=None):
+    """headings 传列表时，h2/h3 会带自增 id 并收集为 [{level,text,id}]"""
     out, lines = [], md.replace("\r\n", "\n").split("\n")
     i, in_code, code_buf, list_stack = 0, False, [], []
     while i < len(lines):
@@ -79,7 +83,13 @@ def md_to_html(md: str) -> str:
         if m:
             close_lists()
             level = len(m.group(1))
-            out.append(f"<h{level}>{inline(m.group(2))}</h{level}>")
+            text = inline(m.group(2))
+            if headings is not None and level in (2, 3):
+                hid = f"toc-{len(headings) + 1}"
+                headings.append({"level": level, "text": re.sub(r"<[^>]+>", "", text), "id": hid})
+                out.append(f'<h{level} id="{hid}">{text}</h{level}>')
+            else:
+                out.append(f"<h{level}>{text}</h{level}>")
         elif re.match(r"^\s*[-*]\s+", line):
             if not list_stack or list_stack[-1]:
                 close_lists()
@@ -141,6 +151,8 @@ POST_TEMPLATE = """<!DOCTYPE html>
   <title>{title} · {site_name}</title>
   <meta name="description" content="{summary}">
   <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+  <link rel="alternate" type="application/rss+xml" title="RSS 订阅" href="../feed.xml">
+  <script defer src="https://events.vercount.one/js"></script>
   <link rel="preconnect" href="https://fonts.loli.net" crossorigin>
   <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
@@ -177,6 +189,8 @@ POST_TEMPLATE = """<!DOCTYPE html>
         <h1 class="article-title">《{title}》</h1>
         <div class="article-meta">
           <span>🗓 {date}</span>
+          <span>{wordinfo}</span>
+          <span>👁 <span class="vercount-page-pv">…</span> 次围观</span>
           {tags}
         </div>
 
@@ -184,11 +198,13 @@ POST_TEMPLATE = """<!DOCTYPE html>
 {content}
         </div>
 
+        {postnav}
         <p class="article-end">— 谢谢你看到这里 ✧ —</p>
       </div>
     </article>
 
     <aside>
+      {toc_html}
       <div class="card side-card side-profile">
         <div class="avatar-ring"><img src="../assets/avatar.jpg" alt="头像"></div>
         <div class="side-name">{owner}</div>
@@ -235,17 +251,38 @@ POST_TEMPLATE = """<!DOCTYPE html>
 
   <script src="../js/main.js"></script>
   <script src="../js/player.js"></script>
+  <script src="../js/kanban.js" defer></script>
 </body>
 </html>
 """
 
 
-def build_posts() -> list:
+def count_words(md_text: str) -> int:
+    """粗略字数：中文字符逐个算，英文单词算一个。"""
+    text = re.sub(r"```.*?```", "", md_text, flags=re.S)
+    text = re.sub(r"[*`>#\-\[\]()!]", "", text)
+    cjk = len(re.findall(r"[\u4e00-\u9fff\u3040-\u30ff]", text))
+    latin = len(re.findall(r"[A-Za-z0-9]+", text))
+    return cjk + latin
+
+
+def build_posts(include_drafts: bool = False) -> list:
     if not POSTS_SRC.exists():
         POSTS_SRC.mkdir(parents=True)
     POSTS_OUT.mkdir(parents=True, exist_ok=True)
-    entries, generated = [], []
+
+    # 第一遍：解析所有 md
+    parsed, skipped = [], []
     for md_file in sorted(POSTS_SRC.glob("*.md")):
+        if md_file.stem.startswith("_"):
+            (parsed if include_drafts else skipped).append(md_file)
+            continue
+        parsed.append(md_file)
+    for f in skipped:
+        print(f"  草稿  _posts/{f.name} 跳过（--drafts 可本地预览）")
+
+    items = []
+    for md_file in parsed:
         meta, body = parse_front_matter(md_file.read_text(encoding="utf-8"))
         slug = md_file.stem
         title = meta.get("title") or slug
@@ -265,27 +302,62 @@ def build_posts() -> list:
                     summary = re.sub(r"[*`!\[]\(.*?\)", "", line)[:60]
                     break
         cover = meta.get("cover", "")
+        headings = []
+        content = md_to_html(body, headings=headings)
+        words = count_words(body)
+        minutes = max(1, round(words / 400))
+        items.append({
+            "slug": slug, "title": title, "date": d, "tags": tags,
+            "emoji": emoji, "cover": cover, "summary": summary,
+            "content": content, "headings": headings,
+            "wordinfo": f"📝 约 {words} 字 · {minutes} 分钟",
+        })
 
-        if cover:
+    # 按日期降序，计算上一篇（更早）/下一篇（更新）
+    items.sort(key=lambda e: e["date"], reverse=True)
+
+    def nav_link(target, label):
+        if not target:
+            return '<span class="pn-cell pn-empty"><span class="pn-label">没有更多了</span></span>'
+        href = target["slug"] + ".html"
+        return (f'<a class="pn-cell" href="{href}"><span class="pn-label">{label}</span>'
+                f'<span class="pn-title">{esc(target["title"])}</span></a>')
+
+    entries, generated = [], []
+    for i, it in enumerate(items):
+        older = items[i + 1] if i + 1 < len(items) else None
+        newer = items[i - 1] if i > 0 else None
+        it["prev"], it["next"] = older, newer
+
+        if cover := it["cover"]:
             src = cover if cover.startswith("http") else ("../" + cover.lstrip("./"))
             cover_html = f'<img class="coverall" src="{src}" alt="">'
         else:
-            cover_html = f"<span>{emoji or '🪐'}</span>"
-        tags_html = "".join(f'<span class="tag-mini"># {t}</span>' for t in tags)
+            cover_html = f"<span>{it['emoji'] or '🪐'}</span>"
+        tags_html = "".join(f'<span class="tag-mini"># {t}</span>' for t in it["tags"])
+
+        # 目录卡片：标题 ≥ 2 个才生成
+        toc_html = ""
+        if len(it["headings"]) >= 2:
+            toc_items = "".join(
+                f'<a class="toc-l{h["level"]}" href="#{h["id"]}">{esc(h["text"])}</a>'
+                for h in it["headings"]
+            )
+            toc_html = f'<div class="card side-card toc-card"><div class="side-label">CONTENTS</div><nav class="toc-list">{toc_items}</nav></div>'
+
+        postnav = '<nav class="post-nav">' + nav_link(older, "← 上一篇") + nav_link(newer, "下一篇 →") + "</nav>"
 
         html = POST_TEMPLATE.format(
-            title=esc(title), site_name=SITE["name"], owner=SITE["owner"],
-            motto=SITE["motto"], summary=esc(summary), date=d,
-            tags=tags_html, cover=cover_html, content=md_to_html(body),
+            title=esc(it["title"]), site_name=SITE["name"], owner=SITE["owner"],
+            motto=SITE["motto"], summary=esc(it["summary"]), date=it["date"],
+            tags=tags_html, cover=cover_html, content=it["content"],
+            wordinfo=it["wordinfo"], toc_html=toc_html, postnav=postnav,
         )
-        out_file = POSTS_OUT / f"{slug}.html"
+        out_file = POSTS_OUT / f"{it['slug']}.html"
         out_file.write_text(html, encoding="utf-8")
-        entries.append({
-            "slug": slug, "title": title, "date": d, "tags": tags,
-            "emoji": emoji, "cover": cover, "summary": summary,
-        })
+        entries.append({k: it[k] for k in ("slug", "title", "date", "tags", "emoji", "cover", "summary")})
         generated.append(out_file.name)
-        print(f"  文章  _posts/{md_file.name}  →  posts/{out_file.name}")
+        print(f"  文章  _posts/{it['slug']}.md  →  posts/{out_file.name}（{it['wordinfo'][2:]}）")
 
     # 清理：删掉已没有对应 _posts/*.md 的旧生成页
     keep = {"posts.json"} | set(generated)
@@ -294,11 +366,53 @@ def build_posts() -> list:
             old.unlink()
             print(f"  清理  posts/{old.name}（没有对应的 _posts/{old.stem}.md）")
 
-    entries.sort(key=lambda e: e["date"], reverse=True)
     (POSTS_OUT / "posts.json").write_text(
         json.dumps({"posts": entries}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"  目录  posts/posts.json（共 {len(entries)} 篇）")
     return entries
+
+
+# ---------------- RSS / sitemap / robots ----------------
+
+def build_meta_files(entries: list):
+    now = format_datetime(datetime.now(timezone.utc))
+    site = BASE_URL
+
+    rss_items = []
+    for e in entries[:20]:
+        desc = esc(e.get("summary") or e["title"])
+        rss_items.append(
+            f"<item><title>{esc(e['title'])}</title>"
+            f"<link>{site}/posts/{e['slug']}.html</link>"
+            f"<guid>{site}/posts/{e['slug']}.html</guid>"
+            f"<pubDate>{format_datetime(datetime.fromisoformat(e['date'] + 'T12:00:00+08:00'))}</pubDate>"
+            f"<description>{desc}</description></item>")
+    rss = ('<?xml version="1.0" encoding="UTF-8"?>'
+           '<rss version="2.0"><channel>'
+           f"<title>{esc(SITE['name'])}</title><link>{site}/</link>"
+           f"<description>{esc(SITE['desc'])}</description><language>zh-CN</language>"
+           f"<lastBuildDate>{now}</lastBuildDate>"
+           + "".join(rss_items) + "</channel></rss>")
+    (ROOT / "feed.xml").write_text(rss, encoding="utf-8")
+    print("  RSS   feed.xml")
+
+    urls = ["", "blog.html", "photos.html", "about.html", "limbus.html"] + [
+        f"posts/{e['slug']}.html" for e in entries
+    ]
+    sm_items = "".join(
+        f"<url><loc>{site}/{u}</loc>"
+        + (f"<lastmod>{entries[0]['date']}</lastmod>" if u.startswith("posts/") and entries else "")
+        + "</url>"
+        for u in urls
+    )
+    sm = ('<?xml version="1.0" encoding="UTF-8"?>'
+          '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + sm_items + "</urlset>")
+    (ROOT / "sitemap.xml").write_text(sm, encoding="utf-8")
+    print("  SEO   sitemap.xml")
+
+    robots = f"User-agent: *\nAllow: /\nSitemap: {site}/sitemap.xml\n"
+    (ROOT / "robots.txt").write_text(robots, encoding="utf-8")
+    print("  SEO   robots.txt")
 
 
 # ---------------- 照片墙构建 ----------------
@@ -325,10 +439,15 @@ def build_photos() -> list:
 
 
 if __name__ == "__main__":
-    target = sys.argv[1] if len(sys.argv) > 1 else "all"
-    print(f"构建开始（{target}）")
+    args = [a for a in sys.argv[1:] if a]
+    include_drafts = "--drafts" in args
+    target = next((a for a in args if not a.startswith("--")), "all")
+    print(f"构建开始（{target}{'，含草稿' if include_drafts else ''}）")
+    entries = []
     if target in ("all", "posts"):
-        build_posts()
+        entries = build_posts(include_drafts=include_drafts)
     if target in ("all", "photos"):
         build_photos()
+    if target in ("all", "posts") and not include_drafts:
+        build_meta_files(entries)
     print("构建完成 ✧")

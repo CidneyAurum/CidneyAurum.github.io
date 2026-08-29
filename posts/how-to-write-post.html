@@ -6,6 +6,8 @@
   <title>如何发布一篇新文章 / 新照片 · CidneyAurum の 小窝</title>
   <meta name="description" content="三种方式从易到难：站内写作台一键发布、本地一条命令、GitHub 网页直接写。">
   <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+  <link rel="alternate" type="application/rss+xml" title="RSS 订阅" href="../feed.xml">
+  <script defer src="https://events.vercount.one/js"></script>
   <link rel="preconnect" href="https://fonts.loli.net" crossorigin>
   <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
@@ -42,25 +44,27 @@
         <h1 class="article-title">《如何发布一篇新文章 / 新照片》</h1>
         <div class="article-meta">
           <span>🗓 2026-08-29</span>
+          <span>📝 约 368 字 · 1 分钟</span>
+          <span>👁 <span class="vercount-page-pv">…</span> 次围观</span>
           <span class="tag-mini"># 指南</span>
         </div>
 
         <div class="prose">
 <p>发文发图已经做到最简单了，按顺手程度选一种：</p>
-<h2>方式零：写作台（最简单，推荐）</h2>
+<h2 id="toc-1">方式零：写作台（最简单，推荐）</h2>
 <p>打开网站的 <a href="admin.html" target="_blank" rel="noopener">✍️ 写作台</a>：</p>
 <ul>
 <li><strong>发文</strong>：填标题 → 写 Markdown（右边实时预览）→ 点「一键发布到 GitHub」。发布后 Actions 自动生成文章页并更新归档，约 1~2 分钟上线。</li>
 <li><strong>发图</strong>：把图片拖进虚线框（可多选）→ 每张图可以改标题 → 点「全部上传」。照片墙自动更新，连文件名都不用改。</li>
 </ul>
 <p>首次使用需要到写作台的「设置」页粘贴一次 GitHub 令牌（Fine-grained PAT，只授权本仓库的 Contents: Read and write），之后浏览器会记住。</p>
-<h2>方式一：本地一条命令</h2>
+<h2 id="toc-2">方式一：本地一条命令</h2>
 <p>在 <code>_posts/</code> 里写一个 <code>xxx.md</code>（格式见下），然后：</p>
 <pre><code>python tools/build.py
 git add -A &amp;&amp; git commit -m "发布新文章" &amp;&amp; git push</code></pre>
-<h2>方式二：GitHub 网页直接写</h2>
+<h2 id="toc-3">方式二：GitHub 网页直接写</h2>
 <p>仓库 → <code>_posts/</code> → Add file → Create new file → 文件名用英文（如 <code>my-first-note.md</code>）→ 写完提交即可。</p>
-<h2>Markdown 文件格式</h2>
+<h2 id="toc-4">Markdown 文件格式</h2>
 <pre><code>---
 title: 文章标题
 date: 2026-09-01
@@ -72,7 +76,7 @@ summary: 一句话摘要
 正文用 Markdown 写。</code></pre>
 <p><strong>其实只有标题是必须的</strong>：不写日期默认今天，不写摘要会自动截取正文第一段，标签/emoji/封面都能省略。</p>
 <p>常用语法：<code>## 标题</code>、<code><strong>加粗</strong></code>、`<code> </code>代码<code> </code><code>、</code>&gt; 引用<code>、</code><a href="网址" target="_blank" rel="noopener">链接</a><code>、</code><img src="图片路径" alt="图" loading="lazy">`、代码块用三个反引号包裹。</p>
-<h2>发照片的补充说明</h2>
+<h2 id="toc-5">发照片的补充说明</h2>
 <ul>
 <li>图片标题默认取文件名，想改可以在写作台上传时填写</li>
 <li>不写日期的图片会自动使用上传当月</li>
@@ -80,11 +84,13 @@ summary: 一句话摘要
 </ul>
         </div>
 
+        <nav class="post-nav"><span class="pn-cell pn-empty"><span class="pn-label">没有更多了</span></span><a class="pn-cell" href="hello-world.html"><span class="pn-label">下一篇 →</span><span class="pn-title">网站上线啦！</span></a></nav>
         <p class="article-end">— 谢谢你看到这里 ✧ —</p>
       </div>
     </article>
 
     <aside>
+      <div class="card side-card toc-card"><div class="side-label">CONTENTS</div><nav class="toc-list"><a class="toc-l2" href="#toc-1">方式零：写作台（最简单，推荐）</a><a class="toc-l2" href="#toc-2">方式一：本地一条命令</a><a class="toc-l2" href="#toc-3">方式二：GitHub 网页直接写</a><a class="toc-l2" href="#toc-4">Markdown 文件格式</a><a class="toc-l2" href="#toc-5">发照片的补充说明</a></nav></div>
       <div class="card side-card side-profile">
         <div class="avatar-ring"><img src="../assets/avatar.jpg" alt="头像"></div>
         <div class="side-name">CidneyAurum</div>
@@ -131,5 +137,6 @@ summary: 一句话摘要
 
   <script src="../js/main.js"></script>
   <script src="../js/player.js"></script>
+  <script src="../js/kanban.js" defer></script>
 </body>
 </html>

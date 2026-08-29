@@ -10,6 +10,8 @@
   <meta property="og:description" content="博客、照片墙，还有 Limbus 风格歌词演出模拟器。">
   <meta property="og:type" content="website">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="alternate" type="application/rss+xml" title="RSS 订阅" href="feed.xml">
+  <script defer src="https://events.vercount.one/js"></script>
   <link rel="preconnect" href="https://fonts.loli.net" crossorigin>
   <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
@@ -60,6 +62,7 @@
             <div class="stat"><div class="num" id="stat-posts">-</div><div class="label">文章</div></div>
             <div class="stat"><div class="num" id="stat-tags">-</div><div class="label">标签</div></div>
             <div class="stat"><div class="num" id="stat-days">-</div><div class="label">运行天数</div></div>
+            <div class="stat"><div class="num" style="font-size:17px;line-height:1.6;"><span class="vercount-page-pv">…</span></div><div class="label">本页围观</div></div>
           </div>
           <div class="social-row">
             <!-- ✏️ 联系方式 -->
@@ -161,6 +164,7 @@
 
   <script src="js/main.js"></script>
   <script src="js/player.js"></script>
+  <script src="js/kanban.js" defer></script>
   <script>
     // 夜间模式小卡片
     (function () {

@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>拾光档案 · CidneyAurum の 小窝</title>
-  <meta name="description" content="CidneyAurum 的博客归档：学习笔记、折腾记录和日常碎碎念。">
+  <title>光影画廊 · CidneyAurum の 小窝</title>
+  <meta name="description" content="CidneyAurum 的照片墙：记录视觉的一次次触动。">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="preconnect" href="https://fonts.loli.net" crossorigin>
   <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="page-enter" data-page="blog">
+<body class="page-enter" data-page="photos">
   <div class="scene" aria-hidden="true">
     <img class="scene-bg" src="assets/background.png" alt="">
     <div class="scene-overlay"></div>
@@ -26,8 +26,8 @@
     <a class="logo" href="index.html">CidneyAurum<span class="no">の</span>小窝</a>
     <div class="nav-links" id="nav-links">
       <a class="nav-link" href="index.html">首页</a>
-      <a class="nav-link active" href="blog.html">归档</a>
-      <a class="nav-link" href="photos.html">照片墙</a>
+      <a class="nav-link" href="blog.html">归档</a>
+      <a class="nav-link active" href="photos.html">照片墙</a>
       <a class="nav-link" href="limbus.html">歌词模拟器</a>
       <a class="nav-link" href="about.html">关于</a>
     </div>
@@ -39,29 +39,17 @@
 
   <main class="wrap">
     <header class="page-head">
-      <h1 class="page-title">拾光档案</h1>
-      <p class="page-sub"><span class="star">✦</span>总计 <span id="archive-count">-</span> 篇记录<span class="star">✦</span></p>
+      <h1 class="page-title">光影画廊</h1>
+      <p class="page-sub"><span class="star">✦</span>记录视觉的一次次触动<span class="star">✦</span></p>
     </header>
 
-    <!-- 居中大搜索 -->
-    <div class="search-box">
-      <span class="ico">🔍</span>
-      <input id="search-input" type="text" placeholder="搜寻被封存的知识…" autocomplete="off">
+    <!-- 照片墙：构建时自动扫描 assets/gallery/ 生成 gallery.json，这里负责渲染 -->
+    <!-- 发新图：把图片丢进 assets/gallery/ 即可（文件名用 标题_年-月 格式效果最佳） -->
+    <div class="photo-grid" id="photo-grid">
+      <p class="empty-tip">照片加载中… 🖼️</p>
     </div>
 
-    <!-- 筛选 + 视图切换 -->
-    <div class="archive-toolbar">
-      <div class="toolbar-left" id="tag-filter"></div>
-      <div class="view-toggle">
-        <button class="view-btn on" data-view="timeline">☰ 中枢链路</button>
-        <button class="view-btn" data-view="grid">▦ 矩阵网格</button>
-      </div>
-    </div>
-
-    <!-- 时间轴视图 -->
-    <div class="timeline-view on" id="post-timeline"></div>
-    <!-- 网格视图 -->
-    <div class="grid-view" id="post-grid"></div>
+    <p class="photo-note">— 定格时间，珍藏每一刻美好 —</p>
   </main>
 
   <footer>

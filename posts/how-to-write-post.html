@@ -3,23 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>如何发布一篇新文章 · CidneyAurum の 小窝</title>
-  <meta name="description" content="三步往这个纯静态博客里添加一篇新文章。">
+  <title>如何发布一篇新文章 / 新照片 · CidneyAurum の 小窝</title>
+  <meta name="description" content="两种发文方式和零门槛的发图方式：GitHub 网页直接写，或本地一条命令。">
   <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
   <link rel="preconnect" href="https://fonts.loli.net" crossorigin>
   <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
 </head>
 <body class="page-enter" data-page="post">
+  <div class="scene" aria-hidden="true">
+    <img class="scene-bg" src="../assets/background.png" alt="">
+    <div class="scene-overlay"></div>
+    <div class="scene-grass"></div>
+  </div>
   <canvas id="firefly-canvas" aria-hidden="true"></canvas>
+  <button id="to-top" class="to-top" aria-label="返回顶部">✦</button>
 
   <nav class="nav">
     <a class="logo" href="../index.html">CidneyAurum<span class="no">の</span>小窝</a>
     <div class="nav-links" id="nav-links">
       <a class="nav-link" href="../index.html">首页</a>
-      <a class="nav-link active" href="../blog.html">博客</a>
+      <a class="nav-link active" href="../blog.html">归档</a>
+      <a class="nav-link" href="../photos.html">照片墙</a>
       <a class="nav-link" href="../limbus.html">歌词模拟器</a>
-      <a class="nav-link" href="https://github.com/CidneyAurum" target="_blank" rel="noopener">GitHub</a>
+      <a class="nav-link" href="../about.html">关于</a>
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
       <button id="theme-toggle" class="icon-btn" aria-label="切换主题">✨</button>
@@ -27,62 +34,115 @@
     </div>
   </nav>
 
-  <main class="article-wrap">
-    <a class="back-link" href="../blog.html">« 返回博客列表</a>
+  <div class="wrap article-layout">
     <article class="card article-card">
-      <h1 class="article-title">如何发布一篇新文章 📝</h1>
-      <div class="article-meta">
-        <span class="post-date">🗓 2026-08-29</span>
-        <span class="tag-mini"># 指南</span>
+      <div class="article-cover"><span>📝</span></div>
+      <div class="article-inner">
+        <a class="back-pill" href="../blog.html">« 返回上一级</a>
+        <h1 class="article-title">《如何发布一篇新文章 / 新照片》</h1>
+        <div class="article-meta">
+          <span>🗓 2026-08-29</span>
+          <span class="tag-mini"># 指南</span>
+        </div>
+
+        <div class="prose">
+<p>这个博客没有后台、没有数据库，但发文发图已经被优化到<strong>几乎零门槛</strong>——不用写 HTML、不用手动登记目录。</p>
+<h2>方式一：在 GitHub 网页上发文（推荐，零工具）</h2>
+<ol>
+<li>打开本仓库，进入 <code>_posts/</code> 文件夹，点 <strong>Add file → Create new file</strong></li>
+<li>文件名用英文加 <code>.md</code> 后缀，比如 <code>my-first-note.md</code></li>
+<li>按下面的格式写（<code>---</code> 之间的信息会被自动读取）：</li>
+</ol>
+<pre><code>---
+title: 文章标题
+date: 2026-09-01
+tags: 日常, 笔记
+emoji: 🪐
+summary: 显示在归档列表里的一句话摘要
+---
+
+这里开始写正文，**Markdown 语法**都支持：
+
+- 小标题用 `##`
+- **加粗**、*斜体*、`行内代码`
+- 列表、引用、[链接](https://example.com)、图片都可以</code></pre>
+<ol>
+<li>点 <strong>Commit changes</strong> 提交 → GitHub Actions 会自动把它变成排版好的文章页、更新归档目录 → 一两分钟后线上就能看到</li>
+</ol>
+<h2>方式二：本地发文</h2>
+<p>在 <code>_posts/</code> 里写好 <code>.md</code> 文件，然后：</p>
+<pre><code>python tools/build.py
+git add -A &amp;&amp; git commit -m "发布新文章" &amp;&amp; git push</code></pre>
+<h2>发照片：丢图就行</h2>
+<p>把图片传进仓库的 <code>assets/gallery/</code> 文件夹（GitHub 网页上 Add file → Upload 就能拖拽上传），构建时会<strong>自动扫描</strong>生成照片墙。</p>
+<p>文件名建议用「标题_年-月」的格式，标题和日期会自动识别：</p>
+<ul>
+<li><code>泡面_2026-08.jpg</code> → 标题「泡面」，日期 2026 · 08</li>
+<li><code>summer.png</code> → 标题「summer」，日期显示 MEMORY</li>
+</ul>
+<h2>正文常用 Markdown 语法</h2>
+<p>| 写法 | 效果 |</p>
+<p>|---|---|</p>
+<p>| <code>## 标题</code> | 小标题 |</p>
+<p>| <code><strong>加粗</strong></code> | <strong>加粗</strong> |</p>
+<p>| `<code> </code>代码<code> </code>` | 行内代码 |</p>
+<p>| <code>&gt; 引用</code> | 引用块 |</p>
+<p>| ``<code> 代码块 </code>`` | 代码块 |</p>
+<p>| <code><a href="链接" target="_blank" rel="noopener">文字</a></code> | 超链接 |</p>
+<p>| <code><img src="图片路径" alt="描述" loading="lazy"></code> | 插图（图片放 <code>assets/</code> 再引用） |</p>
+<blockquote>进阶：文章的封面默认用 <code>emoji</code>，也可以在 front-matter 里写 <code>cover: assets/xxx.jpg</code> 用图片当封面。</blockquote>
+        </div>
+
+        <p class="article-end">— 谢谢你看到这里 ✧ —</p>
       </div>
-
-      <div class="prose">
-        <p>这个博客没有后台、没有数据库，发文就是「<strong>新建一个 HTML 文件 + 在目录里登记一行</strong>」，三步搞定。</p>
-
-        <h2>第 1 步：复制文章模板</h2>
-        <p>把 <code>posts/hello-world.html</code> 复制一份，文件名用英文（这就是文章的 slug），比如 <code>my-first-note.html</code>。文件里的标题、日期、正文改成你自己的，注意里面所有的 <code>../</code> 路径都不要动。</p>
-
-        <h2>第 2 步：在目录里登记</h2>
-        <p>打开 <code>posts/posts.json</code>，往 <code>posts</code> 数组里加一条（注意 JSON 的逗号）：</p>
-        <pre><code>{
-  "slug": "my-first-note",
-  "title": "文章标题",
-  "date": "2026-09-01",
-  "tags": ["日常", "笔记"],
-  "emoji": "🪐",
-  "summary": "显示在博客列表里的一句话摘要"
-}</code></pre>
-        <ul>
-          <li><code>slug</code> 要和文件名一致（不带 .html）</li>
-          <li><code>date</code> 用 <code>YYYY-MM-DD</code> 格式，列表会自动按日期排序</li>
-          <li><code>emoji</code> 是列表封面的表情，不填会自动随机分配</li>
-          <li><code>tags</code> 随便写，列表页会自动生成标签筛选</li>
-        </ul>
-
-        <h2>第 3 步：发布</h2>
-        <pre><code>git add posts/
-git commit -m "发布新文章：xxx"
-git push</code></pre>
-        <p>推送后 GitHub Pages 会自动部署，一两分钟内线上就能看到新文章了。</p>
-
-        <h2>写正文的常用格式</h2>
-        <p>正文写在 <code>&lt;div class="prose"&gt;</code> 里面，所有排版样式都配好了：</p>
-        <ul>
-          <li>小标题用 <code>&lt;h2&gt;</code> / <code>&lt;h3&gt;</code></li>
-          <li>行内代码用 <code>&lt;code&gt;</code>，代码块用 <code>&lt;pre&gt;&lt;code&gt;</code></li>
-          <li>引用用 <code>&lt;blockquote&gt;</code>，图片放 <code>../assets/</code> 里再引用</li>
-        </ul>
-        <blockquote>进阶玩法：如果觉得手写 HTML 麻烦，可以用 ChatGPT / ZCode 这类 AI 帮你把 Markdown 转成 HTML 片段，粘进来就行。</blockquote>
-      </div>
-
-      <p class="article-end">祝你写作愉快 ✧</p>
     </article>
-  </main>
+
+    <aside>
+      <div class="card side-card side-profile">
+        <div class="avatar-ring"><img src="../assets/avatar.jpg" alt="头像"></div>
+        <div class="side-name">CidneyAurum</div>
+        <p class="side-desc">✏️ 一只喜欢写代码也喜欢看番的普通人类（大概）。</p>
+        <div class="side-social">
+          <a class="social-btn" href="https://github.com/CidneyAurum" target="_blank" rel="noopener" title="GitHub">🐙</a>
+          <a class="social-btn" href="mailto:you@example.com" title="邮箱">💌</a>
+          <a class="social-btn" href="https://space.bilibili.com/xxx" target="_blank" rel="noopener" title="Bilibili">📺</a>
+        </div>
+      </div>
+
+      <div class="card side-card">
+        <div class="side-label">NOW PLAYING</div>
+        <div class="np-row">
+          <img class="np-cover" src="../assets/background.png" alt="">
+          <div class="np-info">
+            <div class="np-title js-player-title">环境电台 · Ambient</div>
+            <div class="np-sub">直面过去，创造未来</div>
+          </div>
+          <button class="np-btn js-play-toggle js-state" aria-label="播放/暂停">▶</button>
+        </div>
+        <div class="np-bar"><div class="fill js-progress-fill"></div></div>
+      </div>
+
+      <div class="card side-card">
+        <div class="side-label">RECORDS</div>
+        <div id="side-records"><div class="side-record"><div class="d">加载中…</div></div></div>
+      </div>
+    </aside>
+  </div>
 
   <footer>
     Made with <span class="heart">♡</span> &amp; 星光 · © 2026 CidneyAurum · Powered by GitHub Pages
   </footer>
 
+  <div class="mini-player">
+    <img class="mini-cover" src="../assets/background.png" alt="">
+    <div>
+      <div class="mini-title js-player-title">环境电台 · Ambient</div>
+      <div class="mini-sub">直面过去，创造未来</div>
+    </div>
+    <button class="mini-btn js-play-toggle js-state" aria-label="播放/暂停">▶</button>
+  </div>
+
   <script src="../js/main.js"></script>
+  <script src="../js/player.js"></script>
 </body>
 </html>

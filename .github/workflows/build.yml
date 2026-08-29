@@ -1,0 +1,39 @@
+name: build content
+
+# 在 GitHub 网页上往 _posts/ 写 Markdown 或往 assets/gallery/ 传图，
+# 推送后这里会自动构建文章页和照片墙数据，无需任何本地工具。
+on:
+  push:
+    paths:
+      - "_posts/**"
+      - "assets/gallery/**"
+      - "tools/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 构建文章与照片墙
+        run: python tools/build.py
+
+      - name: 提交构建结果
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "没有需要提交的变更"
+          else
+            git commit -m "build: 自动更新文章与照片墙数据 [skip ci]"
+            git push
+          fi

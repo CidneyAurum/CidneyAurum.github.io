@@ -1,0 +1,34 @@
+{
+  "photos": [
+    {
+      "src": "assets/gallery/Hitori_2026-08.jpg",
+      "caption": "Hitori",
+      "when": "2026 · 08"
+    },
+    {
+      "src": "assets/gallery/Kita_2026-08.jpg",
+      "caption": "Kita",
+      "when": "2026 · 08"
+    },
+    {
+      "src": "assets/gallery/Nijika_2026-08.jpg",
+      "caption": "Nijika",
+      "when": "2026 · 08"
+    },
+    {
+      "src": "assets/gallery/Ramen_2026-08.png",
+      "caption": "Ramen",
+      "when": "2026 · 08"
+    },
+    {
+      "src": "assets/gallery/Ryo_2026-08.jpg",
+      "caption": "Ryo",
+      "when": "2026 · 08"
+    },
+    {
+      "src": "assets/gallery/XiaRi_2026-08.jpg",
+      "caption": "XiaRi",
+      "when": "2026 · 08"
+    }
+  ]
+}

@@ -11,15 +11,25 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="page-enter" data-page="limbus">
+  <div class="scene" aria-hidden="true">
+    <img class="scene-bg" src="assets/background.png" alt="">
+    <div class="scene-overlay"></div>
+    <div class="scene-grass"></div>
+  </div>
   <canvas id="firefly-canvas" aria-hidden="true"></canvas>
+
+  <svg class="pixel-deco cat" viewBox="0 0 11 8" aria-hidden="true"><g fill="#e8e5f2"><rect x="1" y="0" width="1" height="1"/><rect x="2" y="1" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/><rect x="1" y="2" width="8" height="4"/><rect x="2" y="6" width="6" height="2"/><rect x="9" y="5" width="2" height="1"/></g><g fill="#ff8fb7"><rect x="2" y="0" width="1" height="1"/><rect x="7" y="0" width="1" height="1"/></g><g fill="#2a2a3e"><rect x="3" y="3" width="1" height="1"/><rect x="6" y="3" width="1" height="1"/></g></svg>
+  <svg class="pixel-deco fish" viewBox="0 0 7 4" aria-hidden="true"><g fill="#7cc7ff"><rect x="1" y="1" width="4" height="2"/><rect x="2" y="0" width="2" height="1"/><rect x="2" y="3" width="2" height="1"/><rect x="5" y="0" width="1" height="1"/><rect x="5" y="3" width="1" height="1"/><rect x="6" y="1" width="1" height="2"/></g><rect x="2" y="1" width="1" height="1" fill="#1a2a4a"/></svg>
+  <button id="to-top" class="to-top" aria-label="返回顶部">✦</button>
 
   <nav class="nav">
     <a class="logo" href="index.html">CidneyAurum<span class="no">の</span>小窝</a>
     <div class="nav-links" id="nav-links">
       <a class="nav-link" href="index.html">首页</a>
-      <a class="nav-link" href="blog.html">博客</a>
+      <a class="nav-link" href="blog.html">归档</a>
+      <a class="nav-link" href="photos.html">照片墙</a>
       <a class="nav-link active" href="limbus.html">歌词模拟器</a>
-      <a class="nav-link" href="https://github.com/CidneyAurum" target="_blank" rel="noopener">GitHub</a>
+      <a class="nav-link" href="about.html">关于</a>
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
       <button id="theme-toggle" class="icon-btn" aria-label="切换主题">✨</button>
@@ -28,7 +38,7 @@
   </nav>
 
   <main class="wrap">
-    <!-- ============ 演出舞台 ============ -->
+    <!-- ============ 演出舞台（黑金红是刻意的反差风格） ============ -->
     <div class="stage" id="limbus-stage">
       <div class="stage-topbar"><span>LIMBUS · LIKE · LYRIC</span><span>SIMULATOR WEB</span></div>
       <div class="stage-line"></div>
@@ -69,8 +79,6 @@
 
     <!-- ============ 项目介绍 ============ -->
     <section class="block">
-      <h2 class="sec-title serif">关于这个项目<span class="en">ABOUT PROJECT</span></h2>
-      <p class="sec-sub">网页版由本站原创实现；桌面版功能更加完整，欢迎去 GitHub 点个 Star</p>
       <div class="card project-card">
         <div class="project-grid">
           <div>
@@ -107,6 +115,15 @@
   <footer>
     Made with <span class="heart">♡</span> &amp; 星光 · © 2026 CidneyAurum · Powered by GitHub Pages
   </footer>
+
+  <div class="mini-player">
+    <img class="mini-cover" src="assets/background.png" alt="">
+    <div>
+      <div class="mini-title js-player-title">环境电台 · Ambient</div>
+      <div class="mini-sub">直面过去，创造未来</div>
+    </div>
+    <button class="mini-btn js-play-toggle js-state" aria-label="播放/暂停">▶</button>
+  </div>
 
   <audio id="limbus-audio" preload="auto" style="display:none;"></audio>
   <script src="js/main.js"></script>

@@ -5,27 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- ✏️ 网站标题和描述，改成你自己的 -->
   <title>CidneyAurum の 小窝 · 个人主页</title>
-  <meta name="description" content="CidneyAurum的数字小窝：博客、项目、还有 Limbus 风格歌词演出模拟器。">
+  <meta name="description" content="CidneyAurum的数字小窝：博客、照片墙，还有 Limbus 风格歌词演出模拟器。">
   <meta property="og:title" content="CidneyAurum の 小窝">
-  <meta property="og:description" content="博客、项目、还有 Limbus 风格歌词演出模拟器。">
+  <meta property="og:description" content="博客、照片墙，还有 Limbus 风格歌词演出模拟器。">
   <meta property="og:type" content="website">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-  <!-- 衬线中文标题字体（加载失败自动回退宋体，不影响使用） -->
   <link rel="preconnect" href="https://fonts.loli.net" crossorigin>
   <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="page-enter" data-page="home">
+  <!-- 全站场景层 -->
+  <div class="scene" aria-hidden="true">
+    <img class="scene-bg" src="assets/background.png" alt="">
+    <div class="scene-overlay"></div>
+    <div class="scene-grass"></div>
+  </div>
   <canvas id="firefly-canvas" aria-hidden="true"></canvas>
 
-  <!-- ✏️ 导航：把 GitHub 链接换成你自己的 -->
+  <!-- 像素小装饰 -->
+  <svg class="pixel-deco cat" viewBox="0 0 11 8" aria-hidden="true"><g fill="#e8e5f2"><rect x="1" y="0" width="1" height="1"/><rect x="2" y="1" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/><rect x="1" y="2" width="8" height="4"/><rect x="2" y="6" width="6" height="2"/><rect x="9" y="5" width="2" height="1"/></g><g fill="#ff8fb7"><rect x="2" y="0" width="1" height="1"/><rect x="7" y="0" width="1" height="1"/></g><g fill="#2a2a3e"><rect x="3" y="3" width="1" height="1"/><rect x="6" y="3" width="1" height="1"/></g></svg>
+  <svg class="pixel-deco fish" viewBox="0 0 7 4" aria-hidden="true"><g fill="#7cc7ff"><rect x="1" y="1" width="4" height="2"/><rect x="2" y="0" width="2" height="1"/><rect x="2" y="3" width="2" height="1"/><rect x="5" y="0" width="1" height="1"/><rect x="5" y="3" width="1" height="1"/><rect x="6" y="1" width="1" height="2"/></g><rect x="2" y="1" width="1" height="1" fill="#1a2a4a"/></svg>
+  <button id="to-top" class="to-top" aria-label="返回顶部">✦</button>
+
   <nav class="nav">
     <a class="logo" href="index.html">CidneyAurum<span class="no">の</span>小窝</a>
     <div class="nav-links" id="nav-links">
       <a class="nav-link active" href="index.html">首页</a>
-      <a class="nav-link" href="blog.html">博客</a>
+      <a class="nav-link" href="blog.html">归档</a>
+      <a class="nav-link" href="photos.html">照片墙</a>
       <a class="nav-link" href="limbus.html">歌词模拟器</a>
-      <a class="nav-link" href="https://github.com/CidneyAurum" target="_blank" rel="noopener">GitHub</a>
+      <a class="nav-link" href="about.html">关于</a>
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
       <button id="theme-toggle" class="icon-btn" aria-label="切换主题">✨</button>
@@ -34,16 +44,16 @@
   </nav>
 
   <main class="wrap">
-    <!-- ============ Hero：资料卡 + 宣传卡 ============ -->
+    <!-- ============ Hero：资料卡 + 环境电台 ============ -->
     <header class="hero">
       <div class="hero-grid">
         <div class="card profile-card">
           <div class="profile-top">
-            <!-- ✏️ 头像：想换头像就同名替换 assets/avatar.jpg -->
+            <!-- ✏️ 头像：想换就同名替换 assets/avatar.jpg -->
             <div class="avatar-ring"><img src="assets/avatar.jpg" alt="头像"></div>
             <div>
               <h1 class="profile-name">CidneyAurum</h1>
-              <p class="profile-desc">✏️ 一只喜欢写代码也喜欢看番的普通人类（大概）。白天写代码，晚上补番，周末折腾小东西。</p>
+              <p class="profile-desc">✏️ 一只喜欢写代码也喜欢看番的普通人类（大概）。白天写代码，晚上补番，周末折腾点小东西。</p>
             </div>
           </div>
           <div class="profile-stats">
@@ -59,26 +69,34 @@
           </div>
         </div>
 
-        <!-- Limbus 歌词模拟器宣传卡（模仿播放器卡布局） -->
-        <a class="card promo-card" href="limbus.html">
-          <div class="promo-head">
-            <div class="promo-cover">🎼</div>
+        <!-- 环境电台（Web Audio 合成，真的能播） -->
+        <div class="card player-card">
+          <div class="player-head">
+            <div class="vinyl"><img class="disc" src="assets/background.png" alt=""></div>
             <div>
-              <span class="promo-badge">LYRIC SIMULATOR</span>
-              <div class="promo-title serif">Limbus 歌词演出模拟器</div>
-              <div class="promo-sub">网页版 · 无需安装</div>
+              <span class="player-badge">AMBIENT RADIO</span>
+              <div class="player-title js-player-title serif">环境电台 · Ambient</div>
+              <div class="player-sub">浏览器实时合成 · 无需音频文件</div>
             </div>
           </div>
-          <div class="promo-quote serif">「直面过去，创造未来」</div>
-          <div class="promo-progress"><div class="fill"></div></div>
-          <div class="promo-times"><span>00:00</span><span>♪ ∞</span></div>
-          <span class="promo-btn">▶ 进入演出</span>
-        </a>
+          <div class="player-quote">「直面过去，创造未来」</div>
+          <div class="player-progress"><div class="fill js-progress-fill"></div></div>
+          <div class="player-times"><span class="js-time">00:00</span><span>∞</span></div>
+          <div class="player-controls">
+            <button class="play-btn js-play-toggle"><span class="js-state">▶</span><span class="js-label">播放电台</span></button>
+            <div class="player-file">
+              <label for="player-file-input" title="用本地音乐替代合成音源">📁 本地</label>
+              <input id="player-file-input" type="file" accept="audio/*">
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- 横幅打字条 -->
+      <!-- 打字横幅 -->
       <div class="slogan-bar">
+        <div class="slogan-dots"><i></i><i></i><i></i></div>
         <div class="slogan-text"><span id="slogan-text"></span><span class="caret"></span></div>
+        <svg class="slogan-cat" viewBox="0 0 11 8" aria-hidden="true"><g fill="#e8e5f2"><rect x="1" y="0" width="1" height="1"/><rect x="2" y="1" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/><rect x="1" y="2" width="8" height="4"/><rect x="2" y="6" width="6" height="2"/><rect x="9" y="5" width="2" height="1"/></g><g fill="#ff8fb7"><rect x="2" y="0" width="1" height="1"/><rect x="7" y="0" width="1" height="1"/></g><g fill="#2a2a3e"><rect x="3" y="3" width="1" height="1"/><rect x="6" y="3" width="1" height="1"/></g></svg>
       </div>
     </header>
 
@@ -86,7 +104,7 @@
     <section class="block">
       <div class="home-grid">
         <a class="card featured-card" id="featured-link" href="blog.html">
-          <div class="featured-cover"><span id="featured-emoji">🪐</span>
+          <div class="featured-cover"><span id="featured-cover">🪐</span>
             <div class="featured-badges">
               <span class="badge-latest">LATEST INSIGHT</span>
               <span class="badge-date" id="featured-date">—</span>
@@ -99,22 +117,22 @@
         </a>
 
         <div class="card records-card">
-          <div class="records-head serif">RECORDS <span class="line"></span> 往期记录</div>
+          <div class="records-head">RECORDS <span class="line"></span> 往期记录</div>
           <div id="records-list">
             <div class="record-item"><div class="record-meta">加载中…</div></div>
           </div>
         </div>
 
         <div class="side-stack">
-          <div class="card mini-card" id="mini-night">
-            <span class="mini-ico">✨</span>
-            <span class="mini-title">夜间模式</span>
-            <span class="mini-desc">流萤飞舞的深空</span>
-          </div>
-          <a class="card mini-card" href="blog.html">
-            <span class="mini-ico">📚</span>
-            <span class="mini-title">全部文章</span>
-            <span class="mini-desc">搜索 · 标签 · 归档</span>
+          <a class="card mini-card" href="limbus.html">
+            <span class="mini-ico">🎼</span>
+            <span class="mini-title">歌词模拟器</span>
+            <span class="mini-desc">Limbus 风格演出</span>
+          </a>
+          <a class="card mini-card" href="photos.html">
+            <span class="mini-ico">🖼️</span>
+            <span class="mini-title">光影画廊</span>
+            <span class="mini-desc">记录视觉的触动</span>
           </a>
         </div>
       </div>
@@ -125,52 +143,30 @@
       <div class="clock-time" id="clock-time">-- : -- : --</div>
       <div class="clock-info"><span class="dot"></span>系统已稳定运行 <b id="uptime">…</b> · 愿每一段代码都有回响</div>
     </div>
-
-    <!-- ============ 照片墙 ============ -->
-    <section class="block" id="gallery">
-      <h2 class="sec-title serif">照片墙<span class="en">GALLERY</span></h2>
-      <p class="sec-sub">喜欢的图片就摆在这里（想换就同名替换 assets/gallery/ 下的图片）</p>
-      <div class="gallery-grid">
-        <!-- ✏️ 照片墙：把图片放进 assets/gallery/ 并改名 p1~p4.jpg 即可替换 -->
-        <figure class="gallery-item"><img src="assets/gallery/p1.jpg" alt="相册图片 1" loading="lazy"><figcaption class="cap">PHOTO · 01</figcaption></figure>
-        <figure class="gallery-item"><img src="assets/gallery/p2.jpg" alt="相册图片 2" loading="lazy"><figcaption class="cap">PHOTO · 02</figcaption></figure>
-        <figure class="gallery-item"><img src="assets/gallery/p3.jpg" alt="相册图片 3" loading="lazy"><figcaption class="cap">PHOTO · 03</figcaption></figure>
-        <figure class="gallery-item"><img src="assets/gallery/p4.jpg" alt="相册图片 4" loading="lazy"><figcaption class="cap">PHOTO · 04</figcaption></figure>
-      </div>
-    </section>
-
-    <!-- ============ 关于我 ============ -->
-    <section class="block" id="about">
-      <h2 class="sec-title serif">关于我<span class="en">ABOUT</span></h2>
-      <p class="sec-sub">一只喜欢写代码也喜欢看番的普通人类（大概）</p>
-      <div class="card" style="padding:26px 28px;">
-        <div class="prose" style="margin:0;">
-          <p>你好呀！我是 <strong>CidneyAurum</strong>。白天写<strong>代码</strong>，晚上补<strong>番剧</strong>，周末偶尔画点小画、折腾点小东西。这个网站是我的数字小窝，会记录学习笔记、踩坑记录和日常碎碎念。</p>
-          <p>座右铭：「慢慢来，比较快。」</p>
-        </div>
-        <div class="chips" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;">
-          <!-- ✏️ 你的技能 -->
-          <span class="chip">🌐 HTML / CSS</span>
-          <span class="chip">⚡ JavaScript</span>
-          <span class="chip">🐍 Python</span>
-          <span class="chip">🛠️ Git / GitHub</span>
-          <span class="chip">🎬 视频剪辑</span>
-          <span class="chip">🎮 Limbus Company</span>
-        </div>
-      </div>
-    </section>
   </main>
 
   <footer>
     Made with <span class="heart">♡</span> &amp; 星光 · © 2026 CidneyAurum · Powered by GitHub Pages
   </footer>
 
+  <!-- 全站迷你播放器 -->
+  <div class="mini-player">
+    <img class="mini-cover" src="assets/background.png" alt="">
+    <div>
+      <div class="mini-title js-player-title">环境电台 · Ambient</div>
+      <div class="mini-sub">直面过去，创造未来</div>
+    </div>
+    <button class="mini-btn js-play-toggle js-state" aria-label="播放/暂停">▶</button>
+  </div>
+
   <script src="js/main.js"></script>
+  <script src="js/player.js"></script>
   <script>
-    // 小卡片也能切换主题
-    document.getElementById("mini-night").addEventListener("click", () => {
-      document.getElementById("theme-toggle").click();
-    });
+    // 夜间模式小卡片
+    (function () {
+      const nightCard = document.getElementById("mini-night");
+      if (nightCard) nightCard.addEventListener("click", () => document.getElementById("theme-toggle").click());
+    })();
   </script>
 </body>
 </html>

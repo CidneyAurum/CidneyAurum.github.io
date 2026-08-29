@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>关于 · CidneyAurum の 小窝</title>
+  <meta name="description" content="关于 CidneyAurum：经历、技能与联系方式。">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.loli.net" crossorigin>
+  <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="page-enter" data-page="about">
+  <div class="scene" aria-hidden="true">
+    <img class="scene-bg" src="assets/background.png" alt="">
+    <div class="scene-overlay"></div>
+    <div class="scene-grass"></div>
+  </div>
+  <canvas id="firefly-canvas" aria-hidden="true"></canvas>
+
+  <svg class="pixel-deco cat" viewBox="0 0 11 8" aria-hidden="true"><g fill="#e8e5f2"><rect x="1" y="0" width="1" height="1"/><rect x="2" y="1" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/><rect x="1" y="2" width="8" height="4"/><rect x="2" y="6" width="6" height="2"/><rect x="9" y="5" width="2" height="1"/></g><g fill="#ff8fb7"><rect x="2" y="0" width="1" height="1"/><rect x="7" y="0" width="1" height="1"/></g><g fill="#2a2a3e"><rect x="3" y="3" width="1" height="1"/><rect x="6" y="3" width="1" height="1"/></g></svg>
+  <svg class="pixel-deco fish" viewBox="0 0 7 4" aria-hidden="true"><g fill="#7cc7ff"><rect x="1" y="1" width="4" height="2"/><rect x="2" y="0" width="2" height="1"/><rect x="2" y="3" width="2" height="1"/><rect x="5" y="0" width="1" height="1"/><rect x="5" y="3" width="1" height="1"/><rect x="6" y="1" width="1" height="2"/></g><rect x="2" y="1" width="1" height="1" fill="#1a2a4a"/></svg>
+  <button id="to-top" class="to-top" aria-label="返回顶部">✦</button>
+
+  <nav class="nav">
+    <a class="logo" href="index.html">CidneyAurum<span class="no">の</span>小窝</a>
+    <div class="nav-links" id="nav-links">
+      <a class="nav-link" href="index.html">首页</a>
+      <a class="nav-link" href="blog.html">归档</a>
+      <a class="nav-link" href="photos.html">照片墙</a>
+      <a class="nav-link" href="limbus.html">歌词模拟器</a>
+      <a class="nav-link active" href="about.html">关于</a>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button id="theme-toggle" class="icon-btn" aria-label="切换主题">✨</button>
+      <button id="hamburger" class="icon-btn" aria-label="菜单">☰</button>
+    </div>
+  </nav>
+
+  <main class="wrap">
+    <header class="about-hero">
+      <div class="avatar-ring"><img src="assets/avatar.jpg" alt="头像"></div>
+      <h1 class="about-name">CidneyAurum</h1>
+      <!-- ✏️ 一句话介绍 -->
+      <p class="about-line">一只喜欢写代码也喜欢看番的普通人类（大概）。<br>白天写代码，晚上补番，周末折腾点小东西。这个网站就是我的折腾成果之一。</p>
+      <div class="contact-row">
+        <!-- ✏️ 联系方式 -->
+        <a class="contact-pill" href="https://github.com/CidneyAurum" target="_blank" rel="noopener">🐙 GitHub</a>
+        <a class="contact-pill" href="mailto:you@example.com">💌 邮箱</a>
+        <a class="contact-pill" href="https://space.bilibili.com/xxx" target="_blank" rel="noopener">📺 Bilibili</a>
+      </div>
+    </header>
+
+    <section class="block">
+      <header class="page-head" style="padding-top:26px;">
+        <h1 class="page-title" style="font-size:30px;">足迹</h1>
+        <p class="page-sub"><span class="star">✦</span>TIMELINE<span class="star">✦</span></p>
+      </header>
+      <div class="tl2">
+        <!-- ✏️ 你的经历时间线 -->
+        <div class="tl2-item">
+          <div class="tl2-year">2026</div>
+          <div class="tl2-title">拥有了自己的小窝</div>
+          <div class="tl2-desc">用纯 HTML/CSS/JS 手写了这个网站，部署在 GitHub Pages 上，还顺手做了个 Limbus 风格歌词演出模拟器。</div>
+        </div>
+        <div class="tl2-item">
+          <div class="tl2-year">2024 - 2026</div>
+          <div class="tl2-title">专业学习</div>
+          <div class="tl2-desc">在这里写上你的专业、学过的课程、做过的项目、拿过的奖……（占位，记得改成自己的）</div>
+        </div>
+        <div class="tl2-item">
+          <div class="tl2-year">更早</div>
+          <div class="tl2-title">入坑的起点</div>
+          <div class="tl2-desc">第一次接触编程 / 第一次补完某部番 / 第一次想拥有一个自己的网站……故事从这里开始。</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <header class="page-head" style="padding-top:26px;">
+        <h1 class="page-title" style="font-size:30px;">技能点</h1>
+        <p class="page-sub"><span class="star">✦</span>SKILLS<span class="star">✦</span></p>
+      </header>
+      <div class="chips-row">
+        <!-- ✏️ 你的技能 -->
+        <span class="chip">🌐 HTML / CSS</span>
+        <span class="chip">⚡ JavaScript</span>
+        <span class="chip">🐍 Python</span>
+        <span class="chip">🛠️ Git / GitHub</span>
+        <span class="chip">🎬 视频剪辑</span>
+        <span class="chip">🎮 Limbus Company</span>
+        <span class="chip">📖 正在学习：Rust</span>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Made with <span class="heart">♡</span> &amp; 星光 · © 2026 CidneyAurum · Powered by GitHub Pages
+  </footer>
+
+  <div class="mini-player">
+    <img class="mini-cover" src="assets/background.png" alt="">
+    <div>
+      <div class="mini-title js-player-title">环境电台 · Ambient</div>
+      <div class="mini-sub">直面过去，创造未来</div>
+    </div>
+    <button class="mini-btn js-play-toggle js-state" aria-label="播放/暂停">▶</button>
+  </div>
+
+  <script src="js/main.js"></script>
+  <script src="js/player.js"></script>
+</body>
+</html>

@@ -7,17 +7,20 @@
 ## 目录结构
 
 ```
-├── index.html          # 主页（资料卡 / 最新文章 / 时钟运行条 / 关于我）
-├── blog.html           # 博客列表页（搜索 + 标签筛选）
+├── index.html          # 主页（资料卡 / 环境电台 / 打字横幅 / 最新文章 / 时钟条）
+├── blog.html           # 拾光档案：搜索 + 标签 + 时间轴/网格双视图
+├── photos.html         # 光影画廊：拍立得照片墙
+├── about.html          # 关于：足迹时间线 / 技能 / 联系方式
 ├── limbus.html         # Limbus 风格歌词演出模拟器（网页版）
 ├── 404.html            # 404 页
 ├── posts/
 │   ├── posts.json      # 文章目录（发新文章要在这里登记）
 │   └── *.html          # 每篇文章一个 HTML 文件
 ├── css/style.css       # 全站样式（主题色在这里改）
-├── js/main.js          # 流萤粒子 / 打字横幅 / 时钟 / 博客渲染
+├── js/main.js          # 流萤 / 打字横幅 / 时钟 / 归档双视图
+├── js/player.js        # 环境电台：Web Audio 合成音乐 + 全站迷你播放器
 ├── js/limbus.js        # 歌词演出引擎（手动 / 自动 / 音乐同步）
-└── assets/             # 头像、favicon、照片墙（gallery/）、文章图片都放这里
+└── assets/             # 头像、背景图（background.png）、照片墙（gallery/）
 ```
 
 ## 本地预览
@@ -42,17 +45,46 @@ npx serve .
 | 站名（logo） | 每个 HTML 的 `<a class="logo">` |
 | 联系方式 / GitHub 链接 | 各页面 `<nav>` 和资料卡 |
 | 头像 | 头像文件是 `assets/avatar.jpg`，想换就同名替换它 |
-| 照片墙 | 同名替换 `assets/gallery/p1~p4.jpg`（想加更多就照着 index.html 的 gallery 板块复制一个 figure） |
+| 全站背景 | `assets/background.png`（CSS 自动做模糊+压暗处理，想换就同名替换；删掉它则回退极光渐变） |
+| 照片墙 | 改 `photos.html` 里的 figure 列表，图片放 `assets/gallery/` |
+| 环境电台 | `js/player.js` 顶部的和弦/速度参数；也可点「📁 本地」用自己的 mp3 |
 | 打字横幅文案 / 网站生日 / 粒子开关 | `js/main.js` 顶部的 `SITE_CONFIG` |
 | 主题配色 | `css/style.css` 顶部的 `:root` 变量（默认夜间，`body.light` 为日间） |
 
-## 怎么发新文章
+## 怎么发新文章（两种方式）
 
-三步，详细教程见站内文章《如何发布一篇新文章》：
+**方式一：GitHub 网页上直接写（推荐，零工具）**
 
-1. 复制 `posts/hello-world.html` 为新文件（文件名用英文）
-2. 在 `posts/posts.json` 的 `posts` 数组里加一条登记信息
-3. `git add` → `commit` → `push`，自动上线
+1. 打开本仓库 → `_posts/` 文件夹 → **Add file → Create new file**
+2. 文件名用英文，如 `my-first-note.md`，按这个格式写：
+
+```markdown
+---
+title: 文章标题
+date: 2026-09-01
+tags: 日常, 笔记
+emoji: 🪐
+summary: 一句话摘要
+---
+
+正文用 Markdown 写，## 标题、**加粗**、列表、引用、代码块都支持。
+```
+
+3. Commit 提交 → GitHub Actions 自动生成文章页并更新归档 → 约 1 分钟后线上可见
+
+**方式二：本地**
+
+往 `_posts/` 写好 `.md`，然后 `python tools/build.py` → commit → push。
+
+详细语法见站内文章《如何发布一篇新文章 / 新照片》。
+
+## 怎么发新照片（零登记）
+
+把图片传进 `assets/gallery/`（GitHub 网页支持拖拽上传），构建时自动扫描上墙。
+
+文件名用「标题_年-月」格式可自动识别标题和日期，如 `泡面_2026-08.jpg`；没有日期则显示 MEMORY。
+
+> 原理：GitHub Action（`.github/workflows/build.yml`）在 `_posts/` 或 `assets/gallery/` 变化时自动运行 `python tools/build.py`，生成 `posts/*.html`、`posts/posts.json`、`assets/gallery/gallery.json`。本地没有 Python 也没关系，走方式一即可。
 
 ## Limbus 歌词演出模拟器
 

@@ -4,22 +4,29 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>网站上线啦！ · CidneyAurum の 小窝</title>
-  <meta name="description" content="我的个人小站正式上线，这是第一篇博客。">
+  <meta name="description" content="我的个人小站正式上线，这是第一篇博客，讲讲这个小站是怎么搭起来的。">
   <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
   <link rel="preconnect" href="https://fonts.loli.net" crossorigin>
   <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
 </head>
 <body class="page-enter" data-page="post">
+  <div class="scene" aria-hidden="true">
+    <img class="scene-bg" src="../assets/background.png" alt="">
+    <div class="scene-overlay"></div>
+    <div class="scene-grass"></div>
+  </div>
   <canvas id="firefly-canvas" aria-hidden="true"></canvas>
+  <button id="to-top" class="to-top" aria-label="返回顶部">✦</button>
 
   <nav class="nav">
     <a class="logo" href="../index.html">CidneyAurum<span class="no">の</span>小窝</a>
     <div class="nav-links" id="nav-links">
       <a class="nav-link" href="../index.html">首页</a>
-      <a class="nav-link active" href="../blog.html">博客</a>
+      <a class="nav-link active" href="../blog.html">归档</a>
+      <a class="nav-link" href="../photos.html">照片墙</a>
       <a class="nav-link" href="../limbus.html">歌词模拟器</a>
-      <a class="nav-link" href="https://github.com/CidneyAurum" target="_blank" rel="noopener">GitHub</a>
+      <a class="nav-link" href="../about.html">关于</a>
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
       <button id="theme-toggle" class="icon-btn" aria-label="切换主题">✨</button>
@@ -27,49 +34,89 @@
     </div>
   </nav>
 
-  <main class="article-wrap">
-    <a class="back-link" href="../blog.html">« 返回博客列表</a>
+  <div class="wrap article-layout">
     <article class="card article-card">
-      <h1 class="article-title">网站上线啦！🎉</h1>
-      <div class="article-meta">
-        <span class="post-date">🗓 2026-08-29</span>
-        <span class="tag-mini"># 日常</span>
+      <div class="article-cover"><span>🎉</span></div>
+      <div class="article-inner">
+        <a class="back-pill" href="../blog.html">« 返回上一级</a>
+        <h1 class="article-title">《网站上线啦！》</h1>
+        <div class="article-meta">
+          <span>🗓 2026-08-29</span>
+          <span class="tag-mini"># 日常</span>
+        </div>
+
+        <div class="prose">
+<p>撒花！✧(≖ ◡ ≖✿) 我的个人小站终于上线了！这是本站的第一篇博客，趁这个机会记录一下小站是怎么搭起来的。</p>
+<h2>这个网站有什么？</h2>
+<ul>
+<li><strong>个人主页</strong>：资料卡、环境电台、最新文章、运行状态，还有流萤和像素猫</li>
+<li><strong>拾光档案</strong>：博客归档，带搜索，还有时间轴 / 网格双视图</li>
+<li><strong>光影画廊</strong>：拍立得风格的照片墙</li>
+<li><strong>Limbus 歌词演出模拟器</strong>：网页版歌词演出工具，粘贴歌词就能逐句开演</li>
+</ul>
+<h2>用了什么技术？</h2>
+<p>整个网站是<strong>纯 HTML / CSS / JavaScript</strong> 手写的，没有用任何框架和构建工具，所以：</p>
+<ul>
+<li>改完代码 <code>git push</code> 一下就自动上线，特别省心</li>
+<li>托管在 <a href="https://pages.github.com/" target="_blank" rel="noopener">GitHub Pages</a>，免费</li>
+<li>背景氛围、流萤粒子、时钟条、歌词演出引擎、环境电台（Web Audio 合成音乐）都是自己写的</li>
+</ul>
+<blockquote>小提示：右下角有一只像素猫在陪你逛站；点首页的「播放电台」真的会有音乐哦。</blockquote>
+<h2>接下来想做什么？</h2>
+<p>把占位的内容换成真实内容，然后保持每周更新一篇博客（先立个 flag 好了 🚩）。</p>
+<p>如果你也在做自己的小站，欢迎参考我的仓库，一起玩呀～</p>
+        </div>
+
+        <p class="article-end">— 谢谢你看到这里 ✧ —</p>
       </div>
-
-      <div class="prose">
-        <p>撒花！✧(≖ ◡ ≖✿) 我的个人小站终于上线了！这是本站的第一篇博客，趁这个机会记录一下小站是怎么搭起来的。</p>
-
-        <h2>这个网站有什么？</h2>
-        <ul>
-          <li><strong>个人主页</strong>：自我介绍、最新文章、运行状态，还有流萤粒子背景</li>
-          <li><strong>博客</strong>：就是你现在看到的这个板块，带搜索和标签筛选</li>
-          <li><strong>Limbus 歌词演出模拟器</strong>：网页版歌词演出工具，粘贴歌词就能逐句开演，支持本地音乐同步</li>
-          <li><strong>夜间 / 日间模式</strong>：右上角的按钮可以切换</li>
-        </ul>
-
-        <h2>用了什么技术？</h2>
-        <p>整个网站是<strong>纯 HTML / CSS / JavaScript</strong> 手写的，没有用任何框架和构建工具，所以：</p>
-        <ul>
-          <li>改完代码 <code>git push</code> 一下就自动上线，特别省心</li>
-          <li>托管在 <a href="https://pages.github.com/" target="_blank" rel="noopener">GitHub Pages</a>，免费</li>
-          <li>流萤粒子、打字横幅、时钟条、歌词演出引擎都是自己写的百来行小代码</li>
-        </ul>
-        <blockquote>小提示：歌词模拟器的灵感来自 Tempura3 的开源项目和 YouRanCoder 的桌面版重构，详见模拟器页面底部的致谢。</blockquote>
-
-        <h2>接下来想做什么？</h2>
-        <p>把占位的头像和文章换成真实内容，然后保持每周更新一篇博客（先立个 flag 好了 🚩）。</p>
-
-        <p>如果你也在做自己的小站，欢迎参考我的仓库，一起玩呀～</p>
-      </div>
-
-      <p class="article-end">谢谢你看到这里 ✧</p>
     </article>
-  </main>
+
+    <aside>
+      <div class="card side-card side-profile">
+        <div class="avatar-ring"><img src="../assets/avatar.jpg" alt="头像"></div>
+        <div class="side-name">CidneyAurum</div>
+        <p class="side-desc">✏️ 一只喜欢写代码也喜欢看番的普通人类（大概）。</p>
+        <div class="side-social">
+          <a class="social-btn" href="https://github.com/CidneyAurum" target="_blank" rel="noopener" title="GitHub">🐙</a>
+          <a class="social-btn" href="mailto:you@example.com" title="邮箱">💌</a>
+          <a class="social-btn" href="https://space.bilibili.com/xxx" target="_blank" rel="noopener" title="Bilibili">📺</a>
+        </div>
+      </div>
+
+      <div class="card side-card">
+        <div class="side-label">NOW PLAYING</div>
+        <div class="np-row">
+          <img class="np-cover" src="../assets/background.png" alt="">
+          <div class="np-info">
+            <div class="np-title js-player-title">环境电台 · Ambient</div>
+            <div class="np-sub">直面过去，创造未来</div>
+          </div>
+          <button class="np-btn js-play-toggle js-state" aria-label="播放/暂停">▶</button>
+        </div>
+        <div class="np-bar"><div class="fill js-progress-fill"></div></div>
+      </div>
+
+      <div class="card side-card">
+        <div class="side-label">RECORDS</div>
+        <div id="side-records"><div class="side-record"><div class="d">加载中…</div></div></div>
+      </div>
+    </aside>
+  </div>
 
   <footer>
     Made with <span class="heart">♡</span> &amp; 星光 · © 2026 CidneyAurum · Powered by GitHub Pages
   </footer>
 
+  <div class="mini-player">
+    <img class="mini-cover" src="../assets/background.png" alt="">
+    <div>
+      <div class="mini-title js-player-title">环境电台 · Ambient</div>
+      <div class="mini-sub">直面过去，创造未来</div>
+    </div>
+    <button class="mini-btn js-play-toggle js-state" aria-label="播放/暂停">▶</button>
+  </div>
+
   <script src="../js/main.js"></script>
+  <script src="../js/player.js"></script>
 </body>
 </html>

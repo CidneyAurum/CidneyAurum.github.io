@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- 四芒星 favicon -->
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a78bfa"/>
+      <stop offset="0.55" stop-color="#8b7bff"/>
+      <stop offset="1" stop-color="#5ea2ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="24" fill="#0b0d1a"/>
+  <path d="M50 12 C54 36 64 46 88 50 C64 54 54 64 50 88 C46 64 36 54 12 50 C36 46 46 36 50 12 Z" fill="url(#g)"/>
+  <circle cx="50" cy="50" r="7" fill="#e8e6f2" opacity="0.92"/>
+  <circle cx="76" cy="24" r="2.6" fill="#d9b96c"/>
+  <circle cx="24" cy="76" r="2" fill="#ff8fb7"/>
+</svg>

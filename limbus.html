@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Limbus 歌词演出模拟器 · CidneyAurum の 小窝</title>
+  <meta name="description" content="网页版 Limbus 风格歌词演出模拟器：粘贴歌词即可逐行演出，支持手动、自动与本地音乐同步模式。">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.loli.net" crossorigin>
+  <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700;900&family=Noto+Sans+SC:wght@900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="page-enter" data-page="limbus">
+  <canvas id="firefly-canvas" aria-hidden="true"></canvas>
+
+  <nav class="nav">
+    <a class="logo" href="index.html">CidneyAurum<span class="no">の</span>小窝</a>
+    <div class="nav-links" id="nav-links">
+      <a class="nav-link" href="index.html">首页</a>
+      <a class="nav-link" href="blog.html">博客</a>
+      <a class="nav-link active" href="limbus.html">歌词模拟器</a>
+      <a class="nav-link" href="https://github.com/CidneyAurum" target="_blank" rel="noopener">GitHub</a>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button id="theme-toggle" class="icon-btn" aria-label="切换主题">✨</button>
+      <button id="hamburger" class="icon-btn" aria-label="菜单">☰</button>
+    </div>
+  </nav>
+
+  <main class="wrap">
+    <!-- ============ 演出舞台 ============ -->
+    <div class="stage" id="limbus-stage">
+      <div class="stage-topbar"><span>LIMBUS · LIKE · LYRIC</span><span>SIMULATOR WEB</span></div>
+      <div class="stage-line"></div>
+      <div class="lyric-area" id="lyric-area">
+        <div class="stage-idle">— LYRIC SIMULATOR —</div>
+      </div>
+    </div>
+
+    <!-- ============ 控制台 ============ -->
+    <div class="card console-card">
+      <div class="console-grid">
+        <div class="console-left">
+          <textarea id="lyric-input" spellcheck="false" placeholder="在此粘贴歌词，每行一句；支持 [mm:ss.xx] LRC 时间轴"></textarea>
+          <p class="console-hint">
+            ⌨️ 快捷键：<b>空格 / 点击舞台</b> = 下一句 · 每第 3 句触发红色斩击与震屏 · 演出完自动谢幕<br>
+            📝 支持 LRC 格式（带时间轴），纯文本歌词则按行演出
+          </p>
+        </div>
+        <div class="console-right">
+          <span class="ctrl-label">演出模式</span>
+          <div class="ctrl-row">
+            <button class="ctrl-btn" id="btn-next">▶ 下一句</button>
+            <button class="mode-btn" id="btn-auto">⏱ 自动演出</button>
+          </div>
+          <span class="ctrl-label">自动速度：<span id="speed-val">2.2</span> 秒 / 句</span>
+          <input type="range" class="speed" id="speed-range" min="0.5" max="6" step="0.1" value="2.2">
+          <span class="ctrl-label">音乐同步模式</span>
+          <div class="ctrl-row">
+            <button class="mode-btn" id="btn-music" style="border-color:rgba(217,185,108,0.5);">🎼 开始音乐演出</button>
+            <button class="ctrl-btn ghost" id="btn-reset">↺ 重置</button>
+          </div>
+          <input type="file" id="audio-file" accept="audio/*">
+          <p class="audio-state" id="audio-state">选择本地音乐文件 + 带 LRC 时间轴的歌词即可同步演出（音频不会上传，只在本地播放）</p>
+          <p class="audio-state" id="mode-hint"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 项目介绍 ============ -->
+    <section class="block">
+      <h2 class="sec-title serif">关于这个项目<span class="en">ABOUT PROJECT</span></h2>
+      <p class="sec-sub">网页版由本站原创实现；桌面版功能更加完整，欢迎去 GitHub 点个 Star</p>
+      <div class="card project-card">
+        <div class="project-grid">
+          <div>
+            <h3 class="serif" style="font-size:18px;margin-bottom:4px;">🖥️ 桌面版 · LimbusLyricSimulator</h3>
+            <ul>
+              <li>读取系统正在播放的音乐，自动获取播放进度</li>
+              <li>多行歌词同时演出，中英文渲染模式动态切换</li>
+              <li>基于 PyQt-Fluent-Widgets 的 Fluent 风格控制面板</li>
+              <li>最小化到托盘、开机自启动、伴奏/Inst 过滤</li>
+              <li>Windows 桌面歌词 overlay，全屏无边框窗口可用</li>
+            </ul>
+            <p style="margin-top:10px;">
+              <a class="ctrl-btn" style="display:inline-block;text-decoration:none;" href="https://github.com/YouRanCoder/LimbusLyricSimulator" target="_blank" rel="noopener">★ GitHub 仓库</a>
+            </p>
+          </div>
+          <div>
+            <h3 class="serif" style="font-size:18px;margin-bottom:4px;">🌐 网页版 · 本页功能</h3>
+            <ul>
+              <li>三种演出模式：手动推进 / 定时自动 / 本地音乐 + LRC 同步</li>
+              <li>逐字从两侧飞入、撞击震屏、红色斩击特效</li>
+              <li>纯前端实现，歌词与音频都不会上传到任何服务器</li>
+              <li>移动端可用，收藏到主屏幕即可随时开演</li>
+            </ul>
+          </div>
+        </div>
+        <p class="credit">
+          💡 灵感与方案致敬：<a href="https://github.com/TempuraYMY0728/Limbus-Like-Lyric-Simulator" target="_blank" rel="noopener">Tempura3 / Limbus-Like-Lyric-Simulator</a>
+          （原开源歌词显示方案）；桌面版为 <a href="https://github.com/YouRanCoder/LimbusLyricSimulator" target="_blank" rel="noopener">YouRanCoder / LimbusLyricSimulator</a>（GPL-3.0）。本网页版仅借鉴其演出风格思路，代码独立实现。Limbus Company 相关名称权利归 Project Moon 所有。
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Made with <span class="heart">♡</span> &amp; 星光 · © 2026 CidneyAurum · Powered by GitHub Pages
+  </footer>
+
+  <audio id="limbus-audio" preload="auto" style="display:none;"></audio>
+  <script src="js/main.js"></script>
+  <script src="js/limbus.js"></script>
+  <script>
+    // 速度滑杆的数值显示
+    const speedRange = document.getElementById("speed-range");
+    const speedVal = document.getElementById("speed-val");
+    speedRange.addEventListener("input", () => (speedVal.textContent = parseFloat(speedRange.value).toFixed(1)));
+  </script>
+</body>
+</html>

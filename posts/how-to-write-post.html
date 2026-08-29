@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>如何发布一篇新文章 · CidneyAurum の 小窝</title>
+  <meta name="description" content="三步往这个纯静态博客里添加一篇新文章。">
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.loli.net" crossorigin>
+  <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="page-enter" data-page="post">
+  <canvas id="firefly-canvas" aria-hidden="true"></canvas>
+
+  <nav class="nav">
+    <a class="logo" href="../index.html">CidneyAurum<span class="no">の</span>小窝</a>
+    <div class="nav-links" id="nav-links">
+      <a class="nav-link" href="../index.html">首页</a>
+      <a class="nav-link active" href="../blog.html">博客</a>
+      <a class="nav-link" href="../limbus.html">歌词模拟器</a>
+      <a class="nav-link" href="https://github.com/CidneyAurum" target="_blank" rel="noopener">GitHub</a>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button id="theme-toggle" class="icon-btn" aria-label="切换主题">✨</button>
+      <button id="hamburger" class="icon-btn" aria-label="菜单">☰</button>
+    </div>
+  </nav>
+
+  <main class="article-wrap">
+    <a class="back-link" href="../blog.html">« 返回博客列表</a>
+    <article class="card article-card">
+      <h1 class="article-title">如何发布一篇新文章 📝</h1>
+      <div class="article-meta">
+        <span class="post-date">🗓 2026-08-29</span>
+        <span class="tag-mini"># 指南</span>
+      </div>
+
+      <div class="prose">
+        <p>这个博客没有后台、没有数据库，发文就是「<strong>新建一个 HTML 文件 + 在目录里登记一行</strong>」，三步搞定。</p>
+
+        <h2>第 1 步：复制文章模板</h2>
+        <p>把 <code>posts/hello-world.html</code> 复制一份，文件名用英文（这就是文章的 slug），比如 <code>my-first-note.html</code>。文件里的标题、日期、正文改成你自己的，注意里面所有的 <code>../</code> 路径都不要动。</p>
+
+        <h2>第 2 步：在目录里登记</h2>
+        <p>打开 <code>posts/posts.json</code>，往 <code>posts</code> 数组里加一条（注意 JSON 的逗号）：</p>
+        <pre><code>{
+  "slug": "my-first-note",
+  "title": "文章标题",
+  "date": "2026-09-01",
+  "tags": ["日常", "笔记"],
+  "emoji": "🪐",
+  "summary": "显示在博客列表里的一句话摘要"
+}</code></pre>
+        <ul>
+          <li><code>slug</code> 要和文件名一致（不带 .html）</li>
+          <li><code>date</code> 用 <code>YYYY-MM-DD</code> 格式，列表会自动按日期排序</li>
+          <li><code>emoji</code> 是列表封面的表情，不填会自动随机分配</li>
+          <li><code>tags</code> 随便写，列表页会自动生成标签筛选</li>
+        </ul>
+
+        <h2>第 3 步：发布</h2>
+        <pre><code>git add posts/
+git commit -m "发布新文章：xxx"
+git push</code></pre>
+        <p>推送后 GitHub Pages 会自动部署，一两分钟内线上就能看到新文章了。</p>
+
+        <h2>写正文的常用格式</h2>
+        <p>正文写在 <code>&lt;div class="prose"&gt;</code> 里面，所有排版样式都配好了：</p>
+        <ul>
+          <li>小标题用 <code>&lt;h2&gt;</code> / <code>&lt;h3&gt;</code></li>
+          <li>行内代码用 <code>&lt;code&gt;</code>，代码块用 <code>&lt;pre&gt;&lt;code&gt;</code></li>
+          <li>引用用 <code>&lt;blockquote&gt;</code>，图片放 <code>../assets/</code> 里再引用</li>
+        </ul>
+        <blockquote>进阶玩法：如果觉得手写 HTML 麻烦，可以用 ChatGPT / ZCode 这类 AI 帮你把 Markdown 转成 HTML 片段，粘进来就行。</blockquote>
+      </div>
+
+      <p class="article-end">祝你写作愉快 ✧</p>
+    </article>
+  </main>
+
+  <footer>
+    Made with <span class="heart">♡</span> &amp; 星光 · © 2026 CidneyAurum · Powered by GitHub Pages
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

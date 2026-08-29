@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>博客 · CidneyAurum の 小窝</title>
+  <meta name="description" content="CidneyAurum的博客：学习笔记、折腾记录和日常碎碎念。">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.loli.net" crossorigin>
+  <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="page-enter" data-page="blog">
+  <canvas id="firefly-canvas" aria-hidden="true"></canvas>
+
+  <nav class="nav">
+    <a class="logo" href="index.html">CidneyAurum<span class="no">の</span>小窝</a>
+    <div class="nav-links" id="nav-links">
+      <a class="nav-link" href="index.html">首页</a>
+      <a class="nav-link active" href="blog.html">博客</a>
+      <a class="nav-link" href="limbus.html">歌词模拟器</a>
+      <a class="nav-link" href="https://github.com/CidneyAurum" target="_blank" rel="noopener">GitHub</a>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button id="theme-toggle" class="icon-btn" aria-label="切换主题">✨</button>
+      <button id="hamburger" class="icon-btn" aria-label="菜单">☰</button>
+    </div>
+  </nav>
+
+  <main class="wrap">
+    <header class="page-head">
+      <h1>博客</h1>
+      <p>学习笔记 · 折腾记录 · 日常碎碎念</p>
+    </header>
+
+    <!-- 搜索框 -->
+    <div class="search-box">
+      <span class="ico">🔍</span>
+      <input id="search-input" type="text" placeholder="搜寻标题、描述或标签…" autocomplete="off">
+    </div>
+
+    <!-- 标签筛选（JS 自动生成） -->
+    <div class="tag-filter" id="tag-filter"></div>
+
+    <!-- 文章列表（JS 从 posts/posts.json 渲染） -->
+    <div class="post-list" id="post-list">
+      <p class="empty-tip">文章加载中… ✧</p>
+    </div>
+  </main>
+
+  <footer>
+    Made with <span class="heart">♡</span> &amp; 星光 · © 2026 CidneyAurum · Powered by GitHub Pages
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 · 页面迷路了</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <!-- 本页样式全部内联，保证在任何路径深度下都不会加载失败 -->
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      text-align: center;
+      padding: 24px;
+      font-family: "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+      color: #e8e6f2;
+      background:
+        radial-gradient(1000px 560px at 85% -8%, #221648 0%, transparent 60%),
+        radial-gradient(900px 560px at -10% 30%, #0e1e3d 0%, transparent 58%),
+        radial-gradient(800px 500px at 70% 110%, #2a1233 0%, transparent 55%),
+        #0b0d1a;
+    }
+    .code {
+      font-family: Georgia, serif;
+      font-size: 110px; line-height: 1.1; font-weight: 700;
+      background: linear-gradient(92deg, #d4453a, #d9b96c, #8b7bff);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent; color: transparent;
+    }
+    h1 { font-family: "Noto Serif SC", "Songti SC", serif; font-size: 22px; letter-spacing: 0.1em; }
+    p { color: #9290ab; font-size: 15px; line-height: 2; }
+    .btn {
+      display: inline-block; margin-top: 16px; padding: 12px 32px;
+      border-radius: 999px; text-decoration: none; font-size: 15.5px;
+      font-family: "Noto Serif SC", serif; letter-spacing: 0.1em;
+      color: #f3e9d7; background: linear-gradient(120deg, #8e1f1f, #b03a30 55%, #8e1f1f);
+      border: 1px solid rgba(217, 185, 108, 0.45);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 26px rgba(212, 69, 58, 0.45); }
+    .star { position: fixed; border-radius: 50%; background: #c4b5ff; opacity: 0.5; animation: drift linear infinite; pointer-events: none; }
+    @keyframes drift {
+      0%   { transform: translateY(20px); opacity: 0; }
+      20%  { opacity: 0.6; }
+      100% { transform: translateY(-90vh); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <span class="star" style="left:10%; bottom:0; width:3px; height:3px; animation-duration:9s;"></span>
+  <span class="star" style="left:28%; bottom:0; width:2px; height:2px; animation-duration:12s; animation-delay:3s;"></span>
+  <span class="star" style="left:52%; bottom:0; width:4px; height:4px; animation-duration:11s; animation-delay:1s;"></span>
+  <span class="star" style="left:71%; bottom:0; width:2px; height:2px; animation-duration:13s; animation-delay:5s;"></span>
+  <span class="star" style="left:88%; bottom:0; width:3px; height:3px; animation-duration:10s; animation-delay:2s;"></span>
+
+  <div class="code">404</div>
+  <h1>呜…页面迷路了 (´･ω･`)</h1>
+  <p>你要找的页面可能掉进了深空，<br>或者它根本就不存在。</p>
+  <a class="btn" href="/">✧ 带我回主页</a>
+</body>
+</html>

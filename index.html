@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- ✏️ 网站标题和描述，改成你自己的 -->
+  <title>CidneyAurum の 小窝 · 个人主页</title>
+  <meta name="description" content="CidneyAurum的数字小窝：博客、项目、还有 Limbus 风格歌词演出模拟器。">
+  <meta property="og:title" content="CidneyAurum の 小窝">
+  <meta property="og:description" content="博客、项目、还有 Limbus 风格歌词演出模拟器。">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <!-- 衬线中文标题字体（加载失败自动回退宋体，不影响使用） -->
+  <link rel="preconnect" href="https://fonts.loli.net" crossorigin>
+  <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="page-enter" data-page="home">
+  <canvas id="firefly-canvas" aria-hidden="true"></canvas>
+
+  <!-- ✏️ 导航：把 GitHub 链接换成你自己的 -->
+  <nav class="nav">
+    <a class="logo" href="index.html">CidneyAurum<span class="no">の</span>小窝</a>
+    <div class="nav-links" id="nav-links">
+      <a class="nav-link active" href="index.html">首页</a>
+      <a class="nav-link" href="blog.html">博客</a>
+      <a class="nav-link" href="limbus.html">歌词模拟器</a>
+      <a class="nav-link" href="https://github.com/CidneyAurum" target="_blank" rel="noopener">GitHub</a>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button id="theme-toggle" class="icon-btn" aria-label="切换主题">✨</button>
+      <button id="hamburger" class="icon-btn" aria-label="菜单">☰</button>
+    </div>
+  </nav>
+
+  <main class="wrap">
+    <!-- ============ Hero：资料卡 + 宣传卡 ============ -->
+    <header class="hero">
+      <div class="hero-grid">
+        <div class="card profile-card">
+          <div class="profile-top">
+            <!-- ✏️ 头像：想换头像就同名替换 assets/avatar.jpg -->
+            <div class="avatar-ring"><img src="assets/avatar.jpg" alt="头像"></div>
+            <div>
+              <h1 class="profile-name">CidneyAurum</h1>
+              <p class="profile-desc">✏️ 一只喜欢写代码也喜欢看番的普通人类（大概）。白天写代码，晚上补番，周末折腾小东西。</p>
+            </div>
+          </div>
+          <div class="profile-stats">
+            <div class="stat"><div class="num" id="stat-posts">-</div><div class="label">文章</div></div>
+            <div class="stat"><div class="num" id="stat-tags">-</div><div class="label">标签</div></div>
+            <div class="stat"><div class="num" id="stat-days">-</div><div class="label">运行天数</div></div>
+          </div>
+          <div class="social-row">
+            <!-- ✏️ 联系方式 -->
+            <a class="social-btn" href="https://github.com/CidneyAurum" target="_blank" rel="noopener" title="GitHub">🐙</a>
+            <a class="social-btn" href="mailto:you@example.com" title="邮箱">💌</a>
+            <a class="social-btn" href="https://space.bilibili.com/xxx" target="_blank" rel="noopener" title="Bilibili">📺</a>
+          </div>
+        </div>
+
+        <!-- Limbus 歌词模拟器宣传卡（模仿播放器卡布局） -->
+        <a class="card promo-card" href="limbus.html">
+          <div class="promo-head">
+            <div class="promo-cover">🎼</div>
+            <div>
+              <span class="promo-badge">LYRIC SIMULATOR</span>
+              <div class="promo-title serif">Limbus 歌词演出模拟器</div>
+              <div class="promo-sub">网页版 · 无需安装</div>
+            </div>
+          </div>
+          <div class="promo-quote serif">「直面过去，创造未来」</div>
+          <div class="promo-progress"><div class="fill"></div></div>
+          <div class="promo-times"><span>00:00</span><span>♪ ∞</span></div>
+          <span class="promo-btn">▶ 进入演出</span>
+        </a>
+      </div>
+
+      <!-- 横幅打字条 -->
+      <div class="slogan-bar">
+        <div class="slogan-text"><span id="slogan-text"></span><span class="caret"></span></div>
+      </div>
+    </header>
+
+    <!-- ============ 最新文章区 ============ -->
+    <section class="block">
+      <div class="home-grid">
+        <a class="card featured-card" id="featured-link" href="blog.html">
+          <div class="featured-cover"><span id="featured-emoji">🪐</span>
+            <div class="featured-badges">
+              <span class="badge-latest">LATEST INSIGHT</span>
+              <span class="badge-date" id="featured-date">—</span>
+            </div>
+          </div>
+          <div class="featured-body">
+            <h2 class="featured-title" id="featured-title">最新文章加载中…</h2>
+            <p class="featured-summary" id="featured-summary"></p>
+          </div>
+        </a>
+
+        <div class="card records-card">
+          <div class="records-head serif">RECORDS <span class="line"></span> 往期记录</div>
+          <div id="records-list">
+            <div class="record-item"><div class="record-meta">加载中…</div></div>
+          </div>
+        </div>
+
+        <div class="side-stack">
+          <div class="card mini-card" id="mini-night">
+            <span class="mini-ico">✨</span>
+            <span class="mini-title">夜间模式</span>
+            <span class="mini-desc">流萤飞舞的深空</span>
+          </div>
+          <a class="card mini-card" href="blog.html">
+            <span class="mini-ico">📚</span>
+            <span class="mini-title">全部文章</span>
+            <span class="mini-desc">搜索 · 标签 · 归档</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 时钟条 ============ -->
+    <div class="clock-bar">
+      <div class="clock-time" id="clock-time">-- : -- : --</div>
+      <div class="clock-info"><span class="dot"></span>系统已稳定运行 <b id="uptime">…</b> · 愿每一段代码都有回响</div>
+    </div>
+
+    <!-- ============ 关于我 ============ -->
+    <section class="block" id="about">
+      <h2 class="sec-title serif">关于我<span class="en">ABOUT</span></h2>
+      <p class="sec-sub">一只喜欢写代码也喜欢看番的普通人类（大概）</p>
+      <div class="card" style="padding:26px 28px;">
+        <div class="prose" style="margin:0;">
+          <p>你好呀！我是 <strong>CidneyAurum</strong>。白天写<strong>代码</strong>，晚上补<strong>番剧</strong>，周末偶尔画点小画、折腾点小东西。这个网站是我的数字小窝，会记录学习笔记、踩坑记录和日常碎碎念。</p>
+          <p>座右铭：「慢慢来，比较快。」</p>
+        </div>
+        <div class="chips" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;">
+          <!-- ✏️ 你的技能 -->
+          <span class="chip">🌐 HTML / CSS</span>
+          <span class="chip">⚡ JavaScript</span>
+          <span class="chip">🐍 Python</span>
+          <span class="chip">🛠️ Git / GitHub</span>
+          <span class="chip">🎬 视频剪辑</span>
+          <span class="chip">🎮 Limbus Company</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Made with <span class="heart">♡</span> &amp; 星光 · © 2026 CidneyAurum · Powered by GitHub Pages
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    // 小卡片也能切换主题
+    document.getElementById("mini-night").addEventListener("click", () => {
+      document.getElementById("theme-toggle").click();
+    });
+  </script>
+</body>
+</html>

@@ -1168,10 +1168,6 @@ body.light .copy-btn { background: rgba(255, 255, 255, 0.85); }
   position: relative;
   cursor: grab;
   touch-action: none;
-  border: 1px solid rgba(217, 185, 108, 0.28);
-  border-radius: 14px 14px 0 0;
-  overflow: hidden;
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5);
 }
 .kb-stage:active { cursor: grabbing; }
 .kb-stage canvas { display: block; }

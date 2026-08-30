@@ -325,8 +325,7 @@
       const W = stage.clientWidth, H = stage.clientHeight;
       app = new PIXI.Application({
         width: W, height: H,
-        backgroundAlpha: 1,            // 不透明画布：彻底规避透明 WebGL 滚动消失的浏览器合成 bug
-        backgroundColor: 0x12101f,     // 与站点暗色一致的小舞台底色
+        backgroundAlpha: 0,            // 透明背景（此配置在你浏览器验证过可见）
         autoDensity: true,
         resolution: Math.min(2, window.devicePixelRatio || 1),
         preserveDrawingBuffer: true,

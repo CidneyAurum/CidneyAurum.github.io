@@ -459,7 +459,11 @@
   function esc2(s) { return String(s).replace(/[<>&]/g, ""); }
   function core_setMouth(core) {
     const v = Number(window.__kbMouth || 0);
-    if (v > 0.02) core.setParameterValueById("ParamMouthOpenY", Math.min(1, v));
+    if (v > 0.02) { core.setParameterValueById("ParamMouthOpenY", Math.min(1, v)); return; }
+    // 播放中但拿不到音频电平（跨域直连）时，用规律开合模拟唱歌口型
+    if (window.__kbSinging) {
+      core.setParameterValueById("ParamMouthOpenY", 0.2 + 0.3 * Math.abs(Math.sin(Date.now() / 130)));
+    }
   }
 
   /* ---------- 音乐点播指令（本地处理，不进 AI） ---------- */

@@ -14,6 +14,7 @@ const MikuMusic = (function () {
     playlistId: "18205251703", // ✏️ 你的网易云歌单 ID
     publicApis: [
       "https://api.injahow.cn/meting/",
+      "https://met.liiiu.cn/",
       "https://meting.qjqq.cn/api/",
       "https://api.wuenci.com/meting/api/",
     ],
@@ -79,9 +80,9 @@ const MikuMusic = (function () {
   function ensureAudio() {
     if (audio) return audio;
     audio = new Audio();
-    audio.addEventListener("ended", () => next(true));
-    audio.addEventListener("play", () => { playing = true; emit(); });
-    audio.addEventListener("pause", () => { playing = false; emit(); });
+    audio.addEventListener("ended", () => { window.__kbSinging = false; next(true); });
+    audio.addEventListener("play", () => { playing = true; window.__kbSinging = true; emit(); });
+    audio.addEventListener("pause", () => { playing = false; window.__kbSinging = false; emit(); });
     let lastLine = -2;
     audio.addEventListener("loadedmetadata", () => {
       const tot = document.querySelector(".js-mm-total");
@@ -127,13 +128,16 @@ const MikuMusic = (function () {
     window.__kbMouth = 0;
   }
 
-  /* 取一个能播的地址：优先源返回的流链接，其次按 id 再取一次 */
-  async function resolveStream(item) {
-    if (item.stream) return item.stream;
-    const data = await api("url", item.id);
-    const url = (Array.isArray(data) ? data[0] : data).url;
-    if (!url) throw new Error("拿不到播放地址（可能是 VIP 或版权限制）");
-    return url;
+  /* 播放地址候选：① 网易云官方直链（免费歌官方直出，不依赖第三方）
+     ② Meting 源返回的流链接（兜底） */
+  function streamCandidates(item) {
+    const list = [officialStreamUrl(item)];
+    if (item.stream) list.push(item.stream);
+    return list.filter(Boolean);
+  }
+  function officialStreamUrl(item) {
+    if (item.stream && /^https?:\/\//.test(item.stream) && item.stream.includes("music.163.com")) return item.stream;
+    return "https://music.163.com/song/media/outer/url?id=" + item.id + ".mp3";
   }
 
   async function play(item) {
@@ -244,8 +248,19 @@ const MikuMusic = (function () {
 
   async function loadPlaylist() {
     if (queue.length) return queue.length;
-    const list = await api("playlist", CFG.playlistId);
-    queue = normalize(list);
+    let fromCache = false;
+    try {
+      const list = await api("playlist", CFG.playlistId);
+      queue = normalize(list);
+      try { localStorage.setItem("mm_playlist_cache", JSON.stringify(queue)); } catch (e) {}
+    } catch (e) {
+      // 接口全挂：用上次缓存的歌曲列表 + 官方直链播放
+      let cached = null;
+      try { cached = localStorage.getItem("mm_playlist_cache"); } catch (err) {}
+      if (!cached) throw new Error("音乐接口全部失败，且本机没有历史歌单缓存");
+      try { queue = JSON.parse(cached); } catch (err2) { throw new Error("本地歌单缓存损坏"); }
+      fromCache = true;
+    }
     if (!queue.length) throw new Error("歌单读取失败了");
     qi = -1;
     emit();

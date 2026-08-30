@@ -440,6 +440,7 @@ const MikuMusic = (function () {
   return {
     searchAndPlay, playPlaylist, loadPlaylist, playIndex, next, toggle,
     getState, getQueue: () => queue.slice(), on, playlistId: CFG.playlistId,
+    popLyric,  // 调试/测试用：手动弹出一行歌词
     lyricOverlay: { toggle: loToggle, open: () => setOverlay(true), close: () => setOverlay(false) },
 
   };

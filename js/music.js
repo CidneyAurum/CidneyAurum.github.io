@@ -181,16 +181,21 @@ const MikuMusic = (function () {
         if (currentLrc.length) return;
       } catch (e) { /* 试下一个源 */ }
     }
-    // ② lrclib.net 兜底（开放 API，无需 Key）
-    try {
-      const q = new URLSearchParams({ track_name: item.name || "", artist_name: item.artist || "" });
-      const res = await fetch("https://lrclib.net/api/search?" + q.toString());
-      if (res.ok) {
+    // ② lrclib.net 兜底（开放 API，无需 Key）——多组关键词尝试
+    const artistFirst = (item.artist || "").split("/")[0].trim();
+    const tries = [
+      { track_name: item.name || "", artist_name: artistFirst },
+      { track_name: item.name || "" },
+    ];
+    for (const q of tries) {
+      try {
+        const res = await fetch("https://lrclib.net/api/search?" + new URLSearchParams(q).toString());
+        if (!res.ok) continue;
         const list = await res.json();
         const synced = list.find((d) => d.syncedLyrics) || list[0];
-        if (synced && synced.syncedLyrics) currentLrc = parseLrc(synced.syncedLyrics);
-      }
-    } catch (e) { /* 无歌词照常播 */ }
+        if (synced && synced.syncedLyrics) { currentLrc = parseLrc(synced.syncedLyrics); break; }
+      } catch (e) { /* 下一种组合 */ }
+    }
   }
 
   function lrcIndexAt(time) {

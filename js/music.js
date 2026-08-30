@@ -221,21 +221,37 @@ const MikuMusic = (function () {
 
   async function loadPlaylist() {
     if (queue.length) return queue.length;
-    let fromCache = false;
+    // ① 仓库内置歌单快照（data/playlist.json，构建时快照，永不失败）
     try {
-      queue = normalize(await api("playlist", CFG.playlistId));
-      try { localStorage.setItem("mm_playlist_cache", JSON.stringify(queue)); } catch (e) {}
-    } catch (e) {
-      // 接口全挂：用上次缓存的歌曲列表 + 官方直链播放
-      let cached = null;
-      try { cached = localStorage.getItem("mm_playlist_cache"); } catch (err) {}
-      if (!cached) throw new Error("音乐接口全部失败，且本机没有历史歌单缓存");
-      try { queue = JSON.parse(cached); } catch (err2) { throw new Error("本地歌单缓存损坏"); }
-      fromCache = true;
+      const res = await fetch("data/playlist.json", { cache: "no-cache" });
+      if (res.ok) {
+        const data = await res.json();
+        queue = (data.playlist || []).filter((s) => s.id);
+      }
+    } catch (e) { /* 落到接口 */ }
+    // ② 仓库快照不存在时：Meting 接口 / 本地缓存
+    if (!queue.length) {
+      try {
+        queue = normalize(await api("playlist", CFG.playlistId));
+      } catch (e) {
+        let cached = null;
+        try { cached = localStorage.getItem("mm_playlist_cache"); } catch (err) {}
+        if (!cached) throw new Error("歌单加载失败且无缓存");
+        queue = JSON.parse(cached);
+      }
     }
     if (!queue.length) throw new Error("歌单读取失败了");
     qi = -1;
     emit();
+    // ③ 后台静默刷新（接口可用时更新缓存，失败不影响当前列表）
+    api("playlist", CFG.playlistId).then((list) => {
+      const fresh = normalize(list);
+      if (fresh.length) {
+        queue = fresh;
+        try { localStorage.setItem("mm_playlist_cache", JSON.stringify(queue)); } catch (e) {}
+        emit();
+      }
+    }).catch(() => {});
     return queue.length;
   }
 

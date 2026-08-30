@@ -27,6 +27,7 @@
 
   <!-- 像素小装饰 -->
   <svg class="pixel-deco cat" viewBox="0 0 11 8" aria-hidden="true"><g fill="#e8e5f2"><rect x="1" y="0" width="1" height="1"/><rect x="2" y="1" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/><rect x="1" y="2" width="8" height="4"/><rect x="2" y="6" width="6" height="2"/><rect x="9" y="5" width="2" height="1"/></g><g fill="#ff8fb7"><rect x="2" y="0" width="1" height="1"/><rect x="7" y="0" width="1" height="1"/></g><g fill="#2a2a3e"><rect x="3" y="3" width="1" height="1"/><rect x="6" y="3" width="1" height="1"/></g></svg>
+
   <svg class="pixel-deco fish" viewBox="0 0 7 4" aria-hidden="true"><g fill="#7cc7ff"><rect x="1" y="1" width="4" height="2"/><rect x="2" y="0" width="2" height="1"/><rect x="2" y="3" width="2" height="1"/><rect x="5" y="0" width="1" height="1"/><rect x="5" y="3" width="1" height="1"/><rect x="6" y="1" width="1" height="2"/></g><rect x="2" y="1" width="1" height="1" fill="#1a2a4a"/></svg>
   <button id="to-top" class="to-top" aria-label="返回顶部">✦</button>
 
@@ -116,13 +117,20 @@
             </div>
           </div>
         </div>
+      </div>
 
         <!-- 打字横幅 -->
       <div class="slogan-bar">
         <div class="slogan-dots"><i></i><i></i><i></i></div>
         <div class="slogan-text"><span id="slogan-text"></span><span class="caret"></span></div>
-        <div class="lyric-takeover" hidden></div>
         <svg class="slogan-cat" viewBox="0 0 11 8" aria-hidden="true"><g fill="#e8e5f2"><rect x="1" y="0" width="1" height="1"/><rect x="2" y="1" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/><rect x="1" y="2" width="8" height="4"/><rect x="2" y="6" width="6" height="2"/><rect x="9" y="5" width="2" height="1"/></g><g fill="#ff8fb7"><rect x="2" y="0" width="1" height="1"/><rect x="7" y="0" width="1" height="1"/></g><g fill="#2a2a3e"><rect x="3" y="3" width="1" height="1"/><rect x="6" y="3" width="1" height="1"/></g></svg>
+      </div>
+
+      <!-- 歌词横幅（播放时同步网易云歌词） -->
+      <div class="lyric-bar" id="lyric-bar">
+        <div class="eq"><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="lb-text serif">点歌单里的歌，或跟 Miku 说「放 歌名」♪</div>
+        <span class="lb-note">♪</span>
       </div>
     </header>
 

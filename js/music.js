@@ -270,53 +270,44 @@ const MikuMusic = (function () {
     listeners.forEach((fn) => { try { fn(st); } catch (e) {} });
     document.dispatchEvent(new CustomEvent("mikumusic", { detail: st }));
     try { loTick(); } catch (e) {}
-    try { sloganTick(); } catch (e) {}
+    try { lyricBarTick(); } catch (e) {}
   }
   function on(fn) { listeners.add(fn); }
 
-  /* ---------- 主界面横幅 · 边狱巴士歌词舞台（播放时接管打字横幅） ---------- */
-  let lastSLine = -2;
+  /* ---------- 歌词横幅（参考站布局：音浪柱 + 逐字打字 + 音符） ---------- */
+  let lastBarLine = -2, typingTimer = 0;
 
-  function sloganTick(force) {
-    const bar = document.getElementById("slogan-bar");
+  function lyricBarTick(force) {
+    const bar = document.getElementById("lyric-bar");
     if (!bar) return;
     const st = getState();
-    const show = st.playing && st.lrc.length > 0;
-    bar.classList.toggle("limbus-on", show);
-    const take = document.getElementById("lyric-takeover");
-    if (!take) return;
-    take.hidden = !show;
-    if (!show) return;
-    if (st.lrcLine !== lastSLine || force) {
-      lastSLine = st.lrcLine;
-      take.innerHTML = "";
-      bar.classList.remove("slam");
-      bar.querySelectorAll(".slash").forEach((x) => x.remove());
-      if (st.lrcLine < 0 || !st.lrc[st.lrcLine]) {
-        take.innerHTML = '<div class="stage-idle">♪ ' + esc(st.current ? st.current.name : "MUSIC") + '</div>';
-        return;
+    const textEl = bar.querySelector(".lb-text");
+    if (!textEl) return;
+    bar.classList.toggle("playing", !!st.playing);
+
+    // 没有队列：显示提示
+    if (!st.hasQueue) {
+      if (textEl.dataset.mode !== "hint") {
+        textEl.dataset.mode = "hint";
+        clearInterval(typingTimer);
+        textEl.textContent = "点歌单里的歌，或跟 Miku 说「放 歌名」♪";
       }
-      const line = st.lrc[st.lrcLine];
-      const el = document.createElement("div");
-      el.className = "lyric-line";
-      if (st.lrcLine % 3 === 2) el.classList.add("shake");
-      let k = 0;
-      for (const ch of line.text) {
-        const sp = document.createElement("span");
-        sp.className = "char " + (k % 2 === 0 ? "in-left" : "in-right");
-        sp.style.animationDelay = (k % 2 === 0 ? 0 : 0.05) + k * 0.014 + "s";
-        sp.textContent = ch === " " ? " " : ch;
-        el.appendChild(sp);
-        k++;
-      }
-      take.appendChild(el);
-      if (st.lrcLine % 3 === 2) {
-        const slash = document.createElement("div");
-        slash.className = "slash go";
-        take.appendChild(slash);
-        void bar.offsetWidth;
-        bar.classList.add("slam");
-      }
+      return;
+    }
+    // 播放中：当前歌词逐字打出
+    const line = st.lrcLine >= 0 && st.lrc[st.lrcLine] ? st.lrc[st.lrcLine].text : "♪ " + (st.current ? st.current.name : "");
+    const key = st.lrcLine + "|" + line;
+    if (textEl.dataset.key !== key || force) {
+      textEl.dataset.key = key;
+      textEl.dataset.mode = "lyric";
+      clearInterval(typingTimer);
+      let i = 0;
+      textEl.textContent = "";
+      typingTimer = setInterval(() => {
+        i++;
+        textEl.textContent = line.slice(0, i);
+        if (i >= line.length) clearInterval(typingTimer);
+      }, 65);
     }
   }
 

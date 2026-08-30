@@ -325,10 +325,11 @@
       const W = stage.clientWidth, H = stage.clientHeight;
       app = new PIXI.Application({
         width: W, height: H,
-        backgroundAlpha: 0,
+        backgroundAlpha: 1,            // 不透明画布：彻底规避透明 WebGL 滚动消失的浏览器合成 bug
+        backgroundColor: 0x12101f,     // 与站点暗色一致的小舞台底色
         autoDensity: true,
         resolution: Math.min(2, window.devicePixelRatio || 1),
-        preserveDrawingBuffer: true, // 允许截图/录屏捕捉到模型画面
+        preserveDrawingBuffer: true,
       });
       stage.insertBefore(app.view, stage.firstChild);
       $("kb-loading").remove();

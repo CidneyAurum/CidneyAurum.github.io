@@ -158,6 +158,7 @@ POST_TEMPLATE = """<!DOCTYPE html>
   <link rel="stylesheet" href="../css/style.css">
 </head>
 <body class="page-enter" data-page="post">
+  <div class="read-progress" id="read-progress"></div>
   <div class="scene" aria-hidden="true">
     <img class="scene-bg" src="../assets/background.png" alt="">
     <div class="scene-overlay"></div>

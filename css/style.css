@@ -1812,3 +1812,30 @@ body.light .nav { box-shadow: 0 8px 32px rgba(90, 70, 180, 0.15); }
 .fab:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(143, 123, 255, 0.4); }
 #fab-music { color: var(--gold); }
 .fab-group .to-top { position: static; opacity: 1; pointer-events: auto; transform: none; }
+
+/* ============ 阅读进度条 + 说说头部 ============ */
+.read-progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 3px;
+  width: 0;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent-pink));
+  z-index: 300;
+  transition: width 0.08s linear;
+  pointer-events: none;
+}
+.says-hero {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 22px 26px;
+  margin-top: 130px;
+}
+.says-hero .says-avatar { width: 64px; height: 64px; }
+.says-hero-main { flex: 1; min-width: 0; }
+.says-hero-name { font-size: 22px; font-weight: 900; color: var(--text); }
+.says-hero-desc { font-size: 13px; color: var(--text-light); margin-top: 4px; }
+.says-hero-desc b { color: var(--accent); }
+@media (max-width: 680px) {
+  .says-hero { flex-wrap: wrap; margin-top: 110px; }
+}

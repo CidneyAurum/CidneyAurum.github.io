@@ -506,6 +506,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 });
 
+/* ---------- 文章阅读进度条 ---------- */
+document.addEventListener("DOMContentLoaded", () => {
+  const bar = document.getElementById("read-progress");
+  if (!bar) return;
+  const update = () => {
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    bar.style.width = (max > 0 ? (window.scrollY / max) * 100 : 0) + "%";
+  };
+  window.addEventListener("scroll", update, { passive: true });
+  window.addEventListener("resize", update);
+  update();
+});
+
 /* ---------- 说说渲染（says.html） ---------- */
 document.addEventListener("DOMContentLoaded", async () => {
   const list = document.getElementById("says-list");
@@ -518,6 +531,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     list.innerHTML = '<p class="empty-tip">说说加载失败…</p>';
     return;
   }
+  const countEl = document.getElementById("says-count");
+  if (countEl) countEl.textContent = says.length;
   if (!says.length) {
     list.innerHTML = '<p class="empty-tip">还没有说说，去写作台发第一条吧 ♢</p>';
     return;

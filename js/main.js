@@ -591,7 +591,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   let keyword = "", activeTag = null, view = "timeline";
   try {
     const saved = JSON.parse(sessionStorage.getItem("blog_state") || "null");
-    window.__dbg = { raw: sessionStorage.getItem("blog_state"), saved, when: new Date().toISOString(), probe: sessionStorage.getItem("probe_test") };
     if (saved) {
       keyword = saved.keyword || "";
       activeTag = saved.activeTag || null;
@@ -621,7 +620,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       return tagOk && (!kw || hay.includes(kw));
     });
     const empty = '<p class="empty-tip">没有找到匹配的档案…换个关键词试试吧 (´･ω･`)</p>';
-    gridEl.innerHTML = shown.length
+    listEl.innerHTML = shown.length
       ? shown.map((p, i) => `
           <a class="post-item card" href="posts/${encodeURIComponent(p.slug)}.html">
             <div class="post-cover">${coverHTML2(p, i)}</div>
@@ -653,7 +652,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       filterBar.querySelectorAll(".chip").forEach((c) => c.classList.toggle("on", (c.dataset.tag || null) === activeTag));
     }
     document.querySelectorAll(".view-btn").forEach((b) => b.classList.toggle("on", b.dataset.view === view));
-    gridEl.classList.toggle("on", view === "grid");
+    listEl.classList.toggle("on", view === "grid");
     tlEl.classList.toggle("on", view === "timeline");
     // 恢复滚动位置
     const rs = sessionStorage.getItem("blog_restore_scroll");
@@ -687,7 +686,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     btn.addEventListener("click", () => {
       view = btn.dataset.view;
       document.querySelectorAll(".view-btn").forEach((b) => b.classList.toggle("on", b === btn));
-      gridEl.classList.toggle("on", view === "grid");
+      listEl.classList.toggle("on", view === "grid");
       tlEl.classList.toggle("on", view === "timeline");
       saveState();
     });
@@ -758,22 +757,22 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 /* ---------- 归档页：双视图 + 搜索 + 标签 ---------- */
 document.addEventListener("DOMContentLoaded", async () => {
-  const gridEl = document.getElementById("post-grid");
+  const listEl = document.getElementById("post-grid");
   const tlEl = document.getElementById("post-timeline");
-  if (!gridEl || !tlEl) return;
+  if (!listEl || !tlEl) return;
   const searchInput = document.getElementById("search-input");
   const filterBar = document.getElementById("tag-filter");
   let posts = [];
   try {
     posts = await loadPosts();
   } catch {
-    gridEl.innerHTML = '<p class="empty-tip">(´･ω･`) 档案加载失败了…<br>本地预览请用本地服务器（见 README）。</p>';
+    listEl.innerHTML = '<p class="empty-tip">(´･ω･`) 档案加载失败了…<br>本地预览请用本地服务器（见 README）。</p>';
     return;
   }
   const countEl = document.getElementById("archive-count");
   if (countEl) countEl.textContent = posts.length;
   if (!posts.length) {
-    gridEl.innerHTML = '<p class="empty-tip">还没有档案，快去写第一篇吧 ✧</p>';
+    listEl.innerHTML = '<p class="empty-tip">还没有档案，快去写第一篇吧 ✧</p>';
     return;
   }
 
@@ -807,7 +806,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       return tagOk && (!kw || hay.includes(kw));
     });
     const empty = '<p class="empty-tip">没有找到匹配的档案…换个关键词试试吧 (´･ω･`)</p>';
-    gridEl.innerHTML = shown.length
+    listEl.innerHTML = shown.length
       ? shown.map((p, i) => `
           <a class="post-item card" href="posts/${encodeURIComponent(p.slug)}.html">
             <div class="post-cover">${coverHTML(p, i)}</div>
@@ -859,7 +858,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     btn.addEventListener("click", () => {
       view = btn.dataset.view;
       document.querySelectorAll(".view-btn").forEach((b) => b.classList.toggle("on", b === btn));
-      gridEl.classList.toggle("on", view === "grid");
+      listEl.classList.toggle("on", view === "grid");
       tlEl.classList.toggle("on", view === "timeline");
       saveState();
     });
@@ -868,7 +867,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (keyword && searchInput) searchInput.value = keyword;
   filterBar && filterBar.querySelectorAll(".chip").forEach((c) => c.classList.toggle("on", (c.dataset.tag || null) === activeTag && (activeTag || c.dataset.tag === "")));
   document.querySelectorAll(".view-btn").forEach((b) => b.classList.toggle("on", b.dataset.view === view));
-  gridEl.classList.toggle("on", view === "grid");
+  listEl.classList.toggle("on", view === "grid");
   tlEl.classList.toggle("on", view === "timeline");
   render();
   const rs = sessionStorage.getItem("blog_restore_scroll");

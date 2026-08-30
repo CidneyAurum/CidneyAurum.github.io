@@ -159,12 +159,28 @@ const MikuMusic = (function () {
 
   async function loadLrc(item) {
     currentLrc = [];
-    // ① Meting 源（有的返回原始 LRC 文本，有的返回 JSON）
+    // ① lrclib.net 优先（稳定、开放、无需 Key）
+    const artistFirst = (item.artist || "").split("/")[0].trim();
+    const tries = [
+      { track_name: item.name || "", artist_name: artistFirst },
+      { track_name: item.name || "" },
+    ];
+    for (const q of tries) {
+      try {
+        const res = await fetch("https://lrclib.net/api/search?" + new URLSearchParams(q).toString());
+        if (res.ok) {
+          const list = await res.json();
+          const synced = list.find((d) => d.syncedLyrics) || list[0];
+          if (synced && synced.syncedLyrics) { currentLrc = parseLrc(synced.syncedLyrics); return; }
+        }
+      } catch (e) { /* 下一种组合 */ }
+    }
+    // ② Meting 源 lrc（有的返回原始 LRC 文本，有的返回 JSON）
     for (const base of apiSources()) {
       try {
         if (!item.id) break;
         const ctrl = new AbortController();
-        const timer = setTimeout(() => ctrl.abort(), 8000);
+        const timer = setTimeout(() => ctrl.abort(), 5000);
         const res = await fetch(base + "?type=lrc&server=netease&id=" + encodeURIComponent(item.id), {
           signal: ctrl.signal,
         });
@@ -180,21 +196,6 @@ const MikuMusic = (function () {
         }
         if (currentLrc.length) return;
       } catch (e) { /* 试下一个源 */ }
-    }
-    // ② lrclib.net 兜底（开放 API，无需 Key）——多组关键词尝试
-    const artistFirst = (item.artist || "").split("/")[0].trim();
-    const tries = [
-      { track_name: item.name || "", artist_name: artistFirst },
-      { track_name: item.name || "" },
-    ];
-    for (const q of tries) {
-      try {
-        const res = await fetch("https://lrclib.net/api/search?" + new URLSearchParams(q).toString());
-        if (!res.ok) continue;
-        const list = await res.json();
-        const synced = list.find((d) => d.syncedLyrics) || list[0];
-        if (synced && synced.syncedLyrics) { currentLrc = parseLrc(synced.syncedLyrics); break; }
-      } catch (e) { /* 下一种组合 */ }
     }
   }
 

@@ -258,7 +258,11 @@
       };
 
       await load();
-      document.addEventListener("mikumusic", render);
+      document.addEventListener("mikumusic", (e) => {
+        render();
+        const cur = list.querySelector(".track-item.on");
+        if (cur && e.detail && e.detail.playing) cur.scrollIntoView({ block: "nearest" });
+      });
       document.getElementById("music-retry").addEventListener("click", async () => {
         window.MikuMusic.reloadPlaylist();
         await load();

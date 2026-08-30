@@ -1685,3 +1685,52 @@ body.light .nav { box-shadow: 0 8px 32px rgba(90, 70, 180, 0.15); }
 @media (max-width: 680px) {
   .says-grid.grid3 { grid-template-columns: 1fr 1fr; }
 }
+
+/* ============ v9：细节打磨 ============ */
+/* 全站滚动条 */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(143, 123, 255, 0.35);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background-color: rgba(143, 123, 255, 0.6); }
+.track-list::-webkit-scrollbar, .kb-msgs::-webkit-scrollbar { width: 6px; }
+.track-list::-webkit-scrollbar-thumb { background: rgba(143, 123, 255, 0.45); }
+
+/* 导航悬停下划线滑入 */
+.nav-link::before {
+  content: "";
+  position: absolute;
+  left: 50%; bottom: -3px;
+  width: 0; height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+  transition: width 0.25s ease, left 0.25s ease;
+}
+.nav-link:hover::before { left: 15%; width: 70%; }
+.nav-link.active::before { width: 0; }
+
+/* hero 入场交错 + 歌词条入场 */
+.hero .profile-card { animation: pageIn 0.7s ease 0.05s both; }
+.hero .player-card { animation: pageIn 0.7s ease 0.18s both; }
+.slogan-bar { animation: pageIn 0.7s ease 0.3s both; }
+.lyric-bar { animation: pageIn 0.7s ease 0.42s both; }
+
+/* 时钟状态点脉动 */
+.clock-info .dot { animation: dotPulse 2.2s ease infinite; }
+@keyframes dotPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.45); }
+  50% { box-shadow: 0 0 0 7px rgba(74, 222, 128, 0); }
+}
+
+/* 当前播放行：三点跳动音浪 */
+.teq { display: inline-flex; gap: 2.5px; align-items: flex-end; height: 13px; width: 15px; flex-shrink: 0; }
+.teq i { width: 3px; border-radius: 1.5px; background: var(--accent); height: 40%; animation: eqBounce 0.8s ease-in-out infinite; }
+.teq i:nth-child(2) { animation-delay: 0.18s; }
+.teq i:nth-child(3) { animation-delay: 0.36s; }
+
+/* 说说页顶部发布入口 */
+.says-top { display: flex; justify-content: center; margin: 18px 0 0; }

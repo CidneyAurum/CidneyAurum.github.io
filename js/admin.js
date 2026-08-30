@@ -468,11 +468,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  /* ---------- 标签页切换 ---------- */
+  /* ---------- 标签页切换（支持 ?tab=say 直达） ---------- */
+  function activateTab(name) {
+    document.querySelectorAll(".tab-btn").forEach((b) => b.classList.toggle("on", b.dataset.tab === name));
+    document.querySelectorAll(".tab-pane").forEach((p) => (p.style.display = p.id === "tab-" + name ? "" : "none"));
+  }
   document.querySelectorAll(".tab-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".tab-btn").forEach((b) => b.classList.toggle("on", b === btn));
-      document.querySelectorAll(".tab-pane").forEach((p) => (p.style.display = p.id === "tab-" + btn.dataset.tab ? "" : "none"));
-    });
+    btn.addEventListener("click", () => activateTab(btn.dataset.tab));
   });
+  const wantTab = new URLSearchParams(location.search).get("tab");
+  if (wantTab) activateTab(wantTab);
 });

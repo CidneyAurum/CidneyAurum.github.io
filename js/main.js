@@ -19,6 +19,18 @@ const SITE_CONFIG = {
 
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+/* 切走标签页时的标题彩蛋 */
+document.addEventListener("visibilitychange", () => {
+  const base = (document.title || "").split(" ||")[0];
+  document.title = document.hidden ? base + " || (´･ω･`) 回来看看呀" : base;
+});
+
+/* 控制台彩蛋 */
+try {
+  console.log("%c✧ CidneyAurum の 小窝 ✧", "color:#8b7bff;font-size:22px;font-weight:bold;font-family:serif");
+  console.log("%c嘿！扒控制台的同行你好呀 ♪ 源码开源在 github.com/CidneyAurum/CidneyAurum.github.io，点个 star 再走～", "color:#d9b96c");
+} catch (e) {}
+
 /* ---------- 主题（默认夜间，可切日间） ---------- */
 (function initTheme() {
   const saved = localStorage.getItem("theme");

@@ -54,6 +54,15 @@
   };
 
   const EMOTES = ["比心", "圈圈", "脸红", "前倾", "唱歌", "葱", "QQ人"];
+  // 挂件用 absolute+手动钉屏 定位：不依赖 position:fixed（部分浏览器滚动后
+  // 会停止呈现固定的透明 WebGL 画布）。pin.offsetY = 视口内期望的顶部位置。
+  const pin = { left: 14, offsetY: Math.max(80, window.innerHeight - 400) };
+  function applyPin() {
+    const el = document.getElementById("kanban");
+    if (!el) return;
+    el.style.left = Math.max(4, Math.min(window.innerWidth - 120, pin.left)) + "px";
+    el.style.top = (window.scrollY + Math.max(60, Math.min(window.innerHeight - 120, pin.offsetY))) + "px";
+  }
   let model = null, app = null, booted = false, bubbleTimer = null;
   let history = []; // [{role, content}]
   const store = {
@@ -113,12 +122,12 @@
     });
     document.body.appendChild(min);
 
-    // 恢复上次拖拽的位置
+    // 恢复上次拖拽的位置（absolute + top 方案，滚屏永不消失）
     try {
       const pos = JSON.parse(localStorage.getItem("kb_pos") || "null");
       if (pos && window.innerWidth > 900) {
-        el.style.left = Math.max(4, Math.min(window.innerWidth - 120, pos.left)) + "px";
-        el.style.bottom = Math.max(0, Math.min(window.innerHeight - 100, pos.bottom)) + "px";
+        pin.left = Math.max(4, Math.min(window.innerWidth - 120, pos.left));
+        pin.offsetY = Math.max(60, pos.offsetY || 80);
       }
     } catch (e) {}
 
@@ -361,27 +370,25 @@
         bubble(CFG.tapLines[Math.floor(Math.random() * CFG.tapLines.length)]);
       });
 
-      // 拖拽整个挂件
+      // 拖拽整个挂件（top 基准）
       let dragging = null;
       const host = document.getElementById("kanban");
       stage.addEventListener("pointerdown", (e) => {
         if (e.button !== 0) return;
         const rect = host.getBoundingClientRect();
-        dragging = { x: e.clientX, y: e.clientY, left: rect.left, bottom: window.innerHeight - rect.bottom };
+        dragging = { x: e.clientX, y: e.clientY, left: rect.left, top: rect.top, scrollY: window.scrollY };
         stage.setPointerCapture(e.pointerId);
       });
       stage.addEventListener("pointermove", (e) => {
         if (!dragging) return;
-        const nx = dragging.left + e.clientX - dragging.x;
-        const nb = dragging.bottom + (e.clientY - dragging.y);
-        host.style.left = Math.max(4, Math.min(window.innerWidth - 120, nx)) + "px";
-        host.style.bottom = Math.max(0, Math.min(window.innerHeight - 100, nb)) + "px";
+        pin.left = Math.max(4, Math.min(window.innerWidth - 120, dragging.left + e.clientX - dragging.x));
+        pin.offsetY = Math.max(60, Math.min(window.innerHeight - 120, dragging.top + e.clientY - dragging.y));
+        applyPin();
       });
       stage.addEventListener("pointerup", () => {
         if (dragging) {
-          // 记住拖拽后的位置
           const rect = host.getBoundingClientRect();
-          localStorage.setItem("kb_pos", JSON.stringify({ left: rect.left, bottom: window.innerHeight - rect.bottom }));
+          localStorage.setItem("kb_pos", JSON.stringify({ left: pin.left, offsetY: Math.round(rect.top) }));
         }
         dragging = null;
       });
@@ -401,27 +408,15 @@
       }
       setTimeout(() => bubble("嗨～我是 Miku，点我聊天、点歌哦 ♪"), 1800);
 
-      // 滚动/切页时的呈现兜底：补帧 + 强制画布重新合成（治"滚动后不显示"）
-      let scrollRaf = 0, visT = 0;
-      const forceRecomposite = () => {
-        const c = stage.querySelector("canvas");
-        if (!c) return;
-        c.style.visibility = "hidden";
-        void c.offsetHeight;
-        c.style.visibility = "visible";
-      };
+      // 滚动：钉住挂件位置（absolute 布局靠手动同步）+ 补帧
+      let scrollRaf = 0;
       window.addEventListener("scroll", () => {
+        applyPin();
         if (scrollRaf) return;
-        scrollRaf = requestAnimationFrame(() => {
-          app.render();
-          forceRecomposite();
-          clearTimeout(visT);
-          visT = setTimeout(() => { app.render(); forceRecomposite(); }, 220);
-          scrollRaf = 0;
-        });
+        scrollRaf = requestAnimationFrame(() => { app.render(); scrollRaf = 0; });
       }, { passive: true });
       document.addEventListener("visibilitychange", () => {
-        if (!document.hidden) { app.render(); forceRecomposite(); }
+        if (!document.hidden) { applyPin(); app.render(); }
       });
 
       // 窗口尺寸变化：重设渲染器与模型位置

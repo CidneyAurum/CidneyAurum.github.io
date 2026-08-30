@@ -1137,8 +1137,8 @@ body.light .copy-btn { background: rgba(255, 255, 255, 0.85); }
 
 /* ============ v4：看板娘 ============ */
 .kanban {
-  position: fixed;
-  left: 14px; bottom: 0;
+  position: absolute;   /* absolute+JS钉屏：不依赖 position:fixed（规避浏览器滚动呈现 bug） */
+  left: 14px; top: 200px;
   z-index: 90;
   display: flex; flex-direction: column; align-items: flex-start;
   transition: transform .3s ease;

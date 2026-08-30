@@ -316,7 +316,6 @@ const MikuMusic = (function () {
   /* 界面弹出的大字歌词（逐字飞入，3 秒后淡出） */
   let popTimer = 0;
   function popLyric(text, lineIdx) {
-    if (reduceMotion) return;
     let host = document.getElementById("lyric-pop-host");
     if (!host) {
       host = document.createElement("div");

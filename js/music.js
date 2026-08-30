@@ -332,6 +332,7 @@ const MikuMusic = (function () {
     if (!host) {
       host = document.createElement("div");
       host.id = "lyric-pop-host";
+      host.className = "lyric-pop-host"; // 样式按类名匹配（之前漏了这行导致弹层无样式）
       document.body.appendChild(host);
     }
     host.innerHTML = "";

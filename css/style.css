@@ -1734,3 +1734,81 @@ body.light .nav { box-shadow: 0 8px 32px rgba(90, 70, 180, 0.15); }
 
 /* 说说页顶部发布入口 */
 .says-top { display: flex; justify-content: center; margin: 18px 0 0; }
+
+/* ============ v11：首页搜索胶囊 + 悬浮按钮组 + 播放联动 ============ */
+.home-search {
+  position: relative;
+  margin-top: 22px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 15px 26px;
+  border-radius: 999px;
+  background: rgba(10, 14, 30, 0.85);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: var(--shadow);
+  z-index: 6;
+}
+.home-search .hs-ico { font-size: 15px; opacity: 0.75; }
+.home-search input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 14.5px;
+  font-family: var(--font-body);
+}
+.home-search input::placeholder { color: var(--text-light); }
+.hs-drop {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0; right: 0;
+  border-radius: 16px;
+  background: rgba(10, 14, 30, 0.96);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  z-index: 50;
+}
+.hs-item {
+  display: block;
+  padding: 12px 22px;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  transition: background 0.2s;
+}
+.hs-item:last-child { border-bottom: none; }
+.hs-item:hover { background: var(--chip-bg); }
+.hs-item b { display: block; font-family: var(--font-serif); font-size: 14.5px; }
+.hs-item span { display: block; font-size: 11.5px; color: var(--text-light); margin-top: 3px; }
+.hs-item.hs-none { color: var(--text-light); cursor: default; }
+
+.fab-group {
+  position: fixed;
+  right: 22px; bottom: 22px;
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.fab {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card-deep);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--text);
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: all 0.25s;
+}
+.fab:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(143, 123, 255, 0.4); }
+#fab-music { color: var(--gold); }
+.fab-group .to-top { position: static; opacity: 1; pointer-events: auto; transform: none; }

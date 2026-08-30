@@ -29,7 +29,10 @@
   <svg class="pixel-deco cat" viewBox="0 0 11 8" aria-hidden="true"><g fill="#e8e5f2"><rect x="1" y="0" width="1" height="1"/><rect x="2" y="1" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/><rect x="1" y="2" width="8" height="4"/><rect x="2" y="6" width="6" height="2"/><rect x="9" y="5" width="2" height="1"/></g><g fill="#ff8fb7"><rect x="2" y="0" width="1" height="1"/><rect x="7" y="0" width="1" height="1"/></g><g fill="#2a2a3e"><rect x="3" y="3" width="1" height="1"/><rect x="6" y="3" width="1" height="1"/></g></svg>
 
   <svg class="pixel-deco fish" viewBox="0 0 7 4" aria-hidden="true"><g fill="#7cc7ff"><rect x="1" y="1" width="4" height="2"/><rect x="2" y="0" width="2" height="1"/><rect x="2" y="3" width="2" height="1"/><rect x="5" y="0" width="1" height="1"/><rect x="5" y="3" width="1" height="1"/><rect x="6" y="1" width="1" height="2"/></g><rect x="2" y="1" width="1" height="1" fill="#1a2a4a"/></svg>
-  <button id="to-top" class="to-top" aria-label="返回顶部">✦</button>
+  <div class="fab-group">
+    <button id="fab-music" class="fab" title="播放/暂停音乐（Miku 点播队列）">♪</button>
+    <button id="to-top" class="fab" aria-label="返回顶部">✦</button>
+  </div>
 
   <nav class="nav">
     <a class="logo" href="index.html">CidneyAurum<span class="no">の</span>小窝</a>
@@ -84,9 +87,12 @@
               <div>
                 <span class="player-badge">NETEASE MUSIC</span>
                 <div class="player-title serif">我的网易云歌单</div>
+                <div class="player-sub js-mm-song" style="margin-top:4px;">选择一首歌开始播放</div>
               </div>
             </div>
             <div class="track-list" id="track-list"><p class="empty-tip" style="padding:16px 0;">歌单加载中… 🎵</p></div>
+            <div class="player-progress" style="margin-top:14px;"><div class="fill js-mm-fill" style="width:0%"></div></div>
+            <div class="player-times"><span class="js-mm-cur">00:00</span><span class="js-mm-total">--:--</span></div>
             <div class="music-line">
               <button class="icon-btn js-mm-toggle" title="播放/暂停（Miku 点播队列）">▶</button>
               <button class="icon-btn js-mm-next" title="下一首">⏭</button>
@@ -134,6 +140,13 @@
         <div class="lb-text serif">点歌单里的歌，或跟 Miku 说「放 歌名」♪</div>
         <span class="lb-note">♪</span>
       </div>
+
+      <!-- 全站搜索胶囊 -->
+      <div class="home-search" id="home-search">
+        <span class="hs-ico">🔍</span>
+        <input id="hs-input" type="text" placeholder="搜寻标题、描述或标签…" autocomplete="off">
+        <div class="hs-drop" id="hs-drop" hidden></div>
+      </div>
     </header>
 
     <!-- ============ 最新文章区 ============ -->
@@ -177,7 +190,7 @@
     <!-- ============ 时钟条 ============ -->
     <div class="clock-bar">
       <div class="clock-time" id="clock-time">-- : -- : --</div>
-      <div class="clock-info"><span class="dot"></span>系统已稳定运行 <b id="uptime">…</b> · 愿每一段代码都有回响</div>
+      <div class="clock-info"><span class="dot"></span><span id="clock-date">—</span> · 系统已稳定运行 <b id="uptime">…</b> · 愿每一段代码都有回响</div>
     </div>
   </main>
 
@@ -252,18 +265,33 @@
       });
       document.querySelector(".js-lyric").addEventListener("click", () => window.MikuMusic.lyricOverlay.open());
     }, 0));
-    // Miku 点播队列控制
+    // Miku 点播队列控制 + 歌单卡真联动
     const mmBtn = document.querySelector(".js-mm-toggle");
+    const mmFill = document.querySelector(".js-mm-fill");
+    const mmCur = document.querySelector(".js-mm-cur");
+    const mmTotal = document.querySelector(".js-mm-total");
+    const mmSong = document.querySelector(".js-mm-song");
     if (mmBtn) {
       mmBtn.addEventListener("click", () => window.MikuMusic && window.MikuMusic.toggle());
       document.querySelector(".js-mm-next").addEventListener("click", () => window.MikuMusic && window.MikuMusic.next());
+      const fmt = (s) => { s = Math.max(0, Math.floor(s || 0)); return String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"); };
       document.addEventListener("mikumusic", (e) => {
         const d = e.detail || {};
-        if (d.current && d.playing) {
-          document.querySelector(".js-mm-text").textContent = "♪ 正在播放：《" + d.current.name + "》" + (d.artist ? " - " + d.artist : "");
-        }
         mmBtn.textContent = d.playing ? "❚❚" : "▶";
+        if (d.current) {
+          document.querySelector(".js-mm-text").textContent = "♪ 正在播放：《" + d.current.name + "》";
+          if (mmSong) mmSong.textContent = d.current.name + (d.current.artist ? " - " + d.current.artist : "");
+        }
       });
+      // 进度秒级更新（timeupdate 在 music.js 内部，用 rAF 轻量轮询 audio 元素）
+      const poll = () => {
+        const st = window.MikuMusic.getState();
+        if (st.current && st.playing !== undefined) {
+          mmBtn.textContent = st.playing ? "❚❚" : "▶";
+        }
+        requestAnimationFrame(() => setTimeout(poll, 500));
+      };
+      poll();
     }
   </script>
 </body>

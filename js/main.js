@@ -181,6 +181,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const p = (n) => String(n).padStart(2, "0");
       timeEl.textContent = `${p(now.getHours())} : ${p(now.getMinutes())} : ${p(now.getSeconds())}`;
     }
+    const dateEl = document.getElementById("clock-date");
+    if (dateEl) {
+      const wd = ["日", "一", "二", "三", "四", "五", "六"][now.getDay()];
+      const p = (n) => String(n).padStart(2, "0");
+      dateEl.textContent = `${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())} 周${wd}`;
+    }
     if (upEl) {
       const days = Math.max(0, Math.floor((now - birthday) / 86400000));
       const hours = Math.max(0, Math.floor(((now - birthday) % 86400000) / 3600000));
@@ -287,6 +293,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     </figure>`
     )
     .join("");
+});
+
+/* ---------- 悬浮音乐钮（与 Miku 点播队列联动） ---------- */
+document.addEventListener("DOMContentLoaded", () => {
+  const fab = document.getElementById("fab-music");
+  if (!fab || !window.MikuMusic) return;
+  const sync = (st) => { fab.textContent = st.playing ? "❚❚" : "♪"; };
+  document.addEventListener("mikumusic", (e) => sync(e.detail || {}));
+  fab.addEventListener("click", () => window.MikuMusic.toggle());
+  sync(window.MikuMusic.getState());
 });
 
 /* ---------- 点击彩蛋：光标处爆出小爱心 ---------- */
@@ -454,6 +470,41 @@ const revealMO = new MutationObserver((muts) => {
 if (!reduceMotion) document.addEventListener("DOMContentLoaded", () => revealMO.observe(document.body, { childList: true, subtree: true }));
 
 function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+/* ---------- 首页搜索胶囊（实时下拉） ---------- */
+document.addEventListener("DOMContentLoaded", async () => {
+  const input = document.getElementById("hs-input");
+  const drop = document.getElementById("hs-drop");
+  if (!input || !drop || !window.location.pathname.endsWith("index.html")) return;
+  let posts = [];
+  try {
+    const res = await fetch("posts/posts.json", { cache: "no-cache" });
+    posts = (await res.json()).posts || [];
+  } catch (e) { return; }
+
+  function renderDrop(kw) {
+    const k = kw.trim().toLowerCase();
+    if (!k) { drop.hidden = true; drop.innerHTML = ""; return; }
+    const hits = posts.filter((p) => (p.title + " " + (p.summary || "") + " " + (p.tags || []).join(" ")).toLowerCase().includes(k)).slice(0, 6);
+    drop.innerHTML = hits.length
+      ? hits.map((p) => `<a class="hs-item" href="posts/${encodeURIComponent(p.slug)}.html"><b>${esc(p.title)}</b><span>${(p.summary || "").slice(0, 30)}</span></a>`).join("")
+      : '<div class="hs-item hs-none">没找到相关文章 (´･ω･`)</div>';
+    drop.hidden = false;
+  }
+
+  input.addEventListener("input", () => renderDrop(input.value));
+  input.addEventListener("focus", () => renderDrop(input.value));
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      const first = drop.querySelector("a.hs-item");
+      if (first) first.click();
+    }
+    if (e.key === "Escape") { drop.hidden = true; input.blur(); }
+  });
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest("#home-search")) drop.hidden = true;
+  });
+});
 
 /* ---------- 说说渲染（says.html） ---------- */
 document.addEventListener("DOMContentLoaded", async () => {

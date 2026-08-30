@@ -20,6 +20,10 @@ const MikuMusic = (function () {
   };
 
   let audio = null;
+  const fmt = (sec) => {
+    sec = Math.max(0, Math.floor(sec || 0));
+    return String(Math.floor(sec / 60)).padStart(2, "0") + ":" + String(sec % 60).padStart(2, "0");
+  };
   let queue = [];        // [{name, artist, id, stream}]
   let qi = -1;
   let playing = false;
@@ -79,9 +83,17 @@ const MikuMusic = (function () {
     audio.addEventListener("play", () => { playing = true; emit(); });
     audio.addEventListener("pause", () => { playing = false; emit(); });
     let lastLine = -2;
+    audio.addEventListener("loadedmetadata", () => {
+      const tot = document.querySelector(".js-mm-total");
+      if (tot && audio.duration) tot.textContent = fmt(audio.duration);
+    });
     audio.addEventListener("timeupdate", () => {
       const line = lrcIndexAt(audio.currentTime || 0);
       if (line !== lastLine) { lastLine = line; emit(); }
+      const fill = document.querySelector(".js-mm-fill");
+      if (fill && audio.duration) fill.style.width = (audio.currentTime / audio.duration) * 100 + "%";
+      const cur = document.querySelector(".js-mm-cur");
+      if (cur) cur.textContent = fmt(audio.currentTime);
     });
     return audio;
   }

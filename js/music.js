@@ -308,7 +308,50 @@ const MikuMusic = (function () {
         textEl.textContent = line.slice(0, i);
         if (i >= line.length) clearInterval(typingTimer);
       }, 65);
+      // 同步弹出：界面上以边狱巴士风格弹出大字歌词
+      if (st.playing) popLyric(line, st.lrcLine);
     }
+  }
+
+  /* 界面弹出的大字歌词（逐字飞入，3 秒后淡出） */
+  let popTimer = 0;
+  function popLyric(text, lineIdx) {
+    if (reduceMotion) return;
+    let host = document.getElementById("lyric-pop-host");
+    if (!host) {
+      host = document.createElement("div");
+      host.id = "lyric-pop-host";
+      document.body.appendChild(host);
+    }
+    host.innerHTML = "";
+    const pop = document.createElement("div");
+    pop.className = "lyric-pop";
+    const el = document.createElement("div");
+    el.className = "lyric-line";
+    if (lineIdx % 3 === 2) el.classList.add("shake");
+    let k = 0;
+    for (const ch of text) {
+      const sp = document.createElement("span");
+      sp.className = "char " + (k % 2 === 0 ? "in-left" : "in-right");
+      sp.style.animationDelay = (k % 2 === 0 ? 0 : 0.05) + k * 0.02 + "s";
+      sp.textContent = ch === " " ? " " : ch;
+      el.appendChild(sp);
+      k++;
+    }
+    pop.appendChild(el);
+    if (lineIdx % 3 === 2) {
+      const slash = document.createElement("div");
+      slash.className = "slash go";
+      pop.appendChild(slash);
+    }
+    host.appendChild(pop);
+    clearTimeout(popTimer);
+    popTimer = setTimeout(() => {
+      pop.style.transition = "opacity .5s ease, transform .5s ease";
+      pop.style.opacity = "0";
+      pop.style.transform = "translateY(-16px)";
+      setTimeout(() => pop.remove(), 520);
+    }, 3200);
   }
 
     /* ---------- 边狱巴士风格 · 歌词演出浮层 ---------- */

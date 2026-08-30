@@ -1547,3 +1547,42 @@ body.light .kb-set input { background: rgba(255,255,255,.6); }
   .lyric-bar { padding: 12px 16px; }
   .lyric-bar .lb-text { font-size: 15px; }
 }
+
+/* ============ 边狱巴士 · 弹出式大字歌词 ============ */
+.lyric-pop-host {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+.lyric-pop {
+  margin-top: 16vh;
+  padding: 18px 40px 22px;
+  background: rgba(5, 5, 7, 0.86);
+  border-top: 1px solid rgba(217, 185, 108, 0.55);
+  border-bottom: 1px solid rgba(212, 69, 58, 0.55);
+  max-width: 82vw;
+  text-align: center;
+  animation: popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  position: relative;
+  overflow: hidden;
+}
+@keyframes popIn { from { opacity: 0; transform: translateY(-22px) scale(0.96); } to { opacity: 1; transform: none; } }
+.lyric-pop .lyric-line {
+  font-family: var(--font-body);
+  font-weight: 900;
+  font-size: clamp(24px, 3.6vw, 40px);
+  color: #ece5d3;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 69, 58, 0.4);
+  white-space: pre-wrap;
+}
+.lyric-pop .slash { top: 50%; left: 8%; width: 84%; }
+@media (max-width: 680px) {
+  .lyric-pop { margin-top: 12vh; padding: 12px 20px 16px; }
+  .lyric-pop .lyric-line { font-size: 20px; }
+}

@@ -108,7 +108,86 @@ async function ghPutFile(path, bytes, message) {
   if (got.status === 200) sha = (await got.json()).sha;
   const body = JSON.stringify({ message, content: bytesToB64(bytes), ...(sha ? { sha } : {}) });
   const res = await ghApi(path, { method: "PUT", body });
-  if (!res.ok) throw new Error(`GitHub 返回 ${res.status}：${(await res.text()).slice(0, 200)}`);
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(ghErr(res.status, text));
+  }
+  return await res.json();
+}
+
+/* 图片压缩：长边 ≤1920、JPEG、目标 ≤1MB */
+async function compressImage(file, maxSide = 1920, quality = 0.75) {
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  await new Promise((res, rej) => { img.onload = res; img.onerror = () => rej(new Error("图片读取失败")); img.src = url; });
+  let w = img.naturalWidth, h = img.naturalHeight;
+  const scale = Math.min(1, maxSide / Math.max(w, h));
+  w = Math.max(1, Math.round(w * scale));
+  h = Math.max(1, Math.round(h * scale));
+  const cv = document.createElement("canvas");
+  cv.width = w; cv.height = h;
+  cv.getContext("2d").drawImage(img, 0, 0, w, h);
+  URL.revokeObjectURL(url);
+  let q = quality;
+  let blob = await new Promise((r) => cv.toBlob(r, "image/jpeg", q));
+  while (blob && blob.size > 1024 * 1024 && q > 0.35) {
+    q -= 0.15;
+    blob = await new Promise((r) => cv.toBlob(r, "image/jpeg", q));
+  }
+  if (!blob) throw new Error("图片压缩失败");
+  return new Uint8Array(await blob.arrayBuffer());
+}
+
+/* GitHub 错误 → 中文原因 */
+function ghErr(status, text) {
+  const map = {
+    401: "令牌无效或已过期 → 到「设置」重新粘贴一个新令牌",
+    403: "权限不足 → 令牌需要 Contents: Read and write 权限",
+    404: "仓库不存在或令牌无权访问该仓库",
+    422: "内容校验失败：" + (text || "").slice(0, 140),
+  };
+  return map[status] || ("GitHub " + status + "：" + (text || "").slice(0, 140));
+}
+
+/* 令牌完整体检：有效性 → 仓库 → 写权限 */
+async function tokenCheckupSteps() {
+  const out = { ok: false, steps: [] };
+  const H = { Authorization: "Bearer " + getToken(), Accept: "application/vnd.github+json" };
+  try {
+    const me = await fetch("https://api.github.com/user", { headers: H });
+    if (me.status === 401) { out.steps.push(["✗", "令牌无效或已过期"]); return out; }
+    if (!me.ok) { out.steps.push(["✗", "GitHub 返回 " + me.status]); return out; }
+    out.steps.push(["✓", "令牌有效，账号 " + (await me.json()).login]);
+    const repo = await fetch("https://api.github.com/repos/" + ADMIN.repo, { headers: H });
+    if (!repo.ok) { out.steps.push(["✗", "无法访问仓库（" + repo.status + "）"]); return out; }
+    const perm = (await repo.json()).permissions || {};
+    out.steps.push(perm.push ? ["✓", "仓库访问正常，有写入权限"] : ["✗", "缺少写入权限：请给令牌加 Contents: Read and write"]);
+    out.ok = !!perm.push;
+    return out;
+  } catch (e) {
+    out.steps.push(["✗", "网络错误：" + e.message]);
+    return out;
+  }
+}
+
+/* 发布后追踪 Actions 构建：成功返回 true */
+async function trackBuild(sha) {
+  for (let i = 0; i < 40; i++) {
+    await new Promise((r) => setTimeout(r, 6000));
+    try {
+      const res = await fetch("https://api.github.com/repos/" + ADMIN.repo + "/actions/runs?head_sha=" + sha + "&per_page=1", {
+        headers: { Accept: "application/vnd.github+json" },
+      });
+      if (!res.ok) continue;
+      const run = ((await res.json()).workflow_runs || [])[0];
+      if (!run) continue;
+      if (run.status === "completed") {
+        if (run.conclusion === "success") return { ok: true, url: run.html_url };
+        return { ok: false, msg: "构建失败（" + run.conclusion + "）" };
+      }
+    } catch (e) { /* 网络抖动继续轮询 */ }
+  }
+  return { ok: false, msg: "构建超时（超过 4 分钟），可到 Actions 页查看进度" };
 }
 
 function bytesToB64(bytes) {
@@ -170,18 +249,34 @@ document.addEventListener("DOMContentLoaded", () => {
     status(`已下载 ${md.slug}.md —— 把它上传到仓库的 _posts/ 文件夹即可发文`, true);
   });
 
-  // 一键发布
+  // 一键发布（状态机：校验→上传→构建追踪）
   $("btn-publish").addEventListener("click", async () => {
     const md = buildMarkdown();
     if (!md.title || md.title === "无题") { status("先起个标题吧", false); return; }
     if (!$("p-body").value.trim()) { status("正文还是空的哦", false); return; }
     if (!getToken()) { status("还没有配置令牌，请到「设置」页粘贴一次", false); return; }
-    status("发布中…");
+    const btn = $("btn-publish");
+    btn.disabled = true;
     try {
-      await ghPutFile(`_posts/${md.slug}.md`, new TextEncoder().encode(md.text), `发布文章：${md.title}`);
-      status(`✅ 已发布 _posts/${md.slug}.md ！Actions 正在构建，约 1~2 分钟后线上可见`, true);
+      status("① 校验令牌与权限…");
+      const chk = await tokenCheckupSteps();
+      const bad = chk.steps.find((x) => x[0] === "✗");
+      if (bad) { status("✗ " + bad[1], false); return; }
+      status("② 上传文章 _posts/" + md.slug + ".md …");
+      const put = await ghPutFile(`_posts/${md.slug}.md`, new TextEncoder().encode(md.text), `发布文章：${md.title}`);
+      const sha = put && put.commit && put.commit.sha ? put.commit.sha : "";
+      status("③ 文章已提交，等待构建上线…");
+      if (sha) {
+        const track = await trackBuild(sha);
+        if (track.ok) status("✅ 已上线！访问 cidneyaurum.github.io 查看", true);
+        else status("⚠️ 提交成功但构建未确认：" + track.msg, false);
+      } else {
+        status("✅ 已提交，约 1~2 分钟后上线", true);
+      }
     } catch (err) {
-      status("发布失败：" + err.message, false);
+      status("✗ 发布失败：" + err.message, false);
+    } finally {
+      btn.disabled = false;
     }
   });
 
@@ -273,14 +368,105 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   $("btn-verify").addEventListener("click", async () => {
     if (!getToken()) { status("还没有令牌可验证", false); return; }
-    status("验证中…");
-    try {
-      const res = await ghApi("");
-      status(res.ok ? "✅ 令牌有效，可以发布内容" : `令牌无效或权限不足（${res.status}）`, res.ok);
-    } catch (err) {
-      status("验证失败：" + err.message, false);
-    }
+    status("体检中：令牌 → 仓库 → 写权限…");
+    const r = await tokenCheckupSteps();
+    r.steps.forEach((s) => console.log(s.join(" ")));
+    status(r.steps.map((x) => x[1]).join(" → "), r.ok);
   });
+
+  /* ---------- 说说：选图压缩预览 + 一键发布 ---------- */
+  const sText = $("s-text");
+  const sImgs = $("s-imgs");
+  const sPreviews = $("s-previews");
+  const sCount = $("s-count");
+  const sQueue = []; // {bytes, url}
+
+  if (sText) {
+    sText.addEventListener("input", () => {
+      const n = sText.value.length;
+      sCount.textContent = n + " / 500";
+      sCount.style.color = n > 500 ? "#ff7b7b" : "var(--text-light)";
+    });
+  }
+
+  function addSayImages(files) {
+    for (const f of files) {
+      if (!/^image\//.test(f.type)) continue;
+      compressImage(f)
+        .then((bytes) => {
+          sQueue.push({ bytes, name: f.name });
+          renderSayPreviews();
+        })
+        .catch((e) => status("图片处理失败：" + e.message, false));
+    }
+  }
+
+  function renderSayPreviews() {
+    sPreviews.innerHTML = sQueue
+      .map(
+        (q, i) => `
+      <div style="position:relative;">
+        <img src="${q.url}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">
+        <button class="ds-close" data-i="${i}" style="position:absolute;top:-6px;right:-6px;background:var(--card-deep);border-radius:50%;width:20px;height:20px;">✕</button>
+      </div>`
+      )
+      .join("");
+    sPreviews.querySelectorAll("[data-i]").forEach((b) =>
+      b.addEventListener("click", () => { sQueue.splice(+b.dataset.i, 1); renderSayPreviews(); }));
+  }
+
+  if (sImgs) {
+    sImgs.addEventListener("change", () => { addSayImages(sImgs.files); sImgs.value = ""; });
+    const dz = $("s-drop");
+    if (dz) {
+      dz.addEventListener("dragover", (e) => { e.preventDefault(); dz.classList.add("drag"); });
+      dz.addEventListener("dragleave", () => dz.classList.remove("drag"));
+      dz.addEventListener("drop", (e) => { e.preventDefault(); dz.classList.remove("drag"); addSayImages(e.dataTransfer.files); });
+    }
+  }
+
+  const btnSay = $("btn-say");
+  if (btnSay) {
+    btnSay.addEventListener("click", async () => {
+      const text = sText.value.trim();
+      if (!text && !sQueue.length) { status("写点什么或选张图吧", false); return; }
+      if (text.length > 500) { status("文字超过 500 字了", false); return; }
+      if (!getToken()) { status("还没有配置令牌，请到「设置」页粘贴一次", false); return; }
+      btnSay.disabled = true;
+      try {
+        const now = new Date();
+        const pad = (x) => String(x).padStart(2, "0");
+        const time = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+        const images = [];
+        for (let i = 0; i < sQueue.length; i++) {
+          status(`上传图片（${i + 1}/${sQueue.length}）…`);
+          const name = `say_${now.getTime()}_${i}.jpg`;
+          await ghPutFile(`assets/says/${name}`, sQueue[i].bytes, "发布说说配图");
+          images.push("assets/says/" + name);
+        }
+        status("更新说说列表…");
+        let oldSays = [];
+        try {
+          const r = await ghApi("says/says.json");
+          if (r.ok) {
+            const b64 = (await r.json()).content.replace(/\s/g, "");
+            oldSays = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)))).says || [];
+          }
+        } catch (e) { /* 文件不存在则新建 */ }
+        const say = { id: now.getTime().toString(36), text, images, time };
+        const payload = JSON.stringify({ says: [say, ...oldSays] }, null, 2);
+        await ghPutFile("says/says.json", new TextEncoder().encode(payload), "发布说说：" + (text.slice(0, 20) || "[图片]"));
+        sText.value = "";
+        sQueue.length = 0;
+        renderSayPreviews();
+        status("✅ 说说已发布！构建完成后在「说说」页面可见", true);
+      } catch (err) {
+        status("✗ 发布失败：" + err.message, false);
+      } finally {
+        btnSay.disabled = false;
+      }
+    });
+  }
 
   /* ---------- 标签页切换 ---------- */
   document.querySelectorAll(".tab-btn").forEach((btn) => {

@@ -343,7 +343,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
   document.addEventListener("click", (e) => {
     const t = e.target;
-    const isPhoto = t.matches(".prose img, .photo-grid .ph img, .kb-msg img");
+    const isPhoto = t.matches(".prose img, .photo-grid .ph img, .kb-msg img, .says-grid img");
     if (!isPhoto || !t.src || t.src.startsWith("blob:")) return;
     e.preventDefault();
     e.stopPropagation();
@@ -404,6 +404,87 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }, 600);
   }
+});
+
+/* ---------- 滚动渐入（IntersectionObserver 原生方案） ---------- */
+const revealIO = ("IntersectionObserver" in window) && !reduceMotion
+  ? new IntersectionObserver((es) => {
+      es.forEach((en) => {
+        if (en.isIntersecting) { en.target.classList.add("in"); revealIO.unobserve(en.target); }
+      });
+    }, { threshold: 0.06 })
+  : null;
+function revealScan() {
+  document.querySelectorAll(".rv:not(.in):not(.rv-done)").forEach((el) => {
+    el.classList.add("rv-done");
+    if (revealIO) revealIO.observe(el);
+    else el.classList.add("in");
+  });
+}
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".hero .card, .home-grid .card, .post-item, .tl-card, .says-card, .featured-card").forEach((el) => el.classList.add("rv"));
+  revealScan();
+});
+// 动态插入的卡片（博客列表/说说等）自动纳入渐入
+const revealMO = new MutationObserver((muts) => {
+  for (const m of muts) {
+    if (m.type !== "childList") continue;
+    m.addedNodes.forEach((n) => {
+      if (n.nodeType !== 1) return;
+      if (n.classList && (n.classList.contains("card") || n.classList.contains("says-card") || n.classList.contains("post-item"))) {
+        n.classList.add("rv");
+        revealScan();
+      }
+      if (n.querySelectorAll) revealScan(n);
+    });
+  }
+});
+if (!reduceMotion) document.addEventListener("DOMContentLoaded", () => revealMO.observe(document.body, { childList: true, subtree: true }));
+
+function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+/* ---------- 说说渲染（says.html） ---------- */
+document.addEventListener("DOMContentLoaded", async () => {
+  const list = document.getElementById("says-list");
+  if (!list) return;
+  let says = [];
+  try {
+    const res = await fetch("says/says.json", { cache: "no-cache" });
+    says = (await res.json()).says || [];
+  } catch (e) {
+    list.innerHTML = '<p class="empty-tip">说说加载失败…</p>';
+    return;
+  }
+  if (!says.length) {
+    list.innerHTML = '<p class="empty-tip">还没有说说，去写作台发第一条吧 ♢</p>';
+    return;
+  }
+  const rel = (t) => {
+    const d = new Date(String(t).replace(" ", "T"));
+    if (isNaN(d)) return t;
+    const diff = (Date.now() - d.getTime()) / 60000;
+    if (diff < 1) return "刚刚";
+    if (diff < 60) return Math.floor(diff) + " 分钟前";
+    if (diff < 1440) return Math.floor(diff / 60) + " 小时前";
+    if (diff < 2880) return "昨天";
+    return String(t).slice(0, 10);
+  };
+  list.innerHTML = says
+    .map((s) => {
+      const imgs = s.images || [];
+      const gridCls = imgs.length === 1 ? " one" : imgs.length === 2 || imgs.length === 4 ? " two" : " grid3";
+      return `
+      <div class="says-card card rv">
+        <img class="says-avatar" src="assets/avatar.jpg" alt="">
+        <div class="says-main">
+          <div class="says-meta"><b>CidneyAurum</b><span class="says-time">${rel(s.time)}</span></div>
+          ${s.text ? `<div class="says-text">${esc(s.text)}</div>` : ""}
+          ${imgs.length ? `<div class="says-grid${gridCls}">${imgs.map((src) => `<img src="${src}" alt="" loading="lazy">`).join("")}</div>` : ""}
+        </div>
+      </div>`;
+    })
+    .join("");
+  revealScan();
 });
 
 /* ---------- 归档页：双视图 + 搜索 + 标签 ---------- */

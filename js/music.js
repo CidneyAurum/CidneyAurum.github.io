@@ -65,6 +65,7 @@ const MikuMusic = (function () {
           artist: s.artist || s.artists || "",
           id: m ? m[1] : String(s.id || ""),
           stream: /^https?:\/\//.test(raw) ? raw : "",
+          pic: s.pic || "",
         };
       })
       .filter((s) => s.id || s.stream);

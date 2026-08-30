@@ -123,6 +123,7 @@
 
     <div class="tabs">
       <button class="tab-btn on" data-tab="post">✍️ 发文</button>
+      <button class="tab-btn" data-tab="say">💭 说说</button>
       <button class="tab-btn" data-tab="photo">🖼️ 发图</button>
       <button class="tab-btn" data-tab="setup">⚙️ 设置</button>
     </div>
@@ -160,6 +161,25 @@
         「去 GitHub 发布」会打开一个<b>已经替你填好一切</b>的 GitHub 页面，拉到底点绿色 <b>Commit changes</b> 即完成发文，全程不需要令牌；
         「令牌一键发布」是进阶选项（设置页配置后可跳过 GitHub 页面）。发布后约 1~2 分钟上线。
       </p>
+    </div>
+
+    <!-- ============ 说说 ============ -->
+    <div class="tab-pane card pane-card" id="tab-say" style="display:none;">
+      <div class="field">
+        <label>说点什么…（≤500 字，可只发图）</label>
+        <textarea id="s-text" style="min-height:110px;resize:vertical;border-radius:12px;border:1px solid var(--border);background:rgba(4,5,12,.5);color:var(--text);font-size:14px;line-height:1.8;padding:12px 14px;outline:none;font-family:var(--font-body);" placeholder="今天……"></textarea>
+        <div style="font-size:11.5px;color:var(--text-light);text-align:right;" id="s-count">0 / 500</div>
+      </div>
+      <div class="field" style="margin-top:12px;">
+        <label>图片（可选，多选，自动压缩到 1MB 内）</label>
+        <input id="s-imgs" type="file" accept="image/*" multiple style="color:var(--text-light);font-size:12px;">
+        <div id="s-previews" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;"></div>
+      </div>
+      <div class="actions">
+        <button class="ctrl-btn" id="btn-say">🚀 一键发布说说</button>
+        <span class="js-status"></span>
+      </div>
+      <p class="hint">发布后自动出现在「说说」页面（导航栏可进），约 1~2 分钟上线。需要先在「设置」配好令牌。</p>
     </div>
 
     <!-- ============ 发图 ============ -->

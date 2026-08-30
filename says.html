@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>光影画廊 · CidneyAurum の 小窝</title>
-  <meta name="description" content="CidneyAurum 的照片墙：记录视觉的一次次触动。">
+  <title>说说 · CidneyAurum の 小窝</title>
+  <meta name="description" content="CidneyAurum 的说说：碎片想法与日常图集。">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="preconnect" href="https://fonts.loli.net" crossorigin>
   <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css?v=7">
 </head>
-<body class="page-enter" data-page="photos">
+<body class="page-enter" data-page="says">
   <div class="scene" aria-hidden="true">
     <img class="scene-bg" src="assets/background.png" alt="">
     <div class="scene-overlay"></div>
@@ -27,10 +27,11 @@
     <div class="nav-links" id="nav-links">
       <a class="nav-link" href="index.html">首页</a>
       <a class="nav-link" href="blog.html">归档</a>
-        <a class="nav-link" href="says.html">说说</a>
-      <a class="nav-link active" href="photos.html">相册</a>
+      <a class="nav-link active" href="says.html">说说</a>
+      <a class="nav-link" href="photos.html">相册</a>
       <a class="nav-link" href="limbus.html">模拟器</a>
       <a class="nav-link" href="about.html">关于</a>
+      <a class="nav-link nav-post" href="admin.html">✍️ 发布</a>
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
       <button id="theme-toggle" class="icon-btn" aria-label="切换主题">✨</button>
@@ -40,21 +41,17 @@
 
   <main class="wrap">
     <header class="page-head">
-      <h1 class="page-title">光影画廊</h1>
-      <p class="page-sub"><span class="star">✦</span>记录视觉的一次次触动<span class="star">✦</span></p>
+      <h1 class="page-title">说说</h1>
+      <p class="page-sub"><span class="star">✦</span>碎片想法 · 日常图集<span class="star">✦</span></p>
     </header>
 
-    <!-- 照片墙：构建时自动扫描 assets/gallery/ 生成 gallery.json，这里负责渲染 -->
-    <!-- 发新图：把图片丢进 assets/gallery/ 即可（文件名用 标题_年-月 格式效果最佳） -->
-    <div class="photo-grid" id="photo-grid">
-      <p class="empty-tip">照片加载中… 🖼️</p>
+    <div class="says-list" id="says-list">
+      <p class="empty-tip">说说加载中… 💭</p>
     </div>
-
-    <p class="photo-note">— 定格时间，珍藏每一刻美好 —</p>
   </main>
 
   <footer>
-    <a href="admin.html">✍️ 写作台</a> · Made with <span class="heart">♡</span> &amp; 星光 · © 2026 CidneyAurum · Powered by GitHub Pages
+    Made with <span class="heart">♡</span> &amp; 星光 · © 2026 CidneyAurum · Powered by GitHub Pages
   </footer>
 
   <div class="mini-player">
@@ -68,7 +65,5 @@
 
   <script src="js/main.js?v=7"></script>
   <script src="js/player.js?v=7"></script>
-  <script src="js/music.js?v=7" defer></script>
-  <script src="js/kanban.js?v=7" defer></script>
 </body>
 </html>

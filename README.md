@@ -123,6 +123,14 @@ summary: 一句话摘要
 - [imsyy/home](https://github.com/imsyy/home)（MIT）— 一言 API 用法
 - 一言 API：[hitokoto.cn](https://hitokoto.cn/)
 
+## 说说 💭
+
+碎片想法+图片的朋友圈式时间轴（`says.html`）：
+
+- **发布**：写作台 → 「💭 说说」标签 → 写文字、选图（自动压缩）→ 一键发布
+- **原理**：图片传 `assets/says/`、文字进 `says/says.json`（GitHub API），前端渲染
+- 需要 GitHub 令牌（设置页一次性配置，之后全程一键）
+
 ## 看板娘 🎵
 
 右下角的 Live2D 看板娘（Miku）：

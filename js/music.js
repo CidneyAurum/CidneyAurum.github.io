@@ -325,48 +325,47 @@ const MikuMusic = (function () {
     }
   }
 
-  /* 界面弹出的大字歌词（逐字飞入，3 秒后淡出） */
+  /* 界面弹出歌词 —— 1:1 复刻原版 effect.py：
+     暖白字+金色描边 / 整行随机斜排 / 逐字打字机(100ms) / 每字持续抖动 / 随机位置 / 旧句上飘淡出 */
   let popTimer = 0;
   function popLyric(text, lineIdx) {
     let host = document.getElementById("lyric-pop-host");
     if (!host) {
       host = document.createElement("div");
       host.id = "lyric-pop-host";
-      host.className = "lyric-pop-host"; // 样式按类名匹配（之前漏了这行导致弹层无样式）
+      host.className = "lyric-pop-host";
       document.body.appendChild(host);
     }
-    host.innerHTML = "";
+    // 旧句：向上飘走并淡出（可多句共存）
+    host.querySelectorAll(".lyric-pop:not(.fading)").forEach((p) => {
+      p.classList.add("fading");
+      setTimeout(() => p.remove(), 1000);
+    });
+
     const pop = document.createElement("div");
     pop.className = "lyric-pop";
-    const el = document.createElement("div");
-    el.className = "lyric-line";
-    if (lineIdx % 3 === 2) el.classList.add("shake");
-    let k = 0;
-    for (const ch of text) {
-      const sp = document.createElement("span");
-      sp.className = "char " + (k % 2 === 0 ? "in-left" : "in-right");
-      sp.style.animationDelay = (k % 2 === 0 ? 0 : 0.05) + k * 0.02 + "s";
-      sp.textContent = ch === " " ? " " : ch;
-      el.appendChild(sp);
-      k++;
-    }
-    pop.appendChild(el);
-    if (lineIdx % 3 === 2) {
-      const slash = document.createElement("div");
-      slash.className = "slash go";
-      pop.appendChild(slash);
-    }
+    const angle = (Math.random() * 16 - 8).toFixed(1);           // 整行 ±8° 斜排
+    pop.style.left = (12 + Math.random() * 46) + "%";             // 随机位置（视口中带）
+    pop.style.top = (20 + Math.random() * 48) + "%";
+    pop.style.transform = "rotate(" + angle + "deg)";
     host.appendChild(pop);
-    clearTimeout(popTimer);
-    popTimer = setTimeout(() => {
-      pop.style.transition = "opacity .5s ease, transform .5s ease";
-      pop.style.opacity = "0";
-      pop.style.transform = "translateY(-16px)";
-      setTimeout(() => pop.remove(), 520);
-    }, 3200);
-  }
 
-    /* ---------- 边狱巴士风格 · 歌词演出浮层 ---------- */
+    // 逐字打字机（原版 100ms/字），每字带独立抖动
+    const chars = [...text];
+    let ci = 0;
+    const typeTimer = setInterval(() => {
+      ci++;
+      const sp = document.createElement("span");
+      sp.className = "lch";
+      sp.style.animationDuration = (0.12 + Math.random() * 0.08).toFixed(2) + "s";
+      sp.style.animationDelay = (Math.random() * 0.1).toFixed(2) + "s";
+      sp.textContent = chars[ci - 1] === " " ? "\u00A0" : chars[ci - 1];
+      pop.appendChild(sp);
+      if (ci >= chars.length) clearInterval(typeTimer);
+    }, 100);
+    clearTimeout(popTimer);
+    popTimer = setTimeout(() => clearInterval(typeTimer), chars.length * 100 + 120);
+  }  /* ---------- 边狱巴士风格 · 歌词演出浮层 ---------- */
   let overlayBuilt = false, overlayOpen = false, lastLoLine = -2;
   let sessionLyricOff = sessionStorage.getItem("mm_lyric_off") === "1";
 

@@ -1563,30 +1563,32 @@ body.light .kb-set input { background: rgba(255,255,255,.6); }
   justify-content: center;
 }
 .lyric-pop {
-  margin-top: 16vh;
-  padding: 18px 40px 22px;
-  background: rgba(5, 5, 7, 0.86);
-  border-top: 1px solid rgba(217, 185, 108, 0.55);
-  border-bottom: 1px solid rgba(212, 69, 58, 0.55);
-  max-width: 82vw;
-  text-align: center;
-  animation: popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-  position: relative;
-  overflow: hidden;
-}
-@keyframes popIn { from { opacity: 0; transform: translateY(-22px) scale(0.96); } to { opacity: 1; transform: none; } }
-.lyric-pop .lyric-line {
+  position: absolute;
+  color: #fffeef;                                    /* 原版暖白 */
   font-family: var(--font-body);
   font-weight: 900;
-  font-size: clamp(24px, 3.6vw, 40px);
-  color: #ece5d3;
-  letter-spacing: 0.06em;
-  line-height: 1.4;
-  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 69, 58, 0.4);
-  white-space: pre-wrap;
+  font-size: clamp(24px, 2.8vw, 36px);
+  letter-spacing: 4px;                               /* 原版 spacing 5 */
+  white-space: nowrap;
+  text-shadow: 3px 3px 0 #d8a523;                    /* 原版金色描边（+3,+3 阴影） */
+  transform: rotate(var(--tilt, 0deg));              /* 整行斜排 */
+  transition: opacity 0.9s ease, translate 0.9s ease, top 0.9s ease;
 }
-.lyric-pop .slash { top: 50%; left: 8%; width: 84%; }
+.lyric-pop.fading { opacity: 0; translate: 0 -30px; } /* 旧句上飘淡出 */
+@keyframes popIn { from { opacity: 0; transform: translateY(-22px) scale(0.96); } to { opacity: 1; transform: none; } }
 @media (max-width: 680px) {
-  .lyric-pop { margin-top: 12vh; padding: 12px 20px 16px; }
-  .lyric-pop .lyric-line { font-size: 20px; }
+  .lyric-pop { font-size: 20px; letter-spacing: 2px; }
+}
+
+/* 弹出歌词：每个字持续抖动（原版 effect.py 标志性效果） */
+.lyric-pop .lch {
+  display: inline-block;
+  animation: lchJitter 0.15s infinite;
+}
+@keyframes lchJitter {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(1.3px, -1.1px); }
+  50%  { transform: translate(-1.1px, 1.2px); }
+  75%  { transform: translate(0.9px, 0.9px); }
+  100% { transform: translate(-1px, -1.2px); }
 }

@@ -56,7 +56,11 @@
   const EMOTES = ["比心", "圈圈", "脸红", "前倾", "唱歌", "葱", "QQ人"];
   // 挂件用 absolute+手动钉屏 定位：不依赖 position:fixed（部分浏览器滚动后
   // 会停止呈现固定的透明 WebGL 画布）。pin.offsetY = 视口内期望的顶部位置。
-  const pin = { left: 14, top: Math.min(200, Math.max(80, window.innerHeight - 460)) };
+  // 手机上默认吸到下半屏（不挡资料卡），桌面保持偏左下
+  const pin = {
+    left: 14,
+    top: window.innerWidth < 680 ? Math.round(window.innerHeight * 0.5) : 140,
+  };
   function applyPin() {
     const el = document.getElementById("kanban");
     if (!el) return;
@@ -132,9 +136,9 @@
     // 恢复上次拖拽的位置（absolute + top 方案，滚屏永不消失）
     try {
       const pos = JSON.parse(localStorage.getItem("kb_pos") || "null");
-      if (pos) {
+      if (pos && window.innerWidth > 900) {
         pin.left = Math.max(4, Math.min(window.innerWidth - 120, pos.left || 14));
-        pin.top = Math.max(60, Math.min(window.innerHeight - 140, pos.top || 120));
+        pin.top = Math.max(60, Math.min(window.innerHeight - 140, pos.top || 140));
       }
     } catch (e) {}
 

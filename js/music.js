@@ -190,6 +190,16 @@ const MikuMusic = (function () {
         if (currentLrc.length) { emit(); return; }
       } catch (e) { /* 试下一个源 */ }
     }
+    // ② lrclib.net 兜底（开放 API，无需 Key，支持 CORS）
+    try {
+      const q = new URLSearchParams({ track_name: item.name || "", artist_name: item.artist || "" });
+      const res = await fetch("https://lrclib.net/api/search?" + q.toString());
+      if (res.ok) {
+        const list = await res.json();
+        const synced = list.find((d) => d.syncedLyrics) || list[0];
+        if (synced && synced.syncedLyrics) currentLrc = parseLrc(synced.syncedLyrics);
+      }
+    } catch (e) { /* 无歌词照常播 */ }
   }
 
   function lrcIndexAt(time) {
@@ -228,6 +238,8 @@ const MikuMusic = (function () {
     emit();
     return queue.length;
   }
+
+  function reloadPlaylist() { queue = []; qi = -1; }
 
   async function playPlaylist() {
     const n = await loadPlaylist();
@@ -438,7 +450,7 @@ const MikuMusic = (function () {
   }
 
   return {
-    searchAndPlay, playPlaylist, loadPlaylist, playIndex, next, toggle,
+    searchAndPlay, playPlaylist, loadPlaylist, reloadPlaylist, playIndex, next, toggle,
     getState, getQueue: () => queue.slice(), on, playlistId: CFG.playlistId,
     popLyric,  // 调试/测试用：手动弹出一行歌词
     lyricOverlay: { toggle: loToggle, open: () => setOverlay(true), close: () => setOverlay(false) },

@@ -14,7 +14,7 @@
   <script defer src="https://events.vercount.one/js"></script>
   <link rel="preconnect" href="https://fonts.loli.net" crossorigin>
   <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=5">
+  <link rel="stylesheet" href="css/style.css?v=6">
 </head>
 <body class="page-enter" data-page="home">
   <!-- 全站场景层 -->
@@ -53,7 +53,7 @@
         <div class="card profile-card">
           <div class="profile-top">
             <!-- ✏️ 头像：想换就同名替换 assets/avatar.jpg -->
-            <div class="avatar-ring"><img src="assets/avatar.jpg?v=5" alt="头像"></div>
+            <div class="avatar-ring"><img src="assets/avatar.jpg?v=6" alt="头像"></div>
             <div>
               <h1 class="profile-name">CidneyAurum</h1>
               <p class="profile-desc">一只喜欢写代码也喜欢看番的普通人类（大概）。白天写代码，晚上补番，周末折腾点小东西。</p>
@@ -92,7 +92,7 @@
               <span class="js-mm-text">想让 Miku 点歌？跟她聊「放 歌名」♪</span>
             </div>
             <div id="music-fallback" style="display:none;">
-              <p style="font-size:12px;color:var(--text-light);margin:10px 0 8px;">音乐接口暂时不稳，已切换官方播放器：</p>
+              <p style="font-size:12px;color:var(--text-light);margin:10px 0 8px;">音乐接口暂时不稳，已切换官方播放器：<button class="icon-btn" id="music-retry" title="重新加载歌单" style="width:26px;height:26px;font-size:12px;">↻</button></p>
               <iframe allow="autoplay; encrypted-media" src="https://music.163.com/outchain/player?type=0&amp;id=18205251703&amp;auto=0&amp;height=86" width="100%" height="86" frameborder="no" marginwidth="0" marginheight="0" style="border:0;border-radius:12px;background:rgba(255,255,255,.04);"></iframe>
             </div>
           </div>
@@ -193,10 +193,10 @@
     <button class="mini-btn js-play-toggle js-state" aria-label="播放/暂停">▶</button>
   </div>
 
-  <script src="js/main.js?v=5"></script>
-  <script src="js/player.js?v=5"></script>
-  <script src="js/music.js?v=5" defer></script>
-  <script src="js/kanban.js?v=5" defer></script>
+  <script src="js/main.js?v=6"></script>
+  <script src="js/player.js?v=6"></script>
+  <script src="js/music.js?v=6" defer></script>
+  <script src="js/kanban.js?v=6" defer></script>
   <script>
     // 夜间模式小卡片
     (function () {
@@ -210,18 +210,13 @@
         document.querySelectorAll(".cpane").forEach((p) => (p.style.display = p.id === "cpane-" + btn.dataset.pane ? "" : "none"));
       });
     });
-    // 歌单列表（Miku 点播引擎同源）+ 歌词演出按钮
+    // 歌单列表（Miku 点播引擎同源）+ 歌词演出按钮 + 失败重试
     // 注意：MikuMusic 在 defer 脚本里，需等 DOMContentLoaded 后再调用
     document.addEventListener("DOMContentLoaded", () => setTimeout(async () => {
       const list = document.getElementById("track-list");
-      if (!list || !window.MikuMusic) return;
-      try {
-        await window.MikuMusic.loadPlaylist();
-      } catch (e) {
-        list.style.display = "none";
-        document.getElementById("music-fallback").style.display = "";
-        return;
-      }
+      const fallback = document.getElementById("music-fallback");
+      if (!list || !fallback || !window.MikuMusic) return;
+
       const render = () => {
         const st = window.MikuMusic.getState();
         list.innerHTML = window.MikuMusic.getQueue().map((t, i) => `
@@ -232,8 +227,26 @@
         list.querySelectorAll(".track-item").forEach((el) =>
           el.addEventListener("click", () => window.MikuMusic.playIndex(+el.dataset.i)));
       };
-      render();
+
+      const load = async () => {
+        list.style.display = "";
+        list.innerHTML = '<p class="empty-tip" style="padding:16px 0;">歌单加载中… 🎵</p>';
+        fallback.style.display = "none";
+        try {
+          await window.MikuMusic.loadPlaylist();
+          render();
+        } catch (e) {
+          list.style.display = "none";
+          fallback.style.display = "";
+        }
+      };
+
+      await load();
       document.addEventListener("mikumusic", render);
+      document.getElementById("music-retry").addEventListener("click", async () => {
+        window.MikuMusic.reloadPlaylist();
+        await load();
+      });
       document.querySelector(".js-lyric").addEventListener("click", () => window.MikuMusic.lyricOverlay.open());
     }, 0));
     // Miku 点播队列控制

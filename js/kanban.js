@@ -56,12 +56,12 @@
   const EMOTES = ["比心", "圈圈", "脸红", "前倾", "唱歌", "葱", "QQ人"];
   // 挂件用 absolute+手动钉屏 定位：不依赖 position:fixed（部分浏览器滚动后
   // 会停止呈现固定的透明 WebGL 画布）。pin.offsetY = 视口内期望的顶部位置。
-  const pin = { left: 14, offsetY: Math.max(80, window.innerHeight - 400) };
+  const pin = { left: 14, top: Math.min(200, Math.max(80, window.innerHeight - 460)) };
   function applyPin() {
     const el = document.getElementById("kanban");
     if (!el) return;
     el.style.left = Math.max(4, Math.min(window.innerWidth - 120, pin.left)) + "px";
-    el.style.top = (window.scrollY + Math.max(60, Math.min(window.innerHeight - 120, pin.offsetY))) + "px";
+    el.style.top = Math.max(60, Math.min(window.innerHeight - 140, pin.top)) + "px";
   }
   let model = null, app = null, booted = false, bubbleTimer = null;
   let history = []; // [{role, content}]
@@ -109,7 +109,14 @@
           <button class="ctrl-btn ghost" id="kb-cls">🧹 清除 Key</button>
         </div>
       </div>`;
-    document.body.appendChild(el);
+    const anchor = document.createElement("div");
+    anchor.className = "kb-anchor";
+    document.body.appendChild(anchor);
+    anchor.appendChild(el);
+    const syncAnchor = () => { anchor.style.height = document.documentElement.scrollHeight + "px"; };
+    setTimeout(syncAnchor, 300);
+    window.addEventListener("resize", syncAnchor);
+    setInterval(syncAnchor, 3000);
 
     const min = document.createElement("button");
     min.className = "kanban-min";
@@ -125,9 +132,9 @@
     // 恢复上次拖拽的位置（absolute + top 方案，滚屏永不消失）
     try {
       const pos = JSON.parse(localStorage.getItem("kb_pos") || "null");
-      if (pos && window.innerWidth > 900) {
-        pin.left = Math.max(4, Math.min(window.innerWidth - 120, pos.left));
-        pin.offsetY = Math.max(60, pos.offsetY || 80);
+      if (pos) {
+        pin.left = Math.max(4, Math.min(window.innerWidth - 120, pos.left || 14));
+        pin.top = Math.max(60, Math.min(window.innerHeight - 140, pos.top || 120));
       }
     } catch (e) {}
 
@@ -370,25 +377,24 @@
         bubble(CFG.tapLines[Math.floor(Math.random() * CFG.tapLines.length)]);
       });
 
-      // 拖拽整个挂件（top 基准）
+      // 拖拽整个挂件（调整 sticky 的 top/left）
       let dragging = null;
       const host = document.getElementById("kanban");
       stage.addEventListener("pointerdown", (e) => {
         if (e.button !== 0) return;
         const rect = host.getBoundingClientRect();
-        dragging = { x: e.clientX, y: e.clientY, left: rect.left, top: rect.top, scrollY: window.scrollY };
+        dragging = { x: e.clientX, y: e.clientY, left: rect.left, top: rect.top };
         stage.setPointerCapture(e.pointerId);
       });
       stage.addEventListener("pointermove", (e) => {
         if (!dragging) return;
         pin.left = Math.max(4, Math.min(window.innerWidth - 120, dragging.left + e.clientX - dragging.x));
-        pin.offsetY = Math.max(60, Math.min(window.innerHeight - 120, dragging.top + e.clientY - dragging.y));
+        pin.top = Math.max(60, Math.min(window.innerHeight - 140, dragging.top + e.clientY - dragging.y));
         applyPin();
       });
       stage.addEventListener("pointerup", () => {
         if (dragging) {
-          const rect = host.getBoundingClientRect();
-          localStorage.setItem("kb_pos", JSON.stringify({ left: pin.left, offsetY: Math.round(rect.top) }));
+          localStorage.setItem("kb_pos", JSON.stringify({ left: pin.left, top: pin.top }));
         }
         dragging = null;
       });
@@ -408,16 +414,16 @@
       }
       setTimeout(() => bubble("嗨～我是 Miku，点我聊天、点歌哦 ♪"), 1800);
 
-      // 滚动：钉住挂件位置（absolute 布局靠手动同步）+ 补帧
+      // sticky 原生吸顶，无需 JS 同步；仅保留补帧与位置应用
       let scrollRaf = 0;
       window.addEventListener("scroll", () => {
-        applyPin();
         if (scrollRaf) return;
         scrollRaf = requestAnimationFrame(() => { app.render(); scrollRaf = 0; });
       }, { passive: true });
       document.addEventListener("visibilitychange", () => {
-        if (!document.hidden) { applyPin(); app.render(); }
+        if (!document.hidden) app.render();
       });
+      window.addEventListener("resize", applyPin);
 
       // 窗口尺寸变化：重设渲染器与模型位置
       window.addEventListener("resize", () => {

@@ -1136,9 +1136,17 @@ body.light .copy-btn { background: rgba(255, 255, 255, 0.85); }
 }
 
 /* ============ v4：看板娘 ============ */
+.kb-anchor {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  pointer-events: none;
+  z-index: 90;
+}
 .kanban {
-  position: absolute;   /* absolute+JS钉屏：不依赖 position:fixed（规避浏览器滚动呈现 bug） */
-  left: 14px; top: 200px;
+  position: sticky;     /* 原生吸顶：快速滚动也不掉 */
+  pointer-events: auto;
+  left: 14px; top: 140px;
   z-index: 90;
   display: flex; flex-direction: column; align-items: flex-start;
   transition: transform .3s ease;

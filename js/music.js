@@ -127,7 +127,8 @@ const MikuMusic = (function () {
         audio.src = url;
         await audio.play();
         window.__kbSinging = true;
-        loadLrc(item).then(() => emit());
+        window.__lrcTrace && window.__lrcTrace.push("play ok, 调用 loadLrc");
+        loadLrc(item).then(() => emit()).catch((e) => { window.__lrcTrace && window.__lrcTrace.push("loadLrc threw: " + e.message); });
         emit();
         return;
       } catch (e) {
@@ -158,6 +159,7 @@ const MikuMusic = (function () {
   }
 
   async function loadLrc(item) {
+    window.__lrcTrace = ["called with: " + (item ? item.name + " id=" + item.id : "null-item")];
     currentLrc = [];
     // ① lrclib.net 优先（稳定、开放、无需 Key）
     const artistFirst = (item.artist || "").split("/")[0].trim();
@@ -171,7 +173,11 @@ const MikuMusic = (function () {
         if (res.ok) {
           const list = await res.json();
           const synced = list.find((d) => d.syncedLyrics) || list[0];
-          if (synced && synced.syncedLyrics) { currentLrc = parseLrc(synced.syncedLyrics); return; }
+          if (synced && synced.syncedLyrics) {
+          currentLrc = parseLrc(synced.syncedLyrics);
+          window.__lrcTrace.push("lrclib parsed " + currentLrc.length + " 行");
+          return;
+        }
         }
       } catch (e) { /* 下一种组合 */ }
     }
@@ -194,7 +200,10 @@ const MikuMusic = (function () {
           const data = JSON.parse(text);
           currentLrc = parseLrc((Array.isArray(data) ? data[0] : data).lrc || "");
         }
-        if (currentLrc.length) return;
+        if (currentLrc.length) {
+          window.__lrcTrace.push("meting lrc " + currentLrc.length + " 行");
+          return;
+        }
       } catch (e) { /* 试下一个源 */ }
     }
   }

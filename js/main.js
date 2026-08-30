@@ -591,6 +591,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   let keyword = "", activeTag = null, view = "timeline";
   try {
     const saved = JSON.parse(sessionStorage.getItem("blog_state") || "null");
+    window.__dbg = { raw: sessionStorage.getItem("blog_state"), saved, when: new Date().toISOString(), probe: sessionStorage.getItem("probe_test") };
     if (saved) {
       keyword = saved.keyword || "";
       activeTag = saved.activeTag || null;

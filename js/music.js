@@ -220,19 +220,31 @@ const MikuMusic = (function () {
 
   /* ---------- 对外能力 ---------- */
   async function searchAndPlay(name) {
-    let songs = [];
-    try {
-      songs = normalize(await api("search", name));
-    } catch (e) { /* 源不支持搜索就在歌单里找 */ }
-    if (!songs.length && queue.length) {
-      const key = name.toLowerCase();
-      songs = queue.filter((s) => (s.name + " " + s.artist).toLowerCase().includes(key));
+    // ① 先确保歌单已加载（本地 107 首）
+    if (!queue.length) {
+      try { await loadPlaylist(); } catch (e) { /* 歌单加载失败继续尝试在线搜索 */ }
     }
-    if (!songs.length) throw new Error("没找到「" + name + "」，换个歌名或说「播放歌单」试试");
-    queue = songs.concat(queue.filter((q) => !songs.some((s) => s.id === q.id)));
-    qi = 0;
-    await play(queue[0]);
-    return queue[0];
+    // ② 在已加载歌单里模糊匹配
+    if (queue.length) {
+      const key = name.toLowerCase();
+      const matched = queue.filter((s) => (s.name + " " + s.artist).toLowerCase().includes(key));
+      if (matched.length) {
+        queue = matched.concat(queue.filter((q) => !matched.some((m) => m.id === q.id)));
+        qi = 0;
+        await play(queue[0]);
+        return queue[0];
+      }
+    }
+    // ③ 在线搜索（部分源支持）
+    let songs = [];
+    try { songs = normalize(await api("search", name)); } catch (e) {}
+    if (songs.length) {
+      queue = songs.concat(queue.filter((q) => !songs.some((m) => m.id === q.id)));
+      qi = 0;
+      await play(queue[0]);
+      return queue[0];
+    }
+    throw new Error("歌单里没找到「" + name + "」♪ 你可以在网易云 APP 里把这首歌加到歌单，或跟我说「播放歌单」听已有的");
   }
 
   async function loadPlaylist() {

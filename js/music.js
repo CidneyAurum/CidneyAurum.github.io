@@ -1,11 +1,7 @@
 /* ============================================
-   Miku 点播 · 网易云音乐搜索与播放（干净重写版）
-   播放地址优先级：
-     ① 网易云官方直链（免费歌官方直出，不依赖第三方）
-     ② Meting 源返回的流链接（兜底）
-   歌单：接口成功后缓存到 localStorage，接口全挂也能用缓存列表
-   歌词：Meting lrc → lrclib.net 兜底
-   口型：window.__kbSinging 标志驱动（跨域音频也能动嘴）
+   Miku 看板娘 + AI 多协议对话 + 音乐点播引擎
+   AI 协议：OpenAI 兼容 / Google Gemini / Anthropic Claude（自选）
+   播放：网易云官方直链优先 + Meting 兜底 + 歌单缓存
    ============================================ */
 "use strict";
 
@@ -13,7 +9,7 @@ function esc(s) { return String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<"
 
 const MikuMusic = (function () {
   const CFG = {
-    playlistId: "18205251703", // ✏️ 你的网易云歌单 ID
+    playlistId: "18205251703",
     publicApis: [
       "https://api.injahow.cn/meting/",
       "https://met.liiiu.cn/",
@@ -23,10 +19,10 @@ const MikuMusic = (function () {
   };
 
   let audio = null;
-  let queue = [];        // [{name, artist, id, stream, pic}]
+  let queue = [];
   let qi = -1;
   let playing = false;
-  let currentLrc = [];   // [{t, text}]
+  let currentLrc = [];
   const listeners = new Set();
 
   function fmt(sec) {
@@ -45,9 +41,7 @@ const MikuMusic = (function () {
       try {
         const ctrl = new AbortController();
         const timer = setTimeout(() => ctrl.abort(), 8000);
-        const res = await fetch(base + "?type=" + type + "&server=netease&id=" + encodeURIComponent(id), {
-          signal: ctrl.signal,
-        });
+        const res = await fetch(base + "?type=" + type + "&server=netease&id=" + encodeURIComponent(id), { signal: ctrl.signal });
         clearTimeout(timer);
         if (!res.ok) { errors.push(res.status); continue; }
         const text = await res.text();
@@ -56,31 +50,25 @@ const MikuMusic = (function () {
         const ok = Array.isArray(data) ? data.length > 0 : !!data;
         if (ok) return data;
         errors.push("empty");
-      } catch (e) {
-        errors.push(e.name);
-      }
+      } catch (e) { errors.push(e.name); }
     }
-    throw new Error("音乐接口全部失败（已尝试 " + apiSources().length + " 个源）");
+    throw new Error("音乐接口全部失败");
   }
 
-  /* Meting 条目 → 统一格式 */
   function normalize(list) {
-    return (list || [])
-      .map((s) => {
-        const raw = String(s.url || "");
-        const m = raw.match(/[?&]id=(\d+)/);
-        return {
-          name: s.name || s.title || "未知",
-          artist: s.artist || s.artists || "",
-          id: m ? m[1] : String(s.id || ""),
-          stream: /^https?:\/\//.test(raw) ? raw : "",
-          pic: s.pic || "",
-        };
-      })
-      .filter((s) => s.id || s.stream);
+    return (list || []).map((s) => {
+      const raw = String(s.url || "");
+      const m = raw.match(/[?&]id=(\d+)/);
+      return {
+        name: s.name || s.title || "未知",
+        artist: s.artist || s.artists || "",
+        id: m ? m[1] : String(s.id || ""),
+        stream: /^https?:\/\//.test(raw) ? raw : "",
+        pic: s.pic || "",
+      };
+    }).filter((s) => s.id || s.stream);
   }
 
-  /* ---------- 播放核心 ---------- */
   function ensureAudio() {
     if (audio) return audio;
     audio = new Audio();
@@ -103,7 +91,6 @@ const MikuMusic = (function () {
     return audio;
   }
 
-  /* 播放地址候选：官方直链优先，Meting 流链接兜底 */
   function streamCandidates(item) {
     const list = [];
     if (item.id) list.push("https://music.163.com/song/media/outer/url?id=" + item.id + ".mp3");
@@ -112,35 +99,28 @@ const MikuMusic = (function () {
   }
 
   async function play(item) {
-    if (window.Ambient && window.Ambient.isRunning && window.Ambient.isRunning()) {
-      window.Ambient.toggle(); // 电台让位
-    }
+    if (window.Ambient && window.Ambient.isRunning && window.Ambient.isRunning()) window.Ambient.toggle();
     ensureAudio();
     playing = false;
     emit();
     const candidates = streamCandidates(item);
-    if (!candidates.length) throw new Error("拿不到播放地址（可能是 VIP 或版权限制）");
+    if (!candidates.length) throw new Error("拿不到播放地址");
     let lastErr = null;
     for (const url of candidates) {
       try {
-        audio.removeAttribute("crossorigin"); // 直连最稳；口型由唱歌标志驱动，不依赖音频分析
+        audio.removeAttribute("crossorigin");
         audio.src = url;
         await audio.play();
         window.__kbSinging = true;
-        window.__lrcTrace && window.__lrcTrace.push("play ok, 调用 loadLrc");
-        loadLrc(item).then(() => emit()).catch((e) => { window.__lrcTrace && window.__lrcTrace.push("loadLrc threw: " + e.message); });
+        loadLrc(item).then(() => emit());
         emit();
         return;
-      } catch (e) {
-        lastErr = e;
-      }
+      } catch (e) { lastErr = e; }
     }
     window.__kbSinging = false;
-    const hint = lastErr && lastErr.name === "NotSupportedError" ? "（歌曲可能是 VIP 或已下架）" : "";
-    throw new Error("播放失败" + hint + "：" + (lastErr ? lastErr.message : "所有地址都不可用"));
+    throw new Error("播放失败：" + (lastErr ? lastErr.message : "所有地址都不可用"));
   }
 
-  /* ---------- 歌词 ---------- */
   function parseLrc(text) {
     const out = [];
     const tagRe = /\[(\d{1,2}):(\d{1,2})(?:[.:](\d{1,3}))?\]/g;
@@ -160,51 +140,34 @@ const MikuMusic = (function () {
   }
 
   async function loadLrc(item) {
-    window.__lrcTrace = ["called with: " + (item ? item.name + " id=" + item.id : "null-item")];
     currentLrc = [];
-    // ① lrclib.net 优先（稳定、开放、无需 Key）
     const artistFirst = (item.artist || "").split("/")[0].trim();
     const tries = [
       { track_name: item.name || "", artist_name: artistFirst },
       { track_name: item.name || "" },
     ];
-    for (const q of tries) {
+    for (const qp of tries) {
       try {
-        const res = await fetch("https://lrclib.net/api/search?" + new URLSearchParams(q).toString());
-        if (res.ok) {
-          const list = await res.json();
-          const synced = list.find((d) => d.syncedLyrics) || list[0];
-          if (synced && synced.syncedLyrics) {
-          currentLrc = parseLrc(synced.syncedLyrics);
-          window.__lrcTrace.push("lrclib parsed " + currentLrc.length + " 行");
-          return;
-        }
-        }
+        const res = await fetch("https://lrclib.net/api/search?" + new URLSearchParams(qp).toString());
+        if (!res.ok) continue;
+        const list = await res.json();
+        const synced = list.find((d) => d.syncedLyrics) || list[0];
+        if (synced && synced.syncedLyrics) { currentLrc = parseLrc(synced.syncedLyrics); return; }
       } catch (e) { /* 下一种组合 */ }
     }
-    // ② Meting 源 lrc（有的返回原始 LRC 文本，有的返回 JSON）
     for (const base of apiSources()) {
       try {
         if (!item.id) break;
         const ctrl = new AbortController();
         const timer = setTimeout(() => ctrl.abort(), 5000);
-        const res = await fetch(base + "?type=lrc&server=netease&id=" + encodeURIComponent(item.id), {
-          signal: ctrl.signal,
-        });
+        const res = await fetch(base + "?type=lrc&server=netease&id=" + encodeURIComponent(item.id), { signal: ctrl.signal });
         clearTimeout(timer);
         if (!res.ok) continue;
         const text = (await res.text()).trim();
-        if (!text || text.startsWith("{\"error")) continue;
-        if (text.startsWith("[") || text.includes("[00:")) {
-          currentLrc = parseLrc(text);
-        } else {
-          const data = JSON.parse(text);
-          currentLrc = parseLrc((Array.isArray(data) ? data[0] : data).lrc || "");
-        }
-        if (currentLrc.length) {
-          window.__lrcTrace.push("meting lrc " + currentLrc.length + " 行");
-          return;
-        }
+        if (!text || text.startsWith('{"error')) continue;
+        if (text.startsWith("[") || text.includes("[00:")) { currentLrc = parseLrc(text); }
+        else { const data = JSON.parse(text); currentLrc = parseLrc((Array.isArray(data) ? data[0] : data).lrc || ""); }
+        if (currentLrc.length) return;
       } catch (e) { /* 试下一个源 */ }
     }
   }
@@ -220,66 +183,37 @@ const MikuMusic = (function () {
 
   /* ---------- 对外能力 ---------- */
   async function searchAndPlay(name) {
-    // ① 先确保歌单已加载（本地 107 首）
-    if (!queue.length) {
-      try { await loadPlaylist(); } catch (e) { /* 歌单加载失败继续尝试在线搜索 */ }
-    }
-    // ② 在已加载歌单里模糊匹配
+    if (!queue.length) { try { await loadPlaylist(); } catch (e) {} }
     if (queue.length) {
       const key = name.toLowerCase();
       const matched = queue.filter((s) => (s.name + " " + s.artist).toLowerCase().includes(key));
-      if (matched.length) {
-        queue = matched.concat(queue.filter((q) => !matched.some((m) => m.id === q.id)));
-        qi = 0;
-        await play(queue[0]);
-        return queue[0];
-      }
+      if (matched.length) { queue = matched.concat(queue.filter((q) => !matched.some((m) => m.id === q.id))); qi = 0; await play(queue[0]); return queue[0]; }
     }
-    // ③ 在线搜索（部分源支持）
     let songs = [];
     try { songs = normalize(await api("search", name)); } catch (e) {}
-    if (songs.length) {
-      queue = songs.concat(queue.filter((q) => !songs.some((m) => m.id === q.id)));
-      qi = 0;
-      await play(queue[0]);
-      return queue[0];
-    }
-    throw new Error("歌单里没找到「" + name + "」♪ 你可以在网易云 APP 里把这首歌加到歌单，或跟我说「播放歌单」听已有的");
+    if (!songs.length) throw new Error("歌单里和在线都没找到「" + name + "」♪ 你可以在网易云 APP 里把这首歌加到歌单，或跟我说「播放歌单」听已有的");
+    queue = songs.concat(queue.filter((q) => !songs.some((s) => s.id === q.id)));
+    qi = 0;
+    await play(queue[0]);
+    return queue[0];
   }
 
   async function loadPlaylist() {
     if (queue.length) return queue.length;
-    // ① 仓库内置歌单快照（data/playlist.json，构建时快照，永不失败）
+    let fromCache = false;
     try {
-      const res = await fetch("data/playlist.json", { cache: "no-cache" });
-      if (res.ok) {
-        const data = await res.json();
-        queue = (data.playlist || []).filter((s) => s.id);
-      }
-    } catch (e) { /* 落到接口 */ }
-    // ② 仓库快照不存在时：Meting 接口 / 本地缓存
-    if (!queue.length) {
-      try {
-        queue = normalize(await api("playlist", CFG.playlistId));
-      } catch (e) {
-        let cached = null;
-        try { cached = localStorage.getItem("mm_playlist_cache"); } catch (err) {}
-        if (!cached) throw new Error("歌单加载失败且无缓存");
-        queue = JSON.parse(cached);
-      }
+      queue = normalize(await api("playlist", CFG.playlistId));
+      try { localStorage.setItem("mm_playlist_cache", JSON.stringify(queue)); } catch (e) {}
+    } catch (e) {
+      let cached = null;
+      try { cached = localStorage.getItem("mm_playlist_cache"); } catch (err) {}
+      if (!cached) throw new Error("音乐接口全部失败，且本机没有历史歌单缓存");
+      try { queue = JSON.parse(cached); } catch (err2) { throw new Error("本地歌单缓存损坏"); }
+      fromCache = true;
     }
     if (!queue.length) throw new Error("歌单读取失败了");
     qi = -1;
     emit();
-    // ③ 后台静默刷新（接口可用时更新缓存，失败不影响当前列表）
-    api("playlist", CFG.playlistId).then((list) => {
-      const fresh = normalize(list);
-      if (fresh.length) {
-        queue = fresh;
-        try { localStorage.setItem("mm_playlist_cache", JSON.stringify(queue)); } catch (e) {}
-        emit();
-      }
-    }).catch(() => {});
     return queue.length;
   }
 
@@ -334,7 +268,7 @@ const MikuMusic = (function () {
   }
   function on(fn) { listeners.add(fn); }
 
-  /* ---------- 歌词横幅（音浪柱 + 逐字打字 + 弹出大字） ---------- */
+  /* ---------- 歌词横幅 + 弹出大字 ---------- */
   let lastBarLine = -2, typingTimer = 0, popTimer = 0;
 
   function lyricBarTick(force) {
@@ -369,8 +303,6 @@ const MikuMusic = (function () {
     }
   }
 
-  /* 界面弹出歌词 —— 1:1 复刻原版 effect.py：
-     暖白字+金色描边 / 整行随机斜排 / 逐字打字机 / 每字持续抖动 / 随机位置 / 旧句上飘淡出 */
   function popLyric(text, lineIdx) {
     let host = document.getElementById("lyric-pop-host");
     if (!host) {
@@ -404,7 +336,7 @@ const MikuMusic = (function () {
     popTimer = setTimeout(() => clearInterval(typeTimer), chars.length * 100 + 120);
   }
 
-  /* ---------- 边狱巴士风格 · 全屏歌词演出浮层 ---------- */
+  /* ---------- 全屏歌词演出浮层 ---------- */
   let overlayBuilt = false, overlayOpen = false, lastLoLine = -2;
 
   function buildOverlay() {
@@ -488,3 +420,95 @@ const MikuMusic = (function () {
 })();
 
 window.MikuMusic = MikuMusic;
+
+/* ---------- 悬浮音乐钮 ---------- */
+document.addEventListener("DOMContentLoaded", () => {
+  const fab = document.getElementById("fab-music");
+  if (!fab || !window.MikuMusic) return;
+  const sync = (st) => { fab.textContent = st.playing ? "❚❚" : "♪"; };
+  document.addEventListener("mikumusic", (e) => sync(e.detail || {}));
+  fab.addEventListener("click", () => window.MikuMusic.toggle());
+  sync(window.MikuMusic.getState());
+});
+
+/* ---------- AI 多协议对话引擎 ---------- */
+const AIChat = (function () {
+  let history = [];
+
+  function getSettings() {
+    return {
+      protocol: localStorage.getItem("kb_protocol") || "openai",
+      base: (localStorage.getItem("kb_base") || "https://api.deepseek.com").replace(/\/+$/, ""),
+      model: localStorage.getItem("kb_model") || "deepseek-chat",
+      key: localStorage.getItem("kb_key") || "",
+    };
+  }
+
+  const SYSTEM_PROMPT =
+    "你是看板娘「Miku」，住在 CidneyAurum 的个人网站小窝里。性格元气可爱、偶尔傲娇。" +
+    "用中文回复，每次 1~3 句话，亲切自然。你可以在回复里插入一个表情标记来做动作，" +
+    "可用表情：比心、圈圈、脸红、前倾、唱歌、葱、QQ人，格式如【表情:比心】，每次最多一个，不必每句都带。" +
+    "主人叫 CidneyAurum。如果被问到你是谁，就说你是这个网站的看板娘初音。";
+
+  async function requestOpenAI(settings, messages) {
+    const res = await fetch(settings.base + "/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + settings.key },
+      body: JSON.stringify({ model: settings.model, messages, temperature: 0.9 }),
+    });
+    if (!res.ok) throw new Error("API " + res.status + ": " + (await res.text()).slice(0, 120));
+    const data = await res.json();
+    return data.choices?.[0]?.message?.content || "(空回复)";
+  }
+
+  async function requestGemini(settings, messages) {
+    const system = messages.find((m) => m.role === "system");
+    const contents = messages.filter((m) => m.role !== "system").map((m) => ({
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: m.content }],
+    }));
+    const body = { contents, generationConfig: { temperature: 0.9, maxOutputTokens: 512 } };
+    if (system) body.systemInstruction = { parts: [{ text: system.content }] };
+    const res = await fetch(
+      settings.base + "/v1beta/models/" + settings.model + ":generateContent?key=" + settings.key,
+      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
+    );
+    if (!res.ok) throw new Error("Gemini " + res.status + ": " + (await res.text()).slice(0, 120));
+    const data = await res.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || "(空回复)";
+  }
+
+  async function requestClaude(settings, messages) {
+    const system = messages.find((m) => m.role === "system");
+    const msgs = messages.filter((m) => m.role !== "system");
+    const res = await fetch(settings.base + "/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": settings.key,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true",
+      },
+      body: JSON.stringify({
+        model: settings.model || "claude-sonnet-4-20250514",
+        max_tokens: 512,
+        system: system ? system.content : undefined,
+        messages: msgs,
+      }),
+    });
+    if (!res.ok) throw new Error("Claude " + res.status + ": " + (await res.text()).slice(0, 120));
+    const data = await res.json();
+    return data.content?.[0]?.text || "(空回复)";
+  }
+
+  async function askAI(messages) {
+    const settings = getSettings();
+    if (!settings.key) throw new Error("请先在设置里填 API Key");
+    if (settings.protocol === "gemini") return requestGemini(settings, messages);
+    if (settings.protocol === "claude") return requestClaude(settings, messages);
+    return requestOpenAI(settings, messages);
+  }
+
+  return { getSettings, askAI, SYSTEM_PROMPT };
+})();
+

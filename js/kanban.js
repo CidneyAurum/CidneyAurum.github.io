@@ -17,8 +17,15 @@
         base: (localStorage.getItem("kb_base") || "https://api.deepseek.com").replace(/\/+$/, ""),
         model: localStorage.getItem("kb_model") || "deepseek-chat",
         key: localStorage.getItem("kb_key") || "",
+        proxy: (localStorage.getItem("kb_proxy") || "").replace(/\/+$/, ""),
         tts: localStorage.getItem("kb_tts") !== "0",
       };
+    }
+
+    /* 若配置了 CORS 代理，则把请求改道代理转发（代理负责加跨域头） */
+    function u(st, path) {
+      const raw = st.base + path;
+      return st.proxy ? st.proxy + "/?url=" + encodeURIComponent(raw) : raw;
     }
 
     const SYSTEM_PROMPT =
@@ -28,7 +35,7 @@
       "主人叫 CidneyAurum。如果被问到你是谁，就说你是这个网站的看板娘初音。";
 
     async function requestOpenAI(st, messages) {
-      const res = await fetch(st.base + "/chat/completions", {
+      const res = await fetch(u(st, "/chat/completions"), {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + st.key },
         body: JSON.stringify({ model: st.model, messages, temperature: 0.9 }),
@@ -45,7 +52,7 @@
       }));
       const body = { contents, generationConfig: { temperature: 0.9, maxOutputTokens: 512 } };
       if (sys) body.systemInstruction = { parts: [{ text: sys.content }] };
-      const res = await fetch(st.base + "/v1beta/models/" + st.model + ":generateContent?key=" + st.key, {
+      const res = await fetch(u(st, "/v1beta/models/" + st.model + ":generateContent?key=" + st.key), {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error("Gemini " + res.status + ": " + (await res.text()).slice(0, 140));
@@ -56,7 +63,7 @@
     async function requestClaude(st, messages) {
       const sys = messages.find((m) => m.role === "system");
       const msgs = messages.filter((m) => m.role !== "system");
-      const res = await fetch(st.base + "/v1/messages", {
+      const res = await fetch(u(st, "/v1/messages"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json", "x-api-key": st.key,
@@ -80,13 +87,13 @@
     /* 读取可用模型列表（协议自选） */
     async function fetchModels(st) {
       if (st.protocol === "gemini") {
-        const res = await fetch(st.base + "/v1beta/models?key=" + st.key);
+        const res = await fetch(u(st, "/v1beta/models?key=" + st.key));
         if (!res.ok) throw new Error("Gemini 模型列表 " + res.status + ": " + (await res.text()).slice(0, 100));
         const data = await res.json();
         return (data.models || []).map((m) => (m.name || "").replace(/^models\//, "")).filter(Boolean);
       }
       if (st.protocol === "claude") {
-        const res = await fetch(st.base + "/v1/models", {
+        const res = await fetch(u(st, "/v1/models"), {
           headers: { "x-api-key": st.key, "anthropic-version": "2023-06-01" },
         });
         if (!res.ok) throw new Error("Claude 模型列表 " + res.status);
@@ -94,7 +101,7 @@
         return (data.data || []).map((m) => m.id).filter(Boolean);
       }
       // OpenAI 兼容
-      const res = await fetch(st.base + "/models", {
+      const res = await fetch(u(st, "/models"), {
         headers: { Authorization: "Bearer " + st.key },
       });
       if (!res.ok) throw new Error("模型列表 " + res.status + ": " + (await res.text()).slice(0, 100));
@@ -140,6 +147,7 @@
         <label for="kb-protocol">接口协议</label>
         <select id="kb-protocol">
           <option value="openai">OpenAI 兼容（DeepSeek / 通义 / 智谱 / Kimi…）</option>
+          <option value="tokenrhythm">基元律动（TokenRhythm）</option>
           <option value="gemini">Google Gemini</option>
           <option value="claude">Anthropic Claude</option>
         </select>
@@ -153,6 +161,8 @@
         </div>
         <label for="kb-key">API Key</label>
         <input id="kb-key" type="password" placeholder="sk-…" autocomplete="off">
+        <label for="kb-proxy">CORS 代理地址（可选，基元律动必填）</label>
+        <input id="kb-proxy" placeholder="https://你的worker.workers.dev" autocomplete="off">
         <label class="kb-check"><input type="checkbox" id="kb-tts"> 语音朗读回复</label>
         <div class="hint" id="kb-hint"></div>
       </div>
@@ -365,7 +375,7 @@
   function initSettings() {
     const el = {
       protocol: $("kb-protocol"), base: $("kb-base"), model: $("kb-model"),
-      list: $("kb-model-list"), key: $("kb-key"), tts: $("kb-tts"),
+      list: $("kb-model-list"), key: $("kb-key"), proxy: $("kb-proxy"), tts: $("kb-tts"),
       modelsBtn: $("kb-models-btn"), hint: $("kb-hint"),
     };
     const st = KB.getSettings();
@@ -373,6 +383,7 @@
     el.base.value = st.base;
     el.model.value = st.model;
     el.key.value = st.key;
+    el.proxy.value = st.proxy;
     el.tts.checked = st.tts;
 
     const save = () => {
@@ -380,20 +391,24 @@
       localStorage.setItem("kb_base", el.base.value.replace(/\/+$/, ""));
       localStorage.setItem("kb_model", el.model.value.trim());
       localStorage.setItem("kb_key", el.key.value.trim());
+      localStorage.setItem("kb_proxy", el.proxy.value.replace(/\/+$/, ""));
       localStorage.setItem("kb_tts", el.tts.checked ? "1" : "0");
     };
-    ["change", "blur"].forEach((ev) => [el.protocol, el.base, el.model, el.key, el.tts].forEach((n) => n.addEventListener(ev, save)));
+    ["change", "blur"].forEach((ev) => [el.protocol, el.base, el.model, el.key, el.proxy, el.tts].forEach((n) => n.addEventListener(ev, save)));
 
     // 协议切换时的默认占位提示
     const presets = {
       openai: { base: "https://api.deepseek.com", model: "deepseek-chat" },
+      tokenrhythm: { base: "https://tokenrhythm.studio/v1", model: "glm-5" },
       gemini: { base: "https://generativelanguage.googleapis.com", model: "gemini-2.0-flash" },
       claude: { base: "https://api.anthropic.com", model: "claude-sonnet-4-20250514" },
     };
     el.protocol.addEventListener("change", () => {
       const p = presets[el.protocol.value];
-      if (p && !el.base.value.trim()) el.base.value = p.base;
-      if (p && !el.model.value.trim()) el.model.value = p.model;
+      if (p) {
+        if (p.base) el.base.value = p.base;
+        if (p.model) el.model.value = p.model;
+      }
       save();
     });
 
@@ -403,6 +418,7 @@
         protocol: el.protocol.value,
         base: el.base.value.replace(/\/+$/, ""),
         key: el.key.value.trim(),
+        proxy: el.proxy.value.replace(/\/+$/, ""),
       };
       if (!cur.key) { el.hint.textContent = "先填 API Key 才能读取模型"; el.hint.style.color = "#ff7b7b"; return; }
       el.modelsBtn.textContent = "…";

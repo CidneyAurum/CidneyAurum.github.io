@@ -1281,7 +1281,23 @@ body.light .kb-input-row input { background: rgba(255,255,255,.6); }
   outline: none;
 }
 body.light .kb-set input { background: rgba(255,255,255,.6); }
-.kb-set .hint { margin-top: 0; }
+.kb-set .hint { margin-top: 0; font-size: 11.5px; line-height: 1.5; min-height: 1.2em; color: var(--text-light); }
+.kb-set label { font-size: 12px; color: var(--text-light); letter-spacing: .04em; }
+.kb-set select {
+  padding: 9px 12px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: rgba(4,5,12,.45);
+  color: var(--text);
+  font-size: 12.5px;
+  outline: none;
+  cursor: pointer;
+}
+body.light .kb-set select { background: rgba(255,255,255,.6); }
+.kb-model-row { display: flex; gap: 8px; align-items: center; }
+.kb-model-row input { flex: 1; min-width: 0; }
+.kb-model-row .kb-btn { flex: 0 0 34px; border-radius: 9px; }
+.kb-check { display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text) !important; }
 .kanban-min {
   position: fixed;
   left: 16px; bottom: 16px;

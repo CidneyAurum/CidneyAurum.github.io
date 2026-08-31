@@ -1389,13 +1389,29 @@ body.light .kb-set input { background: rgba(255,255,255,.6); }
 .lyric-overlay .lo-close:hover { border-color: #d4453a; color: #fff; box-shadow: 0 6px 20px rgba(212, 69, 58, .35); }
 
 /* 看板娘画布：强制独立合成层，防滚动时丢帧 */
-.kanban { will-change: transform; }
-.kb-stage canvas { transform: translateZ(0); }
+.kanban {
+  isolation: isolate;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+.kb-stage canvas {
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
 .kb-stage, .kb-bar, .kb-chat, .kb-set { pointer-events: auto; }
 
 /* 看板娘画布：强制独立合成层，防滚动时丢帧 */
-.kanban { will-change: transform; }
-.kb-stage canvas { transform: translateZ(0); }
+.kanban {
+  isolation: isolate;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+.kb-stage canvas {
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
 .kb-stage, .kb-bar, .kb-chat, .kb-set { pointer-events: auto; }
 
 /* ============ 边狱巴士 · 横幅歌词舞台（播放时接管打字横幅） ============ */
@@ -1424,8 +1440,16 @@ body.light .kb-set input { background: rgba(255,255,255,.6); }
 
 /* 看板娘画布：强制独立合成层，防滚动时丢帧 */
 /* 看板娘画布：强制独立合成层，防滚动时丢帧 */
-.kanban { will-change: transform; }
-.kb-stage canvas { transform: translateZ(0); }
+.kanban {
+  isolation: isolate;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+.kb-stage canvas {
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
 .kb-stage, .kb-bar, .kb-chat, .kb-set { pointer-events: auto; }
 
 /* ============ 边狱巴士 · 主界面歌词舞台 ============ */
@@ -1464,8 +1488,16 @@ body.light .kb-set input { background: rgba(255,255,255,.6); }
 
 /* 看板娘画布：强制独立合成层，防滚动时丢帧 */
 /* 看板娘画布：强制独立合成层，防滚动时丢帧 */
-.kanban { will-change: transform; }
-.kb-stage canvas { transform: translateZ(0); }
+.kanban {
+  isolation: isolate;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+.kb-stage canvas {
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
 .kb-stage, .kb-bar, .kb-chat, .kb-set { pointer-events: auto; }
 
 /* ============ 桌面歌词条（主界面常驻歌词） ============ */

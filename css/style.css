@@ -1144,7 +1144,7 @@ body.light .copy-btn { background: rgba(255, 255, 255, 0.85); }
   z-index: 90;
 }
 .kanban {
-  position: sticky;     /* 原生吸顶：快速滚动也不掉 */
+  position: fixed;      /* 固定视口左侧，不随文档流/滚动走位 */
   pointer-events: none; /* 盒身不拦截鼠标，只有实际控件可点 */
   width: max-content;   /* 盒子收缩到内容大小，不横占整页 */
   left: 14px; top: 140px;

@@ -336,10 +336,9 @@
     if (loading) loading.remove();
     app.stage.addChild(model);
     model.interactive = true;
-    model.on("pointerdown", () => {
-      setEmotion("比心");
-      bubble("比心给你 ♡");
-    });
+
+    // 显式播放 Idle 动画（呼吸/眨眼/晃动），模型才会"活"起来
+    try { model.motion("Idle"); } catch (e) {}
 
     // 关闭作者水印（模型说明允许关闭）
     try {
@@ -426,6 +425,55 @@
 
   function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 
+  /* ---------- 拖拽移动看板娘（按住 Miku 拖动到任意位置） ---------- */
+  function initDrag() {
+    const root = $("kanban"), stage = $("kb-stage");
+    if (!root || !stage) return;
+    let dragging = false, moved = false, sx = 0, sy = 0, ox = 0, oy = 0;
+    stage.addEventListener("pointerdown", (e) => {
+      dragging = true; moved = false;
+      sx = e.clientX; sy = e.clientY;
+      const r = root.getBoundingClientRect();
+      ox = r.left; oy = r.top;
+      try { stage.setPointerCapture(e.pointerId); } catch (err) {}
+    });
+    stage.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      const dx = e.clientX - sx, dy = e.clientY - sy;
+      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
+      if (moved) {
+        root.style.left = Math.max(0, Math.min(window.innerWidth - 60, ox + dx)) + "px";
+        root.style.top = Math.max(0, Math.min(window.innerHeight - 60, oy + dy)) + "px";
+      }
+    });
+    const end = () => {
+      if (!dragging) return;
+      dragging = false;
+      if (!moved) {
+        setEmotion("比心");
+        bubble("比心给你 ♡");
+      } else {
+        const r = root.getBoundingClientRect();
+        try { localStorage.setItem("kb_pos", JSON.stringify({ left: r.left, top: r.top })); } catch (err) {}
+      }
+    };
+    stage.addEventListener("pointerup", end);
+    stage.addEventListener("pointercancel", end);
+  }
+
+  /* 恢复上次拖拽的位置 */
+  function restorePos() {
+    const root = $("kanban");
+    if (!root) return;
+    try {
+      const p = JSON.parse(localStorage.getItem("kb_pos") || "null");
+      if (p && typeof p.left === "number" && typeof p.top === "number") {
+        root.style.left = Math.max(0, Math.min(window.innerWidth - 60, p.left)) + "px";
+        root.style.top = Math.max(0, Math.min(window.innerHeight - 60, p.top)) + "px";
+      }
+    } catch (e) {}
+  }
+
   /* ---------- 绑定交互 ---------- */
   function bindUI() {
     const chat = $("kb-chat"), set = $("kb-set");
@@ -453,6 +501,7 @@
       root.classList.remove("hidden");
       min.classList.remove("show");
     });
+    initDrag();
   }
 
   /* ---------- 启动 ---------- */
@@ -460,6 +509,7 @@
     buildDOM();
     bindUI();
     initSettings();
+    restorePos();
     addMsg("ai", "你好呀主人～ 我是 Miku ♪ 可以跟我聊天，也能跟我说「放 歌名」点歌哦。点 ⚙️ 配置 AI 接口。");
     bubble("欢迎来到小窝 ♪");
     try { initPixi(); } catch (e) { console.warn("[kanban]", e); }

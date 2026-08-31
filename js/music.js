@@ -136,7 +136,8 @@ const MikuMusic = (function () {
       }
     }
     window.__kbSinging = false;
-    throw new Error("播放失败：" + (lastErr ? lastErr.message : "所有地址都不可用（可能是 VIP 或版权限制）"));
+    const hint = lastErr && lastErr.name === "NotSupportedError" ? "（歌曲可能是 VIP 或已下架）" : "";
+    throw new Error("播放失败" + hint + "：" + (lastErr ? lastErr.message : "所有地址都不可用"));
   }
 
   /* ---------- 歌词 ---------- */
@@ -292,8 +293,10 @@ const MikuMusic = (function () {
   }
 
   function toggle() {
-    if (!audio || !audio.src) return playPlaylist();
-    if (audio.paused) { audio.play(); playing = true; } else { audio.pause(); playing = false; }
+    if (!audio || !audio.src) return playPlaylist().catch((e) => { window.__kbPlayErr = e.message; });
+    try {
+      if (audio.paused) { audio.play(); playing = true; } else { audio.pause(); playing = false; }
+    } catch (e) { /* ignore */ }
     emit();
   }
 

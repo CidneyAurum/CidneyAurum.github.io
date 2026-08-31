@@ -1,0 +1,14 @@
+(async () => {
+  const out = { errs: [] };
+  window.addEventListener('error', (e) => out.errs.push('ERR: ' + e.message));
+  window.addEventListener('unhandledrejection', (e) => out.errs.push('REJ: ' + String(e.reason).slice(0, 100)));
+  const item = document.querySelector('#track-list .track-item');
+  if (!item) { out.noItem = true; return out; }
+  item.click();
+  await new Promise(r => setTimeout(r, 9000));
+  const s = window.MikuMusic.getState();
+  out.playing = s.playing;
+  out.song = s.current ? s.current.name : '';
+  out.lrcLines = s.lrc.length;
+  return out;
+})()

@@ -283,12 +283,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     grid.innerHTML = '<p class="empty-tip">画廊还空着，往 assets/gallery/ 丢几张图试试吧 ♧</p>';
     return;
   }
+  const thumb = (src) => src.replace(/\/(gallery|says)\//, "/$1/thumbs/").replace(/\.(jpe?g|png)$/i, ".webp");
   grid.innerHTML = photos
     .map(
       (p) => `
     <figure class="polaroid">
       <span class="tape"></span>
-      <div class="ph"><img src="${p.src}" alt="${p.caption}" loading="lazy"></div>
+      <div class="ph"><img src="${thumb(p.src)}" data-full="${p.src}" alt="${p.caption}" loading="lazy" decoding="async"></div>
       <figcaption class="cap">${p.caption} <small>${p.when}</small></figcaption>
     </figure>`
     )
@@ -375,7 +376,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!isPhoto || !t.src || t.src.startsWith("blob:")) return;
     e.preventDefault();
     e.stopPropagation();
-    img.src = t.src;
+    img.src = t.dataset.full || t.src;
     cap.textContent = t.alt || "";
     box.classList.add("open");
   });
@@ -553,11 +554,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       const gridCls = imgs.length === 1 ? " one" : imgs.length === 2 || imgs.length === 4 ? " two" : " grid3";
       return `
       <div class="says-card card rv">
-        <img class="says-avatar" src="assets/avatar.jpg" alt="">
+        <img class="says-avatar" src="assets/avatar.webp" alt="">
         <div class="says-main">
           <div class="says-meta"><b>CidneyAurum</b><span class="says-time">${rel(s.time)}</span></div>
           ${s.text ? `<div class="says-text">${esc(s.text)}</div>` : ""}
-          ${imgs.length ? `<div class="says-grid${gridCls}">${imgs.map((src) => `<img src="${src}" alt="" loading="lazy">`).join("")}</div>` : ""}
+          ${imgs.length ? `<div class="says-grid${gridCls}">${imgs.map((src) => `<img src="${thumb(src)}" data-full="${src}" alt="" loading="lazy" decoding="async">`).join("")}</div>` : ""}
         </div>
       </div>`;
     })

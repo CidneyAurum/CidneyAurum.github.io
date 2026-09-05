@@ -160,7 +160,7 @@ POST_TEMPLATE = """<!DOCTYPE html>
 <body class="page-enter" data-page="post">
   <div class="read-progress" id="read-progress"></div>
   <div class="scene" aria-hidden="true">
-    <img class="scene-bg" src="../assets/background.png" alt="">
+    <img class="scene-bg" src="../assets/background-blur.webp" alt="">
     <div class="scene-overlay"></div>
     <div class="scene-grass"></div>
   </div>
@@ -209,7 +209,7 @@ POST_TEMPLATE = """<!DOCTYPE html>
     <aside>
       {toc_html}
       <div class="card side-card side-profile">
-        <div class="avatar-ring"><img src="../assets/avatar.jpg" alt="头像"></div>
+        <div class="avatar-ring"><img src="../assets/avatar.webp" alt="头像"></div>
         <div class="side-name">{owner}</div>
         <p class="side-desc">一只喜欢写代码也喜欢看番的普通人类（大概）。</p>
         <div class="side-social">
@@ -221,7 +221,7 @@ POST_TEMPLATE = """<!DOCTYPE html>
       <div class="card side-card">
         <div class="side-label">NOW PLAYING</div>
         <div class="np-row">
-          <img class="np-cover" src="../assets/background.png" alt="">
+          <img class="np-cover" src="../assets/background-blur.webp" alt="">
           <div class="np-info">
             <div class="np-title js-player-title">环境电台 · Ambient</div>
             <div class="np-sub">{motto}</div>
@@ -243,7 +243,7 @@ POST_TEMPLATE = """<!DOCTYPE html>
   </footer>
 
   <div class="mini-player">
-    <img class="mini-cover" src="../assets/background.png" alt="">
+    <img class="mini-cover" src="../assets/background-blur.webp" alt="">
     <div>
       <div class="mini-title js-player-title">环境电台 · Ambient</div>
       <div class="mini-sub">{motto}</div>

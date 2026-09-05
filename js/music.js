@@ -30,6 +30,8 @@ const MikuMusic = (function () {
   let playing = false;
   let currentLrc = [];
   let mode = "list";
+  let expectPlay = false;  // 处于“应当正在播放”状态（用于断流自愈判定）
+  let failStreak = 0;      // 连续断流次数（防切歌死循环）
   const listeners = new Set();
 
   function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
@@ -124,7 +126,18 @@ const MikuMusic = (function () {
     audio = new Audio();
     audio.preload = "metadata";
     try { audio.volume = Math.min(1, Math.max(0, parseFloat(localStorage.getItem("mm_volume") || "0.9"))); } catch (e) {}
-    audio.addEventListener("ended", () => { window.__kbSinging = false; onEnded(); });
+    audio.addEventListener("ended", () => { window.__kbSinging = false; expectPlay = false; onEnded(); });
+    audio.addEventListener("error", () => {
+      if (!expectPlay) return; // 恢复现场的装载失败不算播放中断
+      failStreak++;
+      if (failStreak >= 3) {
+        expectPlay = false; failStreak = 0;
+        toast("连续播放失败，先停一停～ 点播放键重试");
+        return;
+      }
+      toast("播放中断了，自动换下一首 ♪");
+      next(true);
+    });
     audio.addEventListener("play", () => { playing = true; window.__kbSinging = true; syncAll(); updateMediaSession(); });
     audio.addEventListener("pause", () => { playing = false; window.__kbSinging = false; syncAll(); persist(); });
     let lastLine = -2;
@@ -175,6 +188,7 @@ const MikuMusic = (function () {
         audio.src = url;
         await audio.play();
         window.__kbSinging = true;
+        expectPlay = true; failStreak = 0;
         loadLrc(item).then(() => emit());
         emit();
         persist();
@@ -347,7 +361,7 @@ const MikuMusic = (function () {
   function toggle() {
     if (!audio || !audio.src) return playPlaylist().catch(() => {});
     try {
-      if (audio.paused) { audio.play(); playing = true; } else { audio.pause(); playing = false; }
+      if (audio.paused) { audio.play(); playing = true; expectPlay = true; } else { audio.pause(); playing = false; expectPlay = false; }
     } catch (e) { /* ignore */ }
     emit();
   }

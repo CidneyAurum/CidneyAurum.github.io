@@ -526,7 +526,14 @@
     bindUI();
     initSettings();
     restorePos();
-    addMsg("ai", "你好呀主人～ 我是 Miku ♪ 可以跟我聊天，也能跟我说「放 歌名」点歌哦。点 ⚙️ 配置 AI 接口。");
+    const h = new Date().getHours();
+    const greet = h < 5 ? "这么晚还不睡呀主人？Miku 陪你 ♪"
+      : h < 11 ? "早安主人！今天也元气满满哦 ♪"
+      : h < 14 ? "中午好呀～ 记得好好吃饭 ♪"
+      : h < 18 ? "下午好～ 要听点歌放松一下吗 ♪"
+      : h < 23 ? "晚上好呀主人，Miku 等你很久啦 ♪"
+      : "夜深了主人，早点休息哦 ♪";
+    addMsg("ai", greet + " 可以跟我聊天，也能跟我说「放 歌名」点歌。点 ⚙️ 配置 AI 接口。");
     bubble("欢迎来到小窝 ♪");
     // Live2D 资源较大（数 MB），等首屏渲染完、浏览器空闲时再加载，避免阻塞首屏
     const kick = () => { try { initPixi(); } catch (e) { console.warn("[kanban]", e); } };

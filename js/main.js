@@ -63,9 +63,13 @@ async function pjaxGo(url, push) {
       const v = el.getAttribute(attr) || "";
       if (v && !/^(https?:|data:|#|javascript:)/i.test(v)) el.setAttribute(attr, new URL(v, base).href);
     });
-    document.title = doc.title;
-    if (doc.body && doc.body.dataset.page) document.body.dataset.page = doc.body.dataset.page;
-    curMain.replaceWith(document.adoptNode(newMain));
+    const applySwap = () => {
+      document.title = doc.title;
+      if (doc.body && doc.body.dataset.page) document.body.dataset.page = doc.body.dataset.page;
+      curMain.replaceWith(document.adoptNode(newMain));
+    };
+    if (document.startViewTransition && !reduceMotion) document.startViewTransition(applySwap);
+    else applySwap();
     if (push) history.pushState({ pjax: 1 }, "", base.href);
     window.scrollTo(0, 0);
     refreshNavActive();
@@ -112,10 +116,24 @@ window.addEventListener("popstate", () => pjaxGo(location.href, false));
       btn.title = light ? "回到深空" : "点亮日光";
     };
     sync();
-    btn.addEventListener("click", () => {
-      document.body.classList.toggle("light");
-      localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
-      sync();
+    btn.addEventListener("click", (e) => {
+      const apply = () => {
+        document.body.classList.toggle("light");
+        localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
+        sync();
+      };
+      // 主题切换圆形扩散（View Transitions API，不支持的浏览器自动降级）
+      if (!document.startViewTransition || reduceMotion) { apply(); return; }
+      const x = (e && e.clientX) || window.innerWidth - 60;
+      const y = (e && e.clientY) || 40;
+      const r = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
+      const vt = document.startViewTransition(apply);
+      vt.ready.then(() => {
+        document.documentElement.animate(
+          { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${r}px at ${x}px ${y}px)`] },
+          { duration: 480, easing: "ease-in-out", pseudoElement: "::view-transition-new(root)" }
+        );
+      }).catch(() => {});
     });
   });
 })();
@@ -221,9 +239,11 @@ onPageReady(() => {
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 3500);
-  fetch("https://v1.hitokoto.cn/?c=i&c=k&c=a", { signal: controller.signal })
-    .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-    .then((data) => { clearTimeout(timer); if (data.hitokoto) lines.push(data.hitokoto); })
+  const hito = (host) => fetch(host + "/?c=i&c=k&c=a", { signal: controller.signal })
+    .then((r) => (r.ok ? r.json() : Promise.reject(r.status)));
+  hito("https://v1.hitokoto.cn")
+    .catch(() => hito("https://international.v1.hitokoto.cn"))
+    .then((data) => { clearTimeout(timer); if (data && data.hitokoto) lines.push(data.hitokoto); })
     .catch(() => clearTimeout(timer));
 
   if (reduceMotion) { el.textContent = lines[0]; if (caret) caret.style.display = "none"; return; }
@@ -827,3 +847,152 @@ onPageReady(async () => {
     });
   });
 });
+
+/* ============================================================
+   阶段四 · 视觉与交互（进站遮罩 / 导航自动隐藏 / 卡片 tilt / 快捷键 / 右键菜单）
+   ============================================================ */
+
+/* --- 进站加载遮罩（每次整页加载一次，PJAX 不触发） --- */
+(function bootVeil() {
+  if (reduceMotion) return;
+  const veil = document.createElement("div");
+  veil.className = "boot-veil";
+  veil.innerHTML = '<div class="bv-mark">✧</div><div class="bv-name">CidneyAurum の 小窝</div>';
+  document.body.appendChild(veil);
+  const off = () => veil.classList.add("off");
+  if (document.readyState === "complete") setTimeout(off, 300);
+  else window.addEventListener("load", () => setTimeout(off, 300), { once: true });
+  veil.addEventListener("transitionend", () => veil.remove());
+  setTimeout(() => veil.remove(), 3200); // 兜底，绝不让它挡住页面
+})();
+
+/* --- 导航：下滑隐藏、上滑显现 --- */
+(function navAutoHide() {
+  let lastY = 0;
+  document.addEventListener("DOMContentLoaded", () => {
+    const nav = document.querySelector(".nav");
+    if (!nav) return;
+    window.addEventListener("scroll", () => {
+      const y = window.scrollY;
+      if (y > 320 && y > lastY + 4) nav.classList.add("nav-hide");
+      else if (y < lastY - 4 || y <= 320) nav.classList.remove("nav-hide");
+      lastY = y;
+    }, { passive: true });
+  });
+})();
+
+/* --- 卡片 3D 倾斜 + 光晕跟随（桌面指针设备） --- */
+(function cardTilt() {
+  if (reduceMotion || window.matchMedia("(hover: none)").matches) return;
+  document.addEventListener("pointermove", (e) => {
+    const card = e.target.closest && e.target.closest(".card");
+    if (!card) return;
+    const r = card.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width;
+    const py = (e.clientY - r.top) / r.height;
+    card.style.setProperty("--mx", (px * 100).toFixed(1) + "%");
+    card.style.setProperty("--my", (py * 100).toFixed(1) + "%");
+    const rx = ((py - 0.5) * -4).toFixed(2);
+    const ry = ((px - 0.5) * 4).toFixed(2);
+    card.style.transform = "perspective(900px) rotateX(" + rx + "deg) rotateY(" + ry + "deg) translateY(-1px)";
+    if (!card._tiltReset) {
+      card._tiltReset = true;
+      card.addEventListener("pointerleave", () => { card.style.transform = ""; });
+    }
+  }, { passive: true });
+})();
+
+/* --- 全局快捷键（按住 Shift 出提示条） --- */
+(function hotkeys() {
+  const MAP = [
+    ["D", "切换主题"], ["S", "搜索档案"], ["R", "随便逛逛"],
+    ["H", "回首页"], ["T", "回到顶部"], ["空格", "播放/暂停"],
+  ];
+  let bar = null, barTimer = 0;
+  const show = () => {
+    if (!bar) {
+      bar = document.createElement("div");
+      bar.className = "hotkey-bar";
+      bar.innerHTML = MAP.map(([k, d]) => "<span><kbd>" + k + "</kbd>" + d + "</span>").join("");
+      document.body.appendChild(bar);
+    }
+    bar.classList.add("show");
+    clearTimeout(barTimer);
+    barTimer = setTimeout(() => bar.classList.remove("show"), 2400);
+  };
+  const typing = () => {
+    const t = (document.activeElement && document.activeElement.tagName) || "";
+    return t === "INPUT" || t === "TEXTAREA" || t === "SELECT";
+  };
+  document.addEventListener("keydown", (e) => {
+    if (typing()) return;
+    if (e.shiftKey && !e.repeat && e.key !== "Shift") show(); // 只出提示，不拦截
+    if (e.key === "D" || e.key === "d") {
+      const b = document.getElementById("theme-toggle");
+      if (b) b.click();
+    } else if (e.key === "S" || e.key === "s") {
+      const si = document.getElementById("search-input");
+      if (si) { si.focus(); si.scrollIntoView({ block: "center" }); }
+      else { sessionStorage.setItem("focus-search", "1"); pjaxGo((document.body.dataset.page === "post" ? "../" : "") + "blog.html", true); }
+    } else if (e.key === "R" || e.key === "r") {
+      loadPosts().then((posts) => {
+        if (!posts.length) return;
+        const pg = posts[Math.floor(Math.random() * posts.length)];
+        pjaxGo((document.body.dataset.page === "post" ? "../posts/" : "posts/") + encodeURIComponent(pg.slug) + ".html", true);
+        if (window.MikuMusic) MikuMusic.toast("随机逛到：《" + pg.title + "》");
+      }).catch(() => {});
+    } else if (e.key === "H" || e.key === "h") {
+      pjaxGo("index.html", true);
+    } else if (e.key === "T" || e.key === "t") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  });
+})();
+
+/* --- 自定义右键菜单（输入框与链接保留原生菜单） --- */
+(function ctxMenu() {
+  const menu = document.createElement("div");
+  menu.className = "ctx-menu";
+  menu.innerHTML = [
+    '<button data-act="random">🎲 随便逛逛</button>',
+    '<button data-act="copy">🔗 复制页面链接</button>',
+    '<button data-act="theme">✨ 切换日夜</button>',
+    '<button data-act="top">✦ 回到顶部</button>',
+    '<button data-act="admin">✍️ 写作台</button>',
+  ].join("");
+  document.body.appendChild(menu);
+  const close = () => menu.classList.remove("open");
+  document.addEventListener("contextmenu", (e) => {
+    if (e.target.closest("input, textarea, select, a, button")) return;
+    e.preventDefault();
+    menu.style.left = Math.min(e.clientX, window.innerWidth - 190) + "px";
+    menu.style.top = Math.min(e.clientY, window.innerHeight - 230) + "px";
+    menu.classList.add("open");
+  });
+  document.addEventListener("click", (e) => { if (!e.target.closest(".ctx-menu")) close(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
+  menu.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-act]");
+    if (!b) return;
+    close();
+    const act = b.dataset.act;
+    if (act === "theme") {
+      const t = document.getElementById("theme-toggle");
+      if (t) t.click();
+    } else if (act === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else if (act === "copy") {
+      const url = location.href;
+      const pr = navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject();
+      pr.catch(() => {}).finally(() => { if (window.MikuMusic) MikuMusic.toast("页面链接已复制 ♪"); });
+    } else if (act === "random") {
+      loadPosts().then((posts) => {
+        if (!posts.length) return;
+        const pg = posts[Math.floor(Math.random() * posts.length)];
+        pjaxGo((document.body.dataset.page === "post" ? "../posts/" : "posts/") + encodeURIComponent(pg.slug) + ".html", true);
+      }).catch(() => {});
+    } else if (act === "admin") {
+      location.href = (document.body.dataset.page === "post" ? "../" : "") + "admin.html";
+    }
+  });
+})();

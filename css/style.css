@@ -2116,3 +2116,121 @@ body { padding-bottom: 86px; }
 .gp-qlist::-webkit-scrollbar-thumb, .gp-lyric::-webkit-scrollbar-thumb {
   background: var(--chip-bg); border-radius: 99px;
 }
+
+/* ============================================================
+   阶段四 · 视觉与交互样式
+   ============================================================ */
+/* View Transitions（主题圆扩散 / PJAX 过渡） */
+::view-transition-old(root),
+::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+
+/* 进站加载遮罩 */
+.boot-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: radial-gradient(1200px 700px at 50% 20%, #171332 0%, #07060f 70%);
+  transition: opacity .55s ease, visibility .55s;
+}
+.boot-veil .bv-mark {
+  font-size: 40px;
+  color: #c4b5ff;
+  animation: bvSpin 1.6s ease-in-out infinite;
+  text-shadow: 0 0 26px rgba(140, 120, 255, .7);
+}
+.boot-veil .bv-name {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  letter-spacing: .3em;
+  color: rgba(232, 229, 242, .8);
+}
+@keyframes bvSpin { 0%, 100% { transform: rotate(0) scale(1); opacity: .7; } 50% { transform: rotate(180deg) scale(1.15); opacity: 1; } }
+.boot-veil.off { opacity: 0; visibility: hidden; pointer-events: none; }
+
+/* 导航自动隐藏 */
+.nav { transition: transform .32s ease; }
+.nav.nav-hide { transform: translateX(-50%) translateY(-160%) !important; }
+
+/* 卡片 3D tilt 光晕 */
+.card { position: relative; }
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgba(160, 140, 255, .12), transparent 42%);
+  opacity: 0;
+  transition: opacity .3s;
+  pointer-events: none;
+}
+.card:hover::after { opacity: 1; }
+
+/* 快捷键提示条 */
+.hotkey-bar {
+  position: fixed;
+  left: 50%; top: 76px;
+  transform: translateX(-50%) translateY(-10px);
+  z-index: 190;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 7px 16px;
+  padding: 10px 20px;
+  border-radius: 14px;
+  background: var(--card-deep);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: var(--shadow);
+  opacity: 0;
+  pointer-events: none;
+  transition: all .25s;
+}
+.hotkey-bar.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.hotkey-bar span { font-size: 11.5px; color: var(--text-light); display: inline-flex; align-items: center; gap: 6px; }
+.hotkey-bar kbd {
+  font-family: inherit;
+  font-size: 10.5px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--chip-bg);
+  color: var(--text);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, .25);
+}
+
+/* 自定义右键菜单 */
+.ctx-menu {
+  position: fixed;
+  z-index: 195;
+  min-width: 172px;
+  padding: 6px;
+  border-radius: 14px;
+  background: var(--card-deep);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: var(--shadow);
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+}
+.ctx-menu.open { display: flex; animation: ctxIn .16s ease both; }
+@keyframes ctxIn { from { opacity: 0; transform: scale(.94); } }
+.ctx-menu button {
+  border: none;
+  background: none;
+  text-align: left;
+  padding: 9px 13px;
+  border-radius: 9px;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background .18s;
+}
+.ctx-menu button:hover { background: var(--chip-bg); }

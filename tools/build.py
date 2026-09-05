@@ -55,6 +55,15 @@ def inline(md: str) -> str:
     return s
 
 
+def pygments_css() -> str:
+    """取 pygments 深色配色 CSS；未装 pygments 返回空。"""
+    try:
+        from pygments.formatters import HtmlFormatter
+        return HtmlFormatter(style="monokai").get_style_defs(".hljs")
+    except Exception:
+        return ""
+
+
 def pygments_highlight(code: str, lang: str) -> str | None:
     """构建时代码高亮（CI 里装了 pygments 才生效；本地无则原样返回 None）。"""
     try:
@@ -398,6 +407,9 @@ def build_posts(include_drafts: bool = False) -> list:
           og_image=BASE_URL + "/assets/avatar.webp",
         )
         out_file = POSTS_OUT / f"{it['slug']}.html"
+        css = pygments_css()
+        if css:
+            html = html.replace("</head>", "<style>" + css + "</style></head>")
         out_file.write_text(html, encoding="utf-8")
         entries.append({k: it[k] for k in ("slug", "title", "date", "tags", "emoji", "cover", "summary")})
         generated.append(out_file.name)

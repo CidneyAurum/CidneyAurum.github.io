@@ -91,11 +91,14 @@ const MikuMusic = (function () {
     return list;
   }
 
-  /* 封面异步补齐（Meting pic，本机缓存一个月） */
+  /* 封面兜底：只查当前播放的歌（快照已自带封面，此路径极少触发）。
+     成功缓存 30 天，失败也记负缓存 7 天——绝不反复打公共接口。 */
   async function fetchPic(id) {
     if (!id) return "";
     const key = "mm_pic_" + id;
+    const missKey = "mm_picmiss_" + id;
     try { const c = localStorage.getItem(key); if (c) return c; } catch (e) {}
+    try { if (localStorage.getItem(missKey)) return ""; } catch (e) {}
     for (const base of apiSources()) {
       try {
         const ctrl = new AbortController();
@@ -110,13 +113,19 @@ const MikuMusic = (function () {
         }
       } catch (e) {}
     }
+    try { localStorage.setItem(missKey, String(Date.now())); } catch (e) {}
     return "";
   }
   function fillPics() {
-    queue.forEach(async (s, i) => {
-      if (s.pic || !s.id) return;
-      const pic = await fetchPic(s.id);
-      if (pic && queue[i] === s) { s.pic = pic; if (i === qi) syncAll(); renderQueue(); }
+    // 只兜底当前歌；快照没封面时播放到哪补到哪，不再全队列并发探测
+    const s = queue[qi];
+    if (!s || s.pic || !s.id) return;
+    fetchPic(s.id).then((pic) => {
+      if (pic && queue[qi] === s) {
+        s.pic = pic;
+        syncAll();
+        renderQueue();
+      }
     });
   }
 

@@ -108,7 +108,8 @@ def main() -> None:
             continue
         img = Image.open(ASSETS / "avatar.jpg").convert("RGB")
         img = ImageOps.fit(img, (size, size), Image.LANCZOS)
-        img.save(dst, "PNG", optimize=True)
+        q = img.quantize(colors=256, method=Image.MEDIANCUT, dither=Image.FLOYDSTEINBERG)
+        q.save(dst, "PNG", optimize=True)
         print(f"  图标 {name}: {human(dst.stat().st_size)}")
 
     make_thumbs(ASSETS / "gallery")

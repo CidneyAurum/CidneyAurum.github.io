@@ -22,8 +22,92 @@
   <script defer src="https://events.vercount.one/js"></script>
   <link rel="preconnect" href="https://fonts.loli.net" crossorigin>
   <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/style.css?v=7ada021">
-</head>
+  <link rel="stylesheet" href="../css/style.css?v=ca859a2">
+<style>pre { line-height: 125%; }
+td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
+span.linenos { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
+td.linenos .special { color: #000000; background-color: #ffffc0; padding-left: 5px; padding-right: 5px; }
+span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 5px; padding-right: 5px; }
+.hljs .hll { background-color: #49483e }
+.hljs { background: #272822; color: #F8F8F2 }
+.hljs .c { color: #959077 } /* Comment */
+.hljs .err { color: #ED007E; background-color: #1E0010 } /* Error */
+.hljs .esc { color: #F8F8F2 } /* Escape */
+.hljs .g { color: #F8F8F2 } /* Generic */
+.hljs .k { color: #66D9EF } /* Keyword */
+.hljs .l { color: #AE81FF } /* Literal */
+.hljs .n { color: #F8F8F2 } /* Name */
+.hljs .o { color: #FF4689 } /* Operator */
+.hljs .x { color: #F8F8F2 } /* Other */
+.hljs .p { color: #F8F8F2 } /* Punctuation */
+.hljs .ch { color: #959077 } /* Comment.Hashbang */
+.hljs .cm { color: #959077 } /* Comment.Multiline */
+.hljs .cp { color: #959077 } /* Comment.Preproc */
+.hljs .cpf { color: #959077 } /* Comment.PreprocFile */
+.hljs .c1 { color: #959077 } /* Comment.Single */
+.hljs .cs { color: #959077 } /* Comment.Special */
+.hljs .gd { color: #FF4689 } /* Generic.Deleted */
+.hljs .ge { color: #F8F8F2; font-style: italic } /* Generic.Emph */
+.hljs .ges { color: #F8F8F2; font-weight: bold; font-style: italic } /* Generic.EmphStrong */
+.hljs .gr { color: #FF4689 } /* Generic.Error */
+.hljs .gh { color: #F8F8F2 } /* Generic.Heading */
+.hljs .gi { color: #A6E22E } /* Generic.Inserted */
+.hljs .go { color: #66D9EF } /* Generic.Output */
+.hljs .gp { color: #FF4689; font-weight: bold } /* Generic.Prompt */
+.hljs .gs { color: #F8F8F2; font-weight: bold } /* Generic.Strong */
+.hljs .gu { color: #959077 } /* Generic.Subheading */
+.hljs .gt { color: #66D9EF } /* Generic.Traceback */
+.hljs .kc { color: #66D9EF } /* Keyword.Constant */
+.hljs .kd { color: #66D9EF } /* Keyword.Declaration */
+.hljs .kn { color: #FF4689 } /* Keyword.Namespace */
+.hljs .kp { color: #66D9EF } /* Keyword.Pseudo */
+.hljs .kr { color: #66D9EF } /* Keyword.Reserved */
+.hljs .kt { color: #66D9EF } /* Keyword.Type */
+.hljs .ld { color: #E6DB74 } /* Literal.Date */
+.hljs .m { color: #AE81FF } /* Literal.Number */
+.hljs .s { color: #E6DB74 } /* Literal.String */
+.hljs .na { color: #A6E22E } /* Name.Attribute */
+.hljs .nb { color: #A6E22E } /* Name.Builtin */
+.hljs .nc { color: #A6E22E } /* Name.Class */
+.hljs .no { color: #66D9EF } /* Name.Constant */
+.hljs .nd { color: #A6E22E } /* Name.Decorator */
+.hljs .ni { color: #F8F8F2 } /* Name.Entity */
+.hljs .ne { color: #A6E22E } /* Name.Exception */
+.hljs .nf { color: #A6E22E } /* Name.Function */
+.hljs .nl { color: #F8F8F2 } /* Name.Label */
+.hljs .nn { color: #F8F8F2 } /* Name.Namespace */
+.hljs .nx { color: #A6E22E } /* Name.Other */
+.hljs .py { color: #F8F8F2 } /* Name.Property */
+.hljs .nt { color: #FF4689 } /* Name.Tag */
+.hljs .nv { color: #F8F8F2 } /* Name.Variable */
+.hljs .ow { color: #FF4689 } /* Operator.Word */
+.hljs .pm { color: #F8F8F2 } /* Punctuation.Marker */
+.hljs .w { color: #F8F8F2 } /* Text.Whitespace */
+.hljs .mb { color: #AE81FF } /* Literal.Number.Bin */
+.hljs .mf { color: #AE81FF } /* Literal.Number.Float */
+.hljs .mh { color: #AE81FF } /* Literal.Number.Hex */
+.hljs .mi { color: #AE81FF } /* Literal.Number.Integer */
+.hljs .mo { color: #AE81FF } /* Literal.Number.Oct */
+.hljs .sa { color: #E6DB74 } /* Literal.String.Affix */
+.hljs .sb { color: #E6DB74 } /* Literal.String.Backtick */
+.hljs .sc { color: #E6DB74 } /* Literal.String.Char */
+.hljs .dl { color: #E6DB74 } /* Literal.String.Delimiter */
+.hljs .sd { color: #E6DB74 } /* Literal.String.Doc */
+.hljs .s2 { color: #E6DB74 } /* Literal.String.Double */
+.hljs .se { color: #AE81FF } /* Literal.String.Escape */
+.hljs .sh { color: #E6DB74 } /* Literal.String.Heredoc */
+.hljs .si { color: #E6DB74 } /* Literal.String.Interpol */
+.hljs .sx { color: #E6DB74 } /* Literal.String.Other */
+.hljs .sr { color: #E6DB74 } /* Literal.String.Regex */
+.hljs .s1 { color: #E6DB74 } /* Literal.String.Single */
+.hljs .ss { color: #E6DB74 } /* Literal.String.Symbol */
+.hljs .bp { color: #A6E22E } /* Name.Builtin.Pseudo */
+.hljs .fm { color: #A6E22E } /* Name.Function.Magic */
+.hljs .vc { color: #F8F8F2 } /* Name.Variable.Class */
+.hljs .vg { color: #F8F8F2 } /* Name.Variable.Global */
+.hljs .vi { color: #F8F8F2 } /* Name.Variable.Instance */
+.hljs .vm { color: #F8F8F2 } /* Name.Variable.Magic */
+.hljs .il { color: #AE81FF } /* Literal.Number.Integer.Long */</style></head>
 <body class="page-enter" data-page="post">
   <div class="read-progress" id="read-progress"></div>
   <div class="scene" aria-hidden="true">
@@ -141,10 +225,10 @@
     <button class="mini-btn js-play-toggle js-state" aria-label="播放/暂停">▶</button>
   </div>
 
-  <script src="../js/main.js?v=7ada021"></script>
-  <script src="../js/player.js?v=7ada021"></script>
-  <script src="../js/music.js?v=7ada021" defer></script>
-  <script src="../js/kanban.js?v=7ada021" defer></script>
-  <script src="../js/comments.js?v=7ada021" defer></script>
+  <script src="../js/main.js?v=ca859a2"></script>
+  <script src="../js/player.js?v=ca859a2"></script>
+  <script src="../js/music.js?v=ca859a2" defer></script>
+  <script src="../js/kanban.js?v=ca859a2" defer></script>
+  <script src="../js/comments.js?v=ca859a2" defer></script>
 </body>
 </html>

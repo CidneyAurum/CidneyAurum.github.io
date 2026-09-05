@@ -2285,3 +2285,76 @@ body { padding-bottom: 86px; }
 .related-item .r-title { font-size: 13.5px; font-weight: 700; color: var(--text); }
 .related-item:hover .r-title { color: var(--accent); }
 .related-item .r-meta { font-size: 11px; color: var(--text-light); }
+
+/* ============================================================
+   v2.1 · 星梦式玻璃精致化（通透高光 / 金色点缀 / 胶囊播放条）
+   ============================================================ */
+/* 统一玻璃顶部高光 */
+.card, .gplayer .gp-bar, .gp-drawer, .hotkey-bar, .ctx-menu, .kb-chat, .kb-set {
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0) 46%);
+}
+.gplayer .gp-bar, .gp-drawer, .ctx-menu, .hotkey-bar {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+/* 卡片光晕减淡，更含蓄 */
+.card::after {
+  background: radial-gradient(360px circle at var(--mx, 50%) var(--my, 50%), rgba(160, 140, 255, 0.08), transparent 40%);
+}
+.card:hover::after { opacity: 0.9; }
+
+/* —— 桌面端播放条：胶囊化 + 精致化 —— */
+@media (min-width: 681px) {
+  .gp-bar { padding: 8px 14px; border-radius: 999px; gap: 12px; }
+  .gp-cover-wrap { width: 40px; height: 40px; flex-basis: 40px; border-radius: 10px; }
+  .gp-btn { width: 28px; height: 28px; font-size: 11.5px; }
+  .gp-btn.gp-big { width: 32px; height: 32px; font-size: 13px; }
+  .gp-btn.gp-play {
+    width: 38px; height: 38px; font-size: 14px;
+    background: linear-gradient(120deg, var(--accent) 15%, var(--gold) 115%);
+    box-shadow: 0 6px 20px rgba(143, 123, 255, 0.28), 0 2px 12px rgba(217, 185, 108, 0.18);
+  }
+  .gp-progress { height: 4px; transition: height 0.18s ease; }
+  .gp-progress:hover { height: 7px; }
+}
+/* 进度与歌词的金色点缀（星梦金） */
+.gp-knob { border-color: var(--gold); }
+.gp-fill { background: linear-gradient(90deg, var(--accent), var(--gold)); }
+.gp-lrc-line.on {
+  color: var(--gold);
+  text-shadow: 0 0 20px rgba(217, 185, 108, 0.35);
+}
+.gp-lyric, .gp-search input { border-color: rgba(255, 255, 255, 0.1); }
+
+/* 区块标题：金色装饰线 */
+.related-head, .comments-head {
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.related-head::before, .comments-head::before {
+  content: "";
+  width: 18px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold));
+}
+.related-item { border-radius: 14px; }
+.related-item:hover { border-color: rgba(217, 185, 108, 0.45); transform: translateY(-2px); }
+.related-item:hover .r-title { color: var(--gold); }
+
+/* 进站遮罩：加星点 */
+.boot-veil {
+  background:
+    radial-gradient(2px 2px at 20% 30%, rgba(255, 255, 255, 0.5), transparent 60%),
+    radial-gradient(1.5px 1.5px at 68% 22%, rgba(255, 255, 255, 0.4), transparent 60%),
+    radial-gradient(2px 2px at 82% 64%, rgba(217, 185, 108, 0.45), transparent 60%),
+    radial-gradient(1.5px 1.5px at 38% 74%, rgba(255, 255, 255, 0.35), transparent 60%),
+    radial-gradient(1200px 700px at 50% 20%, #171332 0%, #07060f 70%);
+}
+.boot-veil .bv-name { letter-spacing: 0.42em; }
+
+/* 快捷键 kbd：金色微光 */
+.hotkey-bar kbd {
+  border-color: rgba(217, 185, 108, 0.28);
+  color: var(--gold);
+}

@@ -161,9 +161,15 @@ const MikuMusic = (function () {
   }
 
   function streamCandidates(item) {
+    // 网易外链接口已返回 404 HTML（废弃），Meting type=url 才是真音频——它排前面
     const list = [];
-    if (item.id) list.push("https://music.163.com/song/media/outer/url?id=" + item.id + ".mp3");
     if (item.stream) list.push(item.stream);
+    if (item.id) {
+      for (const base of apiSources().slice(0, 3)) {
+        list.push(base + "?server=netease&type=url&id=" + item.id);
+      }
+      list.push("https://music.163.com/song/media/outer/url?id=" + item.id + ".mp3");
+    }
     return list;
   }
 
@@ -191,6 +197,7 @@ const MikuMusic = (function () {
     const candidates = streamCandidates(item);
     if (!candidates.length) throw new Error("拿不到播放地址");
     let lastErr = null;
+    expectPlay = false; // 候选切换期间产生的 error 不算"播放中断"
     for (const url of candidates) {
       try {
         audio.removeAttribute("crossorigin");

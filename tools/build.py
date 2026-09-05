@@ -55,6 +55,28 @@ def inline(md: str) -> str:
     return s
 
 
+def related_block(current, all_items):
+    """按标签重合度挑最多 3 篇相关文章（构建时算好，零运行时成本）。"""
+    others = [it for it in all_items if it["slug"] != current["slug"]]
+    others.sort(key=lambda it: it["date"], reverse=True)
+    scored = sorted(
+        others,
+        key=lambda it: -len(set(current.get("tags") or []) & set(it.get("tags") or [])),
+    )
+    picked = [it for it in scored if len(set(current.get("tags") or []) & set(it.get("tags") or [])) > 0][:3]
+    if not picked:
+        picked = others[:2]
+    if not picked:
+        return ""
+    rows = "".join(
+        '<a class="related-item" href="' + it["slug"] + '.html">'
+        + '<span class="r-title">' + esc(it["title"]) + '</span>'
+        + '<span class="r-meta">' + it["date"] + " · " + (it.get("summary") or "")[:26] + '…</span></a>'
+        for it in picked
+    )
+    return '<div class="related"><div class="related-head">继续阅读 · RELATED</div>' + rows + "</div>"
+
+
 def pygments_css() -> str:
     """取 pygments 深色配色 CSS；未装 pygments 返回空。"""
     try:
@@ -244,6 +266,7 @@ POST_TEMPLATE = """<!DOCTYPE html>
         </div>
 
         {postnav}
+        {related}
         <p class="article-end">— 谢谢你看到这里 ✧ —</p>
 
         <div class="comments-card card">
@@ -403,9 +426,11 @@ def build_posts(include_drafts: bool = False) -> list:
             motto=SITE["motto"], summary=esc(it["summary"]), date=it["date"],
             tags=tags_html, cover=cover_html, content=it["content"],
             wordinfo=it["wordinfo"], toc_html=toc_html, postnav=postnav,
+          related="{__RELATED__}",
           og_url=BASE_URL + "/posts/" + it["slug"] + ".html",
           og_image=BASE_URL + "/assets/avatar.webp",
         )
+        html = html.replace("{__RELATED__}", related_block(it, items))
         out_file = POSTS_OUT / f"{it['slug']}.html"
         css = pygments_css()
         if css:

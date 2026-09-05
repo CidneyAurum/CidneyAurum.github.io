@@ -11,10 +11,10 @@ const ADMIN = {
 };
 
 /* ---------- Markdown 渲染（与 tools/build.py 同一套子集） ---------- */
-function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+function escAdmin(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
 function mdInline(s) {
-  s = esc(s);
+  s = escAdmin(s);
   s = s.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" loading="lazy">');
   s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
   s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
@@ -29,7 +29,7 @@ function mdToHtml(md) {
   const closeList = () => { if (listOpen) { out.push("</ul>"); listOpen = false; } };
   for (const line of md.replace(/\r\n/g, "\n").split("\n")) {
     if (line.trim().startsWith("```")) {
-      if (inCode) { out.push("<pre><code>" + esc(codeBuf.join("\n")) + "</code></pre>"); codeBuf = []; inCode = false; }
+      if (inCode) { out.push("<pre><code>" + escAdmin(codeBuf.join("\n")) + "</code></pre>"); codeBuf = []; inCode = false; }
       else { closeList(); inCode = true; }
       continue;
     }
@@ -47,7 +47,7 @@ function mdToHtml(md) {
     closeList();
     out.push(`<p>${mdInline(line.trim())}</p>`);
   }
-  if (inCode && codeBuf.length) out.push("<pre><code>" + esc(codeBuf.join("\n")) + "</code></pre>");
+  if (inCode && codeBuf.length) out.push("<pre><code>" + escAdmin(codeBuf.join("\n")) + "</code></pre>");
   closeList();
   return out.join("\n");
 }
@@ -301,8 +301,8 @@ document.addEventListener("DOMContentLoaded", () => {
         (q, i) => `
       <div class="img-item">
         <img src="${URL.createObjectURL(q.file)}" alt="">
-        <input type="text" value="${esc(q.caption)}" placeholder="图片标题" data-i="${i}">
-        <span class="img-name">${esc(q.file.name)} → ${esc((q.caption || "img").replace(/[\\/:*?"<>|\s]/g, ""))}_${ym()}${q.file.type === "image/png" ? ".png" : ".jpg"}</span>
+        <input type="text" value="${escAdmin(q.caption)}" placeholder="图片标题" data-i="${i}">
+        <span class="img-name">${escAdmin(q.file.name)} → ${escAdmin((q.caption || "img").replace(/[\\/:*?"<>|\s]/g, ""))}_${ym()}${q.file.type === "image/png" ? ".png" : ".jpg"}</span>
         <button class="ctrl-btn ghost" data-del="${i}">移除</button>
       </div>`
       )

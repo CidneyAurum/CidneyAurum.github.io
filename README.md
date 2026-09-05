@@ -7,21 +7,31 @@
 ## 目录结构
 
 ```
-├── index.html          # 主页（资料卡 / 环境电台 / 打字横幅 / 最新文章 / 时钟条）
+├── index.html          # 主页（资料卡 / 网易云歌单 / 环境电台 / 打字横幅 / 时钟条）
 ├── blog.html           # 拾光档案：搜索 + 标签 + 时间轴/网格双视图
+├── says.html           # 说说：朋友圈式时间轴
 ├── photos.html         # 光影画廊：拍立得照片墙
-├── about.html          # 关于：足迹时间线 / 技能 / 联系方式
 ├── limbus.html         # Limbus 风格歌词演出模拟器（网页版）
+├── about.html          # 关于：足迹时间线 / 技能 / 联系方式
+├── admin.html          # 写作台：发文 / 发说说 / 发图（站主专用）
 ├── 404.html            # 404 页
 ├── posts/
-│   ├── posts.json      # 文章目录（发新文章要在这里登记）
-│   └── *.html          # 每篇文章一个 HTML 文件
+│   ├── posts.json      # 文章目录（build.py 自动生成）
+│   └── *.html          # 每篇文章一个 HTML 文件（build.py 自动生成）
 ├── css/style.css       # 全站样式（主题色在这里改）
-├── js/main.js          # 流萤 / 打字横幅 / 时钟 / 归档双视图
-├── js/player.js        # 环境电台：Web Audio 合成音乐 + 全站迷你播放器
+├── js/main.js          # 流萤 / 打字横幅 / 时钟 / 归档双视图 / 说说 / 照片墙
+├── js/music.js         # MikuMusic 点播引擎（歌单 / 歌词 / Limbus 弹词）
+├── js/kanban.js        # 看板娘：Live2D + AI 多协议对话 + 点歌联动
+├── js/player.js        # 环境电台：Web Audio 合成音乐
 ├── js/limbus.js        # 歌词演出引擎（手动 / 自动 / 音乐同步）
-└── assets/             # 头像、背景图（background.png）、照片墙（gallery/）
+├── js/admin.js         # 写作台逻辑（GitHub Contents API 发布）
+├── data/playlist.json  # 网易云歌单快照（107 首，含封面）
+├── tools/build.py      # 内容构建（md → 文章页 / RSS / sitemap）
+├── tools/version_pin.py# CI 资源版本号指纹（git 短 SHA，根治 CDN 缓存）
+└── assets/             # 头像、背景图（background.png）、照片墙（gallery/）、Live2D 模型
 ```
+
+> **版本号机制**：所有页面引用静态资源都带 `?v=N`；CI 部署时会自动把全站版本号统一替换为本次提交的 git 短 SHA（`tools/version_pin.py`），每次部署 URL 必然变化，彻底绕开 GitHub Pages CDN 的 10 分钟缓存——改完代码 push 即生效，无需手动改版本号。
 
 ## 本地预览
 

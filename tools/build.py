@@ -155,7 +155,7 @@ POST_TEMPLATE = """<!DOCTYPE html>
   <script defer src="https://events.vercount.one/js"></script>
   <link rel="preconnect" href="https://fonts.loli.net" crossorigin>
   <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/style.css?v=23">
 </head>
 <body class="page-enter" data-page="post">
   <div class="read-progress" id="read-progress"></div>
@@ -172,9 +172,11 @@ POST_TEMPLATE = """<!DOCTYPE html>
     <div class="nav-links" id="nav-links">
       <a class="nav-link" href="../index.html">首页</a>
       <a class="nav-link active" href="../blog.html">归档</a>
+      <a class="nav-link" href="../says.html">说说</a>
       <a class="nav-link" href="../photos.html">照片墙</a>
       <a class="nav-link" href="../limbus.html">歌词模拟器</a>
       <a class="nav-link" href="../about.html">关于</a>
+      <a class="nav-link nav-post" href="../admin.html">✍️</a>
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
       <button id="theme-toggle" class="icon-btn" aria-label="切换主题">✨</button>
@@ -249,9 +251,9 @@ POST_TEMPLATE = """<!DOCTYPE html>
     <button class="mini-btn js-play-toggle js-state" aria-label="播放/暂停">▶</button>
   </div>
 
-  <script src="../js/main.js"></script>
-  <script src="../js/player.js"></script>
-  <script src="../js/kanban.js" defer></script>
+  <script src="../js/main.js?v=23"></script>
+  <script src="../js/player.js?v=23"></script>
+  <script src="../js/kanban.js?v=23" defer></script>
 </body>
 </html>
 """
@@ -396,7 +398,7 @@ def build_meta_files(entries: list):
     (ROOT / "feed.xml").write_text(rss, encoding="utf-8")
     print("  RSS   feed.xml")
 
-    urls = ["", "blog.html", "photos.html", "about.html", "limbus.html"] + [
+    urls = ["", "blog.html", "says.html", "photos.html", "about.html", "limbus.html"] + [
         f"posts/{e['slug']}.html" for e in entries
     ]
     sm_items = "".join(

@@ -1,14 +1,8 @@
 name: build content
 
-# 在 GitHub 网页上往 _posts/ 写 Markdown 或往 assets/gallery/ 传图，
-# 推送后这里会自动构建文章页和照片墙数据，无需任何本地工具。
+# 任何 push 都会：构建文章/照片墙数据 + 把全站资源版本号统一为 git 短 SHA（根治 CDN 缓存）。
 on:
   push:
-    paths:
-      - "_posts/**"
-      - "assets/gallery/**"
-      - "says/**"
-      - "tools/**"
   workflow_dispatch:
 
 permissions:
@@ -30,6 +24,9 @@ jobs:
       - name: 构建文章与照片墙
         run: python tools/build.py
 
+      - name: 资源版本号统一为本次提交短 SHA
+        run: python tools/version_pin.py "${GITHUB_SHA::7}"
+
       - name: 提交构建结果
         run: |
           git config user.name "github-actions[bot]"
@@ -38,6 +35,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "没有需要提交的变更"
           else
-            git commit -m "build: 自动更新文章与照片墙数据 [skip ci]"
+            git commit -m "build: 自动更新文章数据 + 版本号指纹 [skip ci]"
             git push
           fi

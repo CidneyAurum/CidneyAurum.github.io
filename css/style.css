@@ -1417,19 +1417,6 @@ body.light .kb-set select { background: rgba(255,255,255,.6); }
 }
 .kb-stage, .kb-bar, .kb-chat, .kb-set { pointer-events: auto; }
 
-/* 看板娘画布：强制独立合成层，防滚动时丢帧 */
-.kanban {
-  isolation: isolate;
-  will-change: transform;
-  transform: translate3d(0, 0, 0);
-}
-.kb-stage canvas {
-  will-change: transform;
-  transform: translate3d(0, 0, 0);
-  backface-visibility: hidden;
-}
-.kb-stage, .kb-bar, .kb-chat, .kb-set { pointer-events: auto; }
-
 /* ============ 边狱巴士 · 横幅歌词舞台（播放时接管打字横幅） ============ */
 .slogan-bar.limbus-on {
   background: rgba(5, 5, 7, 0.92);
@@ -1453,20 +1440,6 @@ body.light .kb-set select { background: rgba(255,255,255,.6); }
 .lyric-takeover .stage-idle { color: rgba(236, 229, 211, 0.45); font-size: 15px; letter-spacing: 0.3em; }
 .slogan-bar .slash { top: 50%; left: 20%; width: 60%; }
 .slogan-bar.slam { animation: stageShake 0.28s linear 0.4s both; }
-
-/* 看板娘画布：强制独立合成层，防滚动时丢帧 */
-/* 看板娘画布：强制独立合成层，防滚动时丢帧 */
-.kanban {
-  isolation: isolate;
-  will-change: transform;
-  transform: translate3d(0, 0, 0);
-}
-.kb-stage canvas {
-  will-change: transform;
-  transform: translate3d(0, 0, 0);
-  backface-visibility: hidden;
-}
-.kb-stage, .kb-bar, .kb-chat, .kb-set { pointer-events: auto; }
 
 /* ============ 边狱巴士 · 主界面歌词舞台 ============ */
 .desk-stage {
@@ -1501,20 +1474,6 @@ body.light .kb-set select { background: rgba(255,255,255,.6); }
 .desk-stage .lyric-line { font-size: clamp(18px, 2.4vw, 27px); }
 .desk-stage.slam { animation: stageShake 0.28s linear 0.4s both; }
 .desk-stage .slash { top: 58%; }
-
-/* 看板娘画布：强制独立合成层，防滚动时丢帧 */
-/* 看板娘画布：强制独立合成层，防滚动时丢帧 */
-.kanban {
-  isolation: isolate;
-  will-change: transform;
-  transform: translate3d(0, 0, 0);
-}
-.kb-stage canvas {
-  will-change: transform;
-  transform: translate3d(0, 0, 0);
-  backface-visibility: hidden;
-}
-.kb-stage, .kb-bar, .kb-chat, .kb-set { pointer-events: auto; }
 
 /* ============ 桌面歌词条（主界面常驻歌词） ============ */
 .d-lyric {

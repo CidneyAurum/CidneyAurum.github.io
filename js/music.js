@@ -1,11 +1,8 @@
 /* ============================================
-   Miku 看板娘 + AI 多协议对话 + 音乐点播引擎
-   AI 协议：OpenAI 兼容 / Google Gemini / Anthropic Claude（自选）
+   Miku 音乐点播引擎（MikuMusic）
    播放：网易云官方直链优先 + Meting 兜底 + 歌单缓存
    ============================================ */
 "use strict";
-
-function esc(s) { return String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
 
 const MikuMusic = (function () {
   const CFG = {
@@ -24,6 +21,7 @@ const MikuMusic = (function () {
   let playing = false;
   let currentLrc = [];
   const listeners = new Set();
+  function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 
   function fmt(sec) {
     sec = Math.max(0, Math.floor(sec || 0));
@@ -239,7 +237,7 @@ const MikuMusic = (function () {
   }
 
   function toggle() {
-    if (!audio || !audio.src) return playPlaylist().catch((e) => { window.__kbPlayErr = e.message; });
+    if (!audio || !audio.src) return playPlaylist().catch(() => {});
     try {
       if (audio.paused) { audio.play(); playing = true; } else { audio.pause(); playing = false; }
     } catch (e) { /* ignore */ }
@@ -430,85 +428,3 @@ document.addEventListener("DOMContentLoaded", () => {
   fab.addEventListener("click", () => window.MikuMusic.toggle());
   sync(window.MikuMusic.getState());
 });
-
-/* ---------- AI 多协议对话引擎 ---------- */
-const AIChat = (function () {
-  let history = [];
-
-  function getSettings() {
-    return {
-      protocol: localStorage.getItem("kb_protocol") || "openai",
-      base: (localStorage.getItem("kb_base") || "https://api.deepseek.com").replace(/\/+$/, ""),
-      model: localStorage.getItem("kb_model") || "deepseek-chat",
-      key: localStorage.getItem("kb_key") || "",
-    };
-  }
-
-  const SYSTEM_PROMPT =
-    "你是看板娘「Miku」，住在 CidneyAurum 的个人网站小窝里。性格元气可爱、偶尔傲娇。" +
-    "用中文回复，每次 1~3 句话，亲切自然。你可以在回复里插入一个表情标记来做动作，" +
-    "可用表情：比心、圈圈、脸红、前倾、唱歌、葱、QQ人，格式如【表情:比心】，每次最多一个，不必每句都带。" +
-    "主人叫 CidneyAurum。如果被问到你是谁，就说你是这个网站的看板娘初音。";
-
-  async function requestOpenAI(settings, messages) {
-    const res = await fetch(settings.base + "/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: "Bearer " + settings.key },
-      body: JSON.stringify({ model: settings.model, messages, temperature: 0.9 }),
-    });
-    if (!res.ok) throw new Error("API " + res.status + ": " + (await res.text()).slice(0, 120));
-    const data = await res.json();
-    return data.choices?.[0]?.message?.content || "(空回复)";
-  }
-
-  async function requestGemini(settings, messages) {
-    const system = messages.find((m) => m.role === "system");
-    const contents = messages.filter((m) => m.role !== "system").map((m) => ({
-      role: m.role === "assistant" ? "model" : "user",
-      parts: [{ text: m.content }],
-    }));
-    const body = { contents, generationConfig: { temperature: 0.9, maxOutputTokens: 512 } };
-    if (system) body.systemInstruction = { parts: [{ text: system.content }] };
-    const res = await fetch(
-      settings.base + "/v1beta/models/" + settings.model + ":generateContent?key=" + settings.key,
-      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
-    );
-    if (!res.ok) throw new Error("Gemini " + res.status + ": " + (await res.text()).slice(0, 120));
-    const data = await res.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || "(空回复)";
-  }
-
-  async function requestClaude(settings, messages) {
-    const system = messages.find((m) => m.role === "system");
-    const msgs = messages.filter((m) => m.role !== "system");
-    const res = await fetch(settings.base + "/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": settings.key,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true",
-      },
-      body: JSON.stringify({
-        model: settings.model || "claude-sonnet-4-20250514",
-        max_tokens: 512,
-        system: system ? system.content : undefined,
-        messages: msgs,
-      }),
-    });
-    if (!res.ok) throw new Error("Claude " + res.status + ": " + (await res.text()).slice(0, 120));
-    const data = await res.json();
-    return data.content?.[0]?.text || "(空回复)";
-  }
-
-  async function askAI(messages) {
-    const settings = getSettings();
-    if (!settings.key) throw new Error("请先在设置里填 API Key");
-    if (settings.protocol === "gemini") return requestGemini(settings, messages);
-    if (settings.protocol === "claude") return requestClaude(settings, messages);
-    return requestOpenAI(settings, messages);
-  }
-
-  return { getSettings, askAI, SYSTEM_PROMPT };
-})();
-

@@ -75,12 +75,18 @@ async function pjaxGo(url, push) {
       if (doc.body && doc.body.dataset.page) document.body.dataset.page = doc.body.dataset.page;
       curMain.replaceWith(document.adoptNode(newMain));
     };
-    if (document.startViewTransition && !reduceMotion) document.startViewTransition(applySwap);
-    else applySwap();
+    const afterSwap = () => {
+      window.scrollTo(0, 0);
+      refreshNavActive();
+      runPageReady(); // 必须在换入后跑，否则新页面不会被初始化
+    };
     if (push) history.pushState({ pjax: 1 }, "", base.href);
-    window.scrollTo(0, 0);
-    refreshNavActive();
-    runPageReady();
+    if (document.startViewTransition && !reduceMotion) {
+      document.startViewTransition(applySwap).finished.finally(afterSwap);
+    } else {
+      applySwap();
+      afterSwap();
+    }
   } catch (e) {
     location.href = url; // 兜底：整页跳转
   } finally {

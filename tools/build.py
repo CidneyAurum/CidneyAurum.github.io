@@ -253,6 +253,7 @@ POST_TEMPLATE = """<!DOCTYPE html>
 
   <script src="../js/main.js?v=23"></script>
   <script src="../js/player.js?v=23"></script>
+  <script src="../js/music.js?v=23" defer></script>
   <script src="../js/kanban.js?v=23" defer></script>
 </body>
 </html>

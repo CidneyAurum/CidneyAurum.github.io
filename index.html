@@ -14,7 +14,7 @@
   <script defer src="https://events.vercount.one/js"></script>
   <link rel="preconnect" href="https://fonts.loli.net" crossorigin>
   <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=23d615d">
+  <link rel="stylesheet" href="css/style.css?v=f0b3397">
 </head>
 <body class="page-enter" data-page="home">
   <!-- 全站场景层 -->
@@ -58,7 +58,7 @@
         <div class="card profile-card">
           <div class="profile-top">
             <!-- ✏️ 头像：想换就同名替换 assets/avatar.webp -->
-            <div class="avatar-ring"><img src="assets/avatar.webp?v=23d615d" alt="头像"></div>
+            <div class="avatar-ring"><img src="assets/avatar.webp?v=f0b3397" alt="头像"></div>
             <div>
               <h1 class="profile-name">CidneyAurum</h1>
               <p class="profile-desc">一只喜欢写代码也喜欢看番的普通人类（大概）。白天写代码，晚上补番，周末折腾点小东西。</p>
@@ -208,86 +208,9 @@
     <button class="mini-btn js-play-toggle js-state" aria-label="播放/暂停">▶</button>
   </div>
 
-  <script src="js/main.js?v=23d615d"></script>
-  <script src="js/player.js?v=23d615d"></script>
-  <script src="js/music.js?v=23d615d" defer></script>
-  <script src="js/kanban.js?v=23d615d" defer></script>
-  <script>
-    // 夜间模式小卡片
-    (function () {
-      const nightCard = document.getElementById("mini-night");
-      if (nightCard) nightCard.addEventListener("click", () => document.getElementById("theme-toggle").click());
-    })();
-    // 音乐卡标签切换
-    document.querySelectorAll(".ctab").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll(".ctab").forEach((b) => b.classList.toggle("on", b === btn));
-        document.querySelectorAll(".cpane").forEach((p) => (p.style.display = p.id === "cpane-" + btn.dataset.pane ? "" : "none"));
-      });
-    });
-    // 歌单列表（Miku 点播引擎同源）+ 歌词演出按钮 + 失败重试
-    // 注意：MikuMusic 在 defer 脚本里，需等 DOMContentLoaded 后再调用
-    document.addEventListener("DOMContentLoaded", () => setTimeout(async () => {
-      const list = document.getElementById("track-list");
-      const fallback = document.getElementById("music-fallback");
-      if (!list || !fallback || !window.MikuMusic) return;
-
-      const render = () => {
-        const st = window.MikuMusic.getState();
-        list.innerHTML = window.MikuMusic.getQueue().map((t, i) => `
-          <div class="track-item${st.index === i && (st.playing || st.hasQueue) ? " on" : ""}" data-i="${i}">
-            ${t.pic ? `<img class="tk-pic" src="${t.pic}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'tk-pic tk-no',textContent:'♪'}))">` : '<span class="tk-pic tk-no">♪</span>'}
-            <span class="n">${t.name}</span><span class="a">${t.artist}</span>
-            ${st.index === i && st.playing ? '<span class="teq"><i></i><i></i><i></i></span>' : ""}
-          </div>`).join("");
-        list.querySelectorAll(".track-item").forEach((el) =>
-          el.addEventListener("click", () => window.MikuMusic.playIndex(+el.dataset.i)));
-      };
-
-      const load = async () => {
-        list.style.display = "";
-        list.innerHTML = '<p class="empty-tip" style="padding:16px 0;">歌单加载中… 🎵</p>';
-        fallback.style.display = "none";
-        try {
-          await window.MikuMusic.loadPlaylist();
-          render();
-        } catch (e) {
-          list.style.display = "none";
-          fallback.style.display = "";
-        }
-      };
-
-      await load();
-      document.addEventListener("mikumusic", (e) => {
-        render();
-        const cur = list.querySelector(".track-item.on");
-        if (cur && e.detail && e.detail.playing) cur.scrollIntoView({ block: "nearest" });
-      });
-      document.getElementById("music-retry").addEventListener("click", async () => {
-        window.MikuMusic.reloadPlaylist();
-        await load();
-      });
-      document.querySelector(".js-lyric").addEventListener("click", () => window.MikuMusic.lyricOverlay.open());
-    }, 0));
-    // Miku 点播队列控制 + 歌单卡真联动
-    const mmBtn = document.querySelector(".js-mm-toggle");
-    const mmFill = document.querySelector(".js-mm-fill");
-    const mmCur = document.querySelector(".js-mm-cur");
-    const mmTotal = document.querySelector(".js-mm-total");
-    const mmSong = document.querySelector(".js-mm-song");
-    if (mmBtn) {
-      mmBtn.addEventListener("click", () => window.MikuMusic && window.MikuMusic.toggle());
-      document.querySelector(".js-mm-next").addEventListener("click", () => window.MikuMusic && window.MikuMusic.next());
-      const fmt = (s) => { s = Math.max(0, Math.floor(s || 0)); return String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"); };
-      document.addEventListener("mikumusic", (e) => {
-        const d = e.detail || {};
-        mmBtn.textContent = d.playing ? "❚❚" : "▶";
-        if (d.current) {
-          document.querySelector(".js-mm-text").textContent = "♪ 正在播放：《" + d.current.name + "》";
-          if (mmSong) mmSong.textContent = d.current.name + (d.current.artist ? " - " + d.current.artist : "");
-        }
-      });
-    }
-  </script>
+  <script src="js/main.js?v=f0b3397"></script>
+  <script src="js/player.js?v=f0b3397"></script>
+  <script src="js/music.js?v=f0b3397" defer></script>
+  <script src="js/kanban.js?v=f0b3397" defer></script>
 </body>
 </html>

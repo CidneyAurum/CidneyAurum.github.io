@@ -1,12 +1,16 @@
 /* ============================================
-   Miku 音乐点播引擎（MikuMusic）
-   播放：网易云官方直链优先 + Meting 兜底 + 歌单缓存
+   MikuMusic 音乐中枢（全站常驻播放引擎 + 播放条）
+   - 数据源：仓内歌单快照（data/playlist.json）为主，Meting 在线搜索/补漏
+   - 全站玻璃播放条：seek / 音量 / 播放模式 / 上下曲 / 队列抽屉 / 歌词面板
+   - Media Session（系统媒体键 / 锁屏）、状态持久化（刷新/换页恢复现场）
+   - 歌词：lrclib 优先 + Meting 兜底；Limbus 弹出大字与全屏演出保留
    ============================================ */
 "use strict";
 
 const MikuMusic = (function () {
   const CFG = {
     playlistId: "18205251703",
+    snapshot: "/data/playlist.json",
     publicApis: [
       "https://api.injahow.cn/meting/",
       "https://met.liiiu.cn/",
@@ -14,13 +18,20 @@ const MikuMusic = (function () {
       "https://api.wuenci.com/meting/api/",
     ],
   };
+  const MODES = [
+    { id: "list", icon: "🔁", tip: "列表循环" },
+    { id: "one", icon: "🔂", tip: "单曲循环" },
+    { id: "random", icon: "🔀", tip: "随机播放" },
+  ];
 
   let audio = null;
   let queue = [];
   let qi = -1;
   let playing = false;
   let currentLrc = [];
+  let mode = "list";
   const listeners = new Set();
+
   function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 
   function fmt(sec) {
@@ -28,6 +39,7 @@ const MikuMusic = (function () {
     return String(Math.floor(sec / 60)).padStart(2, "0") + ":" + String(sec % 60).padStart(2, "0");
   }
 
+  /* ---------- 数据源 ---------- */
   function apiSources() {
     const custom = (localStorage.getItem("kb_musicapi") || "").trim();
     return custom ? [custom, ...CFG.publicApis] : [...CFG.publicApis];
@@ -67,24 +79,61 @@ const MikuMusic = (function () {
     }).filter((s) => s.id || s.stream);
   }
 
+  /* 歌单快照（仓内 107 首，秒开零依赖） */
+  async function loadSnapshot() {
+    const res = await fetch(CFG.snapshot, { cache: "no-cache" });
+    if (!res.ok) throw new Error("快照 " + res.status);
+    const data = await res.json();
+    const list = normalize((data.playlist || []).map((s) => ({ ...s, url: "" })));
+    if (!list.length) throw new Error("快照为空");
+    return list;
+  }
+
+  /* 封面异步补齐（Meting pic，本机缓存一个月） */
+  async function fetchPic(id) {
+    if (!id) return "";
+    const key = "mm_pic_" + id;
+    try { const c = localStorage.getItem(key); if (c) return c; } catch (e) {}
+    for (const base of apiSources()) {
+      try {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 6000);
+        const res = await fetch(base + "?type=pic&server=netease&id=" + id, { signal: ctrl.signal });
+        clearTimeout(timer);
+        if (!res.ok) continue;
+        const text = (await res.text()).trim();
+        if (/^https?:\/\//.test(text)) {
+          try { localStorage.setItem(key, text); } catch (e) {}
+          return text;
+        }
+      } catch (e) {}
+    }
+    return "";
+  }
+  function fillPics() {
+    queue.forEach(async (s, i) => {
+      if (s.pic || !s.id) return;
+      const pic = await fetchPic(s.id);
+      if (pic && queue[i] === s) { s.pic = pic; if (i === qi) syncAll(); renderQueue(); }
+    });
+  }
+
+  /* ---------- 音频元素 ---------- */
   function ensureAudio() {
     if (audio) return audio;
     audio = new Audio();
-    audio.addEventListener("ended", () => { window.__kbSinging = false; next(true); });
-    audio.addEventListener("play", () => { playing = true; window.__kbSinging = true; emit(); });
-    audio.addEventListener("pause", () => { playing = false; window.__kbSinging = false; emit(); });
+    audio.preload = "metadata";
+    try { audio.volume = Math.min(1, Math.max(0, parseFloat(localStorage.getItem("mm_volume") || "0.9"))); } catch (e) {}
+    audio.addEventListener("ended", () => { window.__kbSinging = false; onEnded(); });
+    audio.addEventListener("play", () => { playing = true; window.__kbSinging = true; syncAll(); updateMediaSession(); });
+    audio.addEventListener("pause", () => { playing = false; window.__kbSinging = false; syncAll(); persist(); });
     let lastLine = -2;
-    audio.addEventListener("loadedmetadata", () => {
-      const tot = document.querySelector(".js-mm-total");
-      if (tot && audio.duration) tot.textContent = fmt(audio.duration);
-    });
+    audio.addEventListener("loadedmetadata", () => syncAll());
     audio.addEventListener("timeupdate", () => {
       const line = lrcIndexAt(audio.currentTime || 0);
       if (line !== lastLine) { lastLine = line; emit(); }
-      const fill = document.querySelector(".js-mm-fill");
-      if (fill && audio.duration) fill.style.width = (audio.currentTime / audio.duration) * 100 + "%";
-      const cur = document.querySelector(".js-mm-cur");
-      if (cur) cur.textContent = fmt(audio.currentTime);
+      syncProgress();
+      if (Math.floor(audio.currentTime || 0) % 3 === 0) persist();
     });
     return audio;
   }
@@ -94,6 +143,22 @@ const MikuMusic = (function () {
     if (item.id) list.push("https://music.163.com/song/media/outer/url?id=" + item.id + ".mp3");
     if (item.stream) list.push(item.stream);
     return list;
+  }
+
+  /* 只装载不播放（用于恢复现场） */
+  function prepare(item, seekTo) {
+    ensureAudio();
+    playing = false;
+    const url = streamCandidates(item)[0];
+    if (!url) return;
+    audio.src = url;
+    if (seekTo > 0) {
+      const jump = () => { try { audio.currentTime = seekTo; } catch (e) {} };
+      if (audio.readyState >= 1) jump();
+      else audio.addEventListener("loadedmetadata", jump, { once: true });
+    }
+    loadLrc(item).then(() => emit());
+    syncAll();
   }
 
   async function play(item) {
@@ -112,13 +177,17 @@ const MikuMusic = (function () {
         window.__kbSinging = true;
         loadLrc(item).then(() => emit());
         emit();
+        persist();
+        updateMediaSession();
         return;
       } catch (e) { lastErr = e; }
     }
     window.__kbSinging = false;
+    toast("《" + item.name + "》播放失败：" + (lastErr ? lastErr.message : "地址不可用"));
     throw new Error("播放失败：" + (lastErr ? lastErr.message : "所有地址都不可用"));
   }
 
+  /* ---------- 歌词 ---------- */
   function parseLrc(text) {
     const out = [];
     const tagRe = /\[(\d{1,2}):(\d{1,2})(?:[.:](\d{1,3}))?\]/g;
@@ -150,7 +219,7 @@ const MikuMusic = (function () {
         if (!res.ok) continue;
         const list = await res.json();
         const synced = list.find((d) => d.syncedLyrics) || list[0];
-        if (synced && synced.syncedLyrics) { currentLrc = parseLrc(synced.syncedLyrics); return; }
+        if (synced && synced.syncedLyrics) { currentLrc = parseLrc(synced.syncedLyrics); renderLyricPanel(true); return; }
       } catch (e) { /* 下一种组合 */ }
     }
     for (const base of apiSources()) {
@@ -165,9 +234,10 @@ const MikuMusic = (function () {
         if (!text || text.startsWith('{"error')) continue;
         if (text.startsWith("[") || text.includes("[00:")) { currentLrc = parseLrc(text); }
         else { const data = JSON.parse(text); currentLrc = parseLrc((Array.isArray(data) ? data[0] : data).lrc || ""); }
-        if (currentLrc.length) return;
+        if (currentLrc.length) { renderLyricPanel(true); return; }
       } catch (e) { /* 试下一个源 */ }
     }
+    renderLyricPanel(true);
   }
 
   function lrcIndexAt(time) {
@@ -179,35 +249,23 @@ const MikuMusic = (function () {
     return idx;
   }
 
-  /* ---------- 对外能力 ---------- */
-  async function searchAndPlay(name) {
-    if (!queue.length) { try { await loadPlaylist(); } catch (e) {} }
-    if (queue.length) {
-      const key = name.toLowerCase();
-      const matched = queue.filter((s) => (s.name + " " + s.artist).toLowerCase().includes(key));
-      if (matched.length) { queue = matched.concat(queue.filter((q) => !matched.some((m) => m.id === q.id))); qi = 0; await play(queue[0]); return queue[0]; }
-    }
-    let songs = [];
-    try { songs = normalize(await api("search", name)); } catch (e) {}
-    if (!songs.length) throw new Error("歌单里和在线都没找到「" + name + "」♪ 你可以在网易云 APP 里把这首歌加到歌单，或跟我说「播放歌单」听已有的");
-    queue = songs.concat(queue.filter((q) => !songs.some((s) => s.id === q.id)));
-    qi = 0;
-    await play(queue[0]);
-    return queue[0];
-  }
-
+  /* ---------- 队列 / 播放控制 ---------- */
   async function loadPlaylist() {
     if (queue.length) return queue.length;
-    let fromCache = false;
+    // 主源：仓内快照（零依赖秒开）；兜底：Meting 在线 → 本机缓存
     try {
-      queue = normalize(await api("playlist", CFG.playlistId));
-      try { localStorage.setItem("mm_playlist_cache", JSON.stringify(queue)); } catch (e) {}
+      queue = await loadSnapshot();
+      fillPics();
     } catch (e) {
-      let cached = null;
-      try { cached = localStorage.getItem("mm_playlist_cache"); } catch (err) {}
-      if (!cached) throw new Error("音乐接口全部失败，且本机没有历史歌单缓存");
-      try { queue = JSON.parse(cached); } catch (err2) { throw new Error("本地歌单缓存损坏"); }
-      fromCache = true;
+      try {
+        queue = normalize(await api("playlist", CFG.playlistId));
+        try { localStorage.setItem("mm_playlist_cache", JSON.stringify(queue)); } catch (err) {}
+      } catch (err) {
+        let cached = null;
+        try { cached = localStorage.getItem("mm_playlist_cache"); } catch (err2) {}
+        if (!cached) throw new Error("歌单快照与在线接口都失败了");
+        try { queue = JSON.parse(cached); } catch (err3) { throw new Error("本地歌单缓存损坏"); }
+      }
     }
     if (!queue.length) throw new Error("歌单读取失败了");
     qi = -1;
@@ -223,17 +281,63 @@ const MikuMusic = (function () {
     return n;
   }
 
-  async function playIndex(i) {
+  async function playIndex(i, opts) {
     if (!queue[i]) return;
     qi = i;
+    if (opts && opts.seekTo !== undefined && opts.autoplay === false) {
+      prepare(queue[i], opts.seekTo);
+      return;
+    }
     await play(queue[i]);
+  }
+
+  function pickRandom() {
+    if (queue.length <= 1) return 0;
+    let r;
+    do { r = Math.floor(Math.random() * queue.length); } while (r === qi);
+    return r;
   }
 
   function next(auto) {
     if (!queue.length) return false;
-    qi = (qi + 1) % queue.length;
+    if (mode === "random") qi = pickRandom();
+    else qi = (qi + 1) % queue.length;
     play(queue[qi]).catch(() => { if (auto) next(true); });
     return true;
+  }
+
+  function prev() {
+    if (!queue.length) return false;
+    if (mode === "random") qi = pickRandom();
+    else qi = (qi - 1 + queue.length) % queue.length;
+    play(queue[qi]).catch(() => {});
+    return true;
+  }
+
+  function onEnded() {
+    if (mode === "one") { audio.currentTime = 0; audio.play().catch(() => {}); return; }
+    next(true);
+  }
+
+  function cycleMode() {
+    mode = MODES[(MODES.findIndex((m) => m.id === mode) + 1) % MODES.length].id;
+    try { localStorage.setItem("mm_mode", mode); } catch (e) {}
+    toast("播放模式：" + MODES.find((m) => m.id === mode).tip);
+    syncAll();
+  }
+
+  function seek(frac) {
+    if (!audio || !audio.duration) return;
+    audio.currentTime = Math.min(audio.duration - 0.2, Math.max(0, frac * audio.duration));
+    syncProgress();
+  }
+
+  function setVolume(v) {
+    ensureAudio();
+    audio.volume = Math.min(1, Math.max(0, v));
+    try { localStorage.setItem("mm_volume", String(audio.volume)); } catch (e) {}
+    const bar = document.querySelector(".gp-vol input");
+    if (bar) bar.value = audio.volume;
   }
 
   function toggle() {
@@ -251,23 +355,319 @@ const MikuMusic = (function () {
       index: qi,
       total: queue.length,
       hasQueue: queue.length > 0,
+      mode,
+      volume: audio ? audio.volume : 0.9,
+      duration: audio ? audio.duration || 0 : 0,
+      time: audio ? audio.currentTime || 0 : 0,
       lrc: currentLrc,
       lrcLine: audio ? lrcIndexAt(audio.currentTime || 0) : -1,
-      time: audio ? audio.currentTime || 0 : 0,
     };
   }
 
+  /* ---------- 事件总线 + 同步 ---------- */
   function emit() {
     const st = getState();
     listeners.forEach((fn) => { try { fn(st); } catch (e) {} });
     document.dispatchEvent(new CustomEvent("mikumusic", { detail: st }));
     try { lyricBarTick(); } catch (e) {}
     try { loTick(); } catch (e) {}
+    syncPlayerBar(st);
+    syncProgress();
   }
+  function syncAll() { emit(); }
   function on(fn) { listeners.add(fn); }
 
-  /* ---------- 歌词横幅 + 弹出大字 ---------- */
-  let lastBarLine = -2, typingTimer = 0, popTimer = 0;
+  /* ---------- 状态持久化（刷新/换页恢复现场） ---------- */
+  let persistTimer = 0;
+  function persist() {
+    clearTimeout(persistTimer);
+    persistTimer = setTimeout(() => {
+      try {
+        if (!queue.length) return;
+        localStorage.setItem("mm_state", JSON.stringify({
+          queue, qi, mode,
+          time: audio ? audio.currentTime || 0 : 0,
+          updated: Date.now(),
+        }));
+      } catch (e) {}
+    }, 400);
+  }
+
+  function restore() {
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem("mm_state") || "null"); } catch (e) {}
+    if (!saved || !Array.isArray(saved.queue) || !saved.queue.length) return;
+    queue = saved.queue;
+    qi = Math.min(Math.max(0, saved.qi | 0), queue.length - 1);
+    mode = MODES.some((m) => m.id === saved.mode) ? saved.mode : "list";
+    prepare(queue[qi], saved.time || 0);
+    fillPics();
+    toast("已恢复上次播放：《" + queue[qi].name + "》，点播放键继续 ♪");
+  }
+
+  /* ---------- Media Session（系统媒体键 / 锁屏） ---------- */
+  function updateMediaSession() {
+    if (!("mediaSession" in navigator) || !queue[qi]) return;
+    const cur = queue[qi];
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: cur.name,
+        artist: cur.artist || "未知歌手",
+        album: "CidneyAurum の 小窝",
+        artwork: cur.pic ? [{ src: cur.pic, sizes: "512x512", type: "image/jpeg" }] : [],
+      });
+      navigator.mediaSession.setActionHandler("play", () => toggle());
+      navigator.mediaSession.setActionHandler("pause", () => toggle());
+      navigator.mediaSession.setActionHandler("previoustrack", () => prev());
+      navigator.mediaSession.setActionHandler("nexttrack", () => next());
+      navigator.mediaSession.setActionHandler("seekto", (d) => { if (audio && d.seekTime != null) { audio.currentTime = d.seekTime; } });
+      navigator.mediaSession.playbackState = playing ? "playing" : "paused";
+    } catch (e) {}
+  }
+
+  /* ---------- toast 轻提示 ---------- */
+  let toastTimer = 0;
+  function toast(msg) {
+    let box = document.getElementById("gp-toast");
+    if (!box) {
+      box = document.createElement("div");
+      box.id = "gp-toast";
+      document.body.appendChild(box);
+    }
+    box.textContent = msg;
+    box.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => box.classList.remove("show"), 3200);
+  }
+
+  /* ============================================================
+     全站播放条（body 级，任何页面常驻）
+     ============================================================ */
+  let barBuilt = false;
+  let lyricOpen = false, drawerOpen = false, lastLrcIdx = -2, dragging = false;
+
+  function buildPlayerBar() {
+    if (barBuilt || !document.body) return;
+    barBuilt = true;
+    const el = document.createElement("div");
+    el.className = "gplayer";
+    el.id = "gplayer";
+    el.innerHTML = `
+      <div class="gp-lyric" id="gp-lyric" hidden><div class="gp-lrc-list" id="gp-lrc-list"></div></div>
+      <div class="gp-drawer" id="gp-drawer" hidden>
+        <div class="gp-drawer-head">
+          <b>播放队列</b><span id="gp-qcount"></span>
+          <button class="gp-drawer-close" id="gp-drawer-close" title="收起">✕</button>
+        </div>
+        <div class="gp-search"><input id="gp-qsearch" placeholder="搜本地队列，回车在线搜…"></div>
+        <div class="gp-qlist" id="gp-qlist"></div>
+      </div>
+      <div class="gp-bar">
+        <div class="gp-left">
+          <div class="gp-cover-wrap"><span class="gp-cover-note">♪</span><img class="gp-cover" id="gp-cover" alt=""></div>
+          <div class="gp-info">
+            <div class="gp-name" id="gp-name">没有在放歌</div>
+            <div class="gp-artist" id="gp-artist">点歌单开始，或跟 Miku 说「放 歌名」</div>
+          </div>
+        </div>
+        <div class="gp-center">
+          <div class="gp-btns">
+            <button class="gp-btn" id="gp-mode" title="播放模式">🔁</button>
+            <button class="gp-btn gp-big" id="gp-prev" title="上一首">⏮</button>
+            <button class="gp-btn gp-play" id="gp-toggle" title="播放/暂停（空格）">▶</button>
+            <button class="gp-btn gp-big" id="gp-next" title="下一首">⏭</button>
+            <button class="gp-btn" id="gp-lyric-btn" title="歌词面板">词</button>
+          </div>
+          <div class="gp-progress-row">
+            <span class="gp-time" id="gp-cur">00:00</span>
+            <div class="gp-progress" id="gp-progress"><div class="gp-fill" id="gp-fill"></div><div class="gp-knob" id="gp-knob"></div></div>
+            <span class="gp-time" id="gp-total">00:00</span>
+          </div>
+        </div>
+        <div class="gp-right">
+          <div class="gp-vol" id="gp-vol"><span class="gp-vol-ico">🔊</span><input type="range" min="0" max="1" step="0.01" value="0.9" aria-label="音量"></div>
+          <button class="gp-btn" id="gp-queue-btn" title="播放队列">☰</button>
+        </div>
+      </div>`;
+    document.body.appendChild(el);
+
+    $("gp-toggle").addEventListener("click", toggle);
+    $("gp-next").addEventListener("click", () => next());
+    $("gp-prev").addEventListener("click", prev);
+    $("gp-mode").addEventListener("click", cycleMode);
+    $("gp-lyric-btn").addEventListener("click", () => setLyricPanel(!lyricOpen));
+    $("gp-queue-btn").addEventListener("click", () => setDrawer(!drawerOpen));
+    $("gp-drawer-close").addEventListener("click", () => setDrawer(false));
+    $("gp-qsearch").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        const kw = e.target.value.trim();
+        if (kw) searchAndPlay(kw).then((s) => toast("《" + s.name + "》开始播放 ♪")).catch((err) => toast(err.message));
+      }
+    });
+    $("gp-qsearch").addEventListener("input", () => renderQueue());
+
+    // 音量
+    const vol = el.querySelector(".gp-vol input");
+    try { vol.value = parseFloat(localStorage.getItem("mm_volume") || "0.9"); } catch (e) {}
+    vol.addEventListener("input", () => setVolume(parseFloat(vol.value)));
+
+    // 进度条：点击 + 拖拽 seek
+    const prog = $("gp-progress");
+    const fracAt = (ev) => {
+      const r = prog.getBoundingClientRect();
+      return Math.min(1, Math.max(0, (ev.clientX - r.left) / r.width));
+    };
+    prog.addEventListener("pointerdown", (e) => {
+      if (!audio || !audio.duration) return;
+      dragging = true;
+      prog.setPointerCapture(e.pointerId);
+      const f = fracAt(e);
+      $("gp-fill").style.width = f * 100 + "%";
+      $("gp-knob").style.left = f * 100 + "%";
+      $("gp-cur").textContent = fmt(f * audio.duration);
+    });
+    prog.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      const f = fracAt(e);
+      $("gp-fill").style.width = f * 100 + "%";
+      $("gp-knob").style.left = f * 100 + "%";
+      $("gp-cur").textContent = fmt(f * (audio.duration || 0));
+    });
+    prog.addEventListener("pointerup", (e) => {
+      if (!dragging) return;
+      dragging = false;
+      seek(fracAt(e));
+    });
+
+    // 歌词行点击 seek（事件委托）
+    $("gp-lrc-list").addEventListener("click", (e) => {
+      const line = e.target.closest(".gp-lrc-line");
+      if (!line || !audio) return;
+      const idx = +line.dataset.i;
+      if (currentLrc[idx]) { audio.currentTime = currentLrc[idx].t; if (audio.paused) toggle(); }
+    });
+    // 队列行点击 / 删除（事件委托）
+    $("gp-qlist").addEventListener("click", (e) => {
+      const del = e.target.closest("[data-del]");
+      if (del) {
+        const i = +del.dataset.del;
+        if (i === qi) { toast("先切到别的歌再删这首吧"); return; }
+        queue.splice(i, 1);
+        if (i < qi) qi--;
+        renderQueue();
+        persist();
+        return;
+      }
+      const row = e.target.closest("[data-i]");
+      if (row) playIndex(+row.dataset.i).catch((err) => toast(err.message));
+    });
+  }
+
+  function $(id) { return document.getElementById(id); }
+
+  function setLyricPanel(open) {
+    buildPlayerBar();
+    lyricOpen = open;
+    const panel = $("gp-lyric");
+    if (panel) panel.hidden = !open;
+    $("gp-lyric-btn").classList.toggle("on", open);
+    if (open) renderLyricPanel(true);
+  }
+
+  function setDrawer(open) {
+    buildPlayerBar();
+    drawerOpen = open;
+    const d = $("gp-drawer");
+    if (d) d.hidden = !open;
+    $("gp-queue-btn").classList.toggle("on", open);
+    if (open) { renderQueue(); const s = $("gp-qsearch"); if (s) s.value = ""; }
+  }
+
+  function renderLyricPanel(force) {
+    if (!lyricOpen || !barBuilt) return;
+    const list = $("gp-lrc-list");
+    const st = getState();
+    if (!list) return;
+    if (!currentLrc.length) {
+      list.innerHTML = '<div class="gp-lrc-empty">这首暂时没有歌词（或还在加载）♪</div>';
+      lastLrcIdx = -2;
+      return;
+    }
+    if (!list.children.length || force || list.dataset.song !== (st.current ? st.current.id : "")) {
+      list.dataset.song = st.current ? st.current.id : "";
+      list.innerHTML = currentLrc.map((l, i) =>
+        `<div class="gp-lrc-line" data-i="${i}">${esc(l.text)}</div>`).join("");
+      lastLrcIdx = -2;
+    }
+    if (st.lrcLine !== lastLrcIdx) {
+      lastLrcIdx = st.lrcLine;
+      list.querySelectorAll(".gp-lrc-line.on").forEach((n) => n.classList.remove("on"));
+      const cur = list.children[st.lrcLine];
+      if (cur) {
+        cur.classList.add("on");
+        cur.scrollIntoView({ block: "center", behavior: "smooth" });
+      }
+    }
+  }
+
+  function renderQueue() {
+    if (!barBuilt || !drawerOpen) return;
+    const list = $("gp-qlist");
+    const st = getState();
+    const kw = ($("gp-qsearch").value || "").trim().toLowerCase();
+    const shown = queue.map((s, i) => ({ s, i })).filter(({ s }) =>
+      !kw || (s.name + " " + s.artist).toLowerCase().includes(kw));
+    $("gp-qcount").textContent = queue.length + " 首";
+    list.innerHTML = shown.length ? shown.map(({ s, i }) => `
+      <div class="gp-qrow${i === st.index ? " on" : ""}" data-i="${i}">
+        <span class="gp-q-idx">${i === st.index && st.playing ? "♪" : i + 1}</span>
+        <span class="gp-q-main"><b>${esc(s.name)}</b><small>${esc(s.artist)}</small></span>
+        <button class="gp-q-del" data-del="${i}" title="移出队列">✕</button>
+      </div>`).join("")
+      : (kw ? '<div class="gp-lrc-empty">队列里没有匹配的歌，回车在线搜</div>' : '<div class="gp-lrc-empty">队列空空如也</div>');
+  }
+
+  function syncProgress() {
+    if (!barBuilt || dragging || !audio) return;
+    const st = getState();
+    const pct = st.duration ? (st.time / st.duration) * 100 : 0;
+    const fill = $("gp-fill"), knob = $("gp-knob"), cur = $("gp-cur"), total = $("gp-total");
+    if (fill) fill.style.width = pct + "%";
+    if (knob) knob.style.left = pct + "%";
+    if (cur) cur.textContent = fmt(st.time);
+    if (total) total.textContent = st.duration ? fmt(st.duration) : "00:00";
+  }
+
+  function syncPlayerBar(st) {
+    if (!barBuilt) return;
+    const btn = $("gp-toggle");
+    if (btn) btn.textContent = st.playing ? "❚❚" : "▶";
+    const modeBtn = $("gp-mode");
+    if (modeBtn) {
+      const m = MODES.find((x) => x.id === st.mode) || MODES[0];
+      modeBtn.textContent = m.icon;
+      modeBtn.title = m.tip;
+    }
+    if (st.current) {
+      $("gp-name").textContent = st.current.name;
+      $("gp-artist").textContent = st.current.artist || "未知歌手";
+      const cover = $("gp-cover");
+      if (cover && cover.dataset.id !== st.current.id) {
+        cover.dataset.id = st.current.id;
+        cover.src = st.current.pic || "";
+        cover.classList.toggle("no", !st.current.pic);
+        if (!st.current.pic) fetchPic(st.current.id).then((p) => {
+          if (p && queue[qi] === st.current) { st.current.pic = p; cover.src = p; cover.classList.remove("no"); }
+        });
+      }
+    }
+    document.getElementById("gplayer").classList.toggle("playing", !!st.playing);
+    renderLyricPanel();
+    renderQueue();
+  }
+
+  /* ---------- 歌词横幅 + 弹出大字（首页 Limbus 演出，保留） ---------- */
+  let typingTimer = 0, popTimer = 0;
 
   function lyricBarTick(force) {
     const bar = document.getElementById("lyric-bar");
@@ -409,15 +809,50 @@ const MikuMusic = (function () {
     }
   }
 
+  /* ---------- 点播（Miku 对话 & 队列搜索共用） ---------- */
+  async function searchAndPlay(name) {
+    if (!queue.length) { try { await loadPlaylist(); } catch (e) {} }
+    if (queue.length) {
+      const key = name.toLowerCase();
+      const matched = queue.filter((s) => (s.name + " " + s.artist).toLowerCase().includes(key));
+      if (matched.length) { queue = matched.concat(queue.filter((q) => !matched.some((m) => m.id === q.id))); qi = 0; await play(queue[0]); return queue[0]; }
+    }
+    let songs = [];
+    try { songs = normalize(await api("search", name)); } catch (e) {}
+    if (!songs.length) throw new Error("歌单里和在线都没找到「" + name + "」♪ 你可以在网易云 APP 里把这首歌加到歌单，或跟我说「播放歌单」听已有的");
+    queue = songs.concat(queue.filter((q) => !songs.some((s) => s.id === q.id)));
+    qi = 0;
+    await play(queue[0]);
+    return queue[0];
+  }
+
+  /* ---------- 对外 API ---------- */
   return {
-    searchAndPlay, playPlaylist, loadPlaylist, reloadPlaylist, playIndex, next, toggle,
+    searchAndPlay, playPlaylist, loadPlaylist, reloadPlaylist, playIndex, next, prev, toggle,
+    seek, setVolume, cycleMode, toast,
     getState, getQueue: () => queue.slice(), on, playlistId: CFG.playlistId,
     popLyric,
     lyricOverlay: { toggle: loToggle, open: () => setOverlay(true), close: () => setOverlay(false) },
+    buildPlayerBar, restore,
   };
 })();
 
 window.MikuMusic = MikuMusic;
+
+/* ---------- 启动：建播放条 + 恢复现场 + 键盘控制 ---------- */
+document.addEventListener("DOMContentLoaded", () => {
+  try { MikuMusic.buildPlayerBar(); } catch (e) {}
+  try { MikuMusic.restore(); } catch (e) {}
+
+  // 空格播放/暂停（输入框聚焦时除外）；←/→ 快退快进 5s
+  document.addEventListener("keydown", (e) => {
+    const tag = (document.activeElement && document.activeElement.tagName) || "";
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+    if (e.code === "Space") { e.preventDefault(); MikuMusic.toggle(); }
+    else if (e.key === "ArrowLeft" && window.MikuMusic.getState().hasQueue) { e.preventDefault(); MikuMusic.seek(Math.max(0, (MikuMusic.getState().time - 5) / Math.max(1, MikuMusic.getState().duration))); }
+    else if (e.key === "ArrowRight" && window.MikuMusic.getState().hasQueue) { e.preventDefault(); MikuMusic.seek(Math.min(1, (MikuMusic.getState().time + 5) / Math.max(1, MikuMusic.getState().duration))); }
+  });
+});
 
 /* ---------- 悬浮音乐钮 ---------- */
 document.addEventListener("DOMContentLoaded", () => {

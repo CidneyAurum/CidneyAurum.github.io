@@ -55,6 +55,19 @@ def inline(md: str) -> str:
     return s
 
 
+def pygments_highlight(code: str, lang: str) -> str | None:
+    """构建时代码高亮（CI 里装了 pygments 才生效；本地无则原样返回 None）。"""
+    try:
+        from pygments import highlight
+        from pygments.lexers import get_lexer_by_name
+        from pygments.formatters import HtmlFormatter
+        lexer = get_lexer_by_name(lang or "text", stripall=False)
+        fmt = HtmlFormatter(nowrap=True)
+        return highlight(code, lexer, fmt).rstrip("\n")
+    except Exception:
+        return None
+
+
 def md_to_html(md: str, headings=None):
     """headings 传列表时，h2/h3 会带自增 id 并收集为 [{level,text,id}]"""
     out, lines = [], md.replace("\r\n", "\n").split("\n")
@@ -63,7 +76,11 @@ def md_to_html(md: str, headings=None):
         line = lines[i]
         if line.strip().startswith("```"):
             if in_code:
-                out.append("<pre><code>" + esc("\n".join(code_buf)) + "</code></pre>")
+                lang = line.strip()[3:].strip()
+                code_text = esc("\n".join(code_buf))
+                hl = pygments_highlight("\n".join(code_buf), lang)
+                body = f'<code class="hljs">{hl}</code>' if hl else f"<code>{code_text}</code>"
+                out.append(f'<pre data-lang="{esc(lang) if lang else ""}">' + body + "</pre>")
                 code_buf, in_code = [], False
             else:
                 close_lists()
@@ -117,7 +134,11 @@ def md_to_html(md: str, headings=None):
             out.append(f"<p>{inline(line.strip())}</p>")
         i += 1
     if in_code and code_buf:
-        out.append("<pre><code>" + esc("\n".join(code_buf)) + "</code></pre>")
+        lang = line.strip()[3:].strip()
+        code_text = esc("\n".join(code_buf))
+        hl = pygments_highlight("\n".join(code_buf), lang)
+        body = f'<code class="hljs">{hl}</code>' if hl else f"<code>{code_text}</code>"
+        out.append(f'<pre data-lang="{esc(lang) if lang else ""}">' + body + "</pre>")
     while list_stack:
         out.append(f"</{'ol' if list_stack.pop() else 'ul'}>")
     return "\n".join(out)
@@ -150,6 +171,18 @@ POST_TEMPLATE = """<!DOCTYPE html>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{title} · {site_name}</title>
   <meta name="description" content="{summary}">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="{title} · {site_name}">
+  <meta property="og:description" content="{summary}">
+  <meta property="og:url" content="{og_url}">
+  <meta property="og:image" content="{og_image}">
+  <script type="application/ld+json">
+  {{"@context": "https://schema.org", "@type": "BlogPosting",
+    "headline": "{title}", "description": "{summary}",
+    "datePublished": "{date}", "author": {{"@type": "Person", "name": "{owner}"}},
+    "image": "{og_image}"}}
+  </script>
   <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
   <link rel="alternate" type="application/rss+xml" title="RSS 订阅" href="../feed.xml">
   <script defer src="https://events.vercount.one/js"></script>
@@ -203,6 +236,11 @@ POST_TEMPLATE = """<!DOCTYPE html>
 
         {postnav}
         <p class="article-end">— 谢谢你看到这里 ✧ —</p>
+
+        <div class="comments-card card">
+          <div class="comments-head">留言板 · COMMENTS</div>
+          <div id="giscus-slot"></div>
+        </div>
       </div>
     </article>
 
@@ -255,6 +293,7 @@ POST_TEMPLATE = """<!DOCTYPE html>
   <script src="../js/player.js?v=23"></script>
   <script src="../js/music.js?v=23" defer></script>
   <script src="../js/kanban.js?v=23" defer></script>
+  <script src="../js/comments.js?v=23" defer></script>
 </body>
 </html>
 """
@@ -355,6 +394,8 @@ def build_posts(include_drafts: bool = False) -> list:
             motto=SITE["motto"], summary=esc(it["summary"]), date=it["date"],
             tags=tags_html, cover=cover_html, content=it["content"],
             wordinfo=it["wordinfo"], toc_html=toc_html, postnav=postnav,
+          og_url=BASE_URL + "/posts/" + it["slug"] + ".html",
+          og_image=BASE_URL + "/assets/avatar.webp",
         )
         out_file = POSTS_OUT / f"{it['slug']}.html"
         out_file.write_text(html, encoding="utf-8")

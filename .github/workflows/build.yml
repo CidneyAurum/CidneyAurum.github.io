@@ -19,7 +19,7 @@ jobs:
           python-version: "3.12"
 
       - name: 安装 Pillow（图片优化用）
-        run: pip install pillow
+        run: pip install pillow pygments
 
       - name: 资产体积优化（纹理量化 / WebP / 缩略图，幂等）
         run: python tools/optimize_assets.py

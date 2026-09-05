@@ -5,12 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>网站上线啦！ · CidneyAurum の 小窝</title>
   <meta name="description" content="我的个人小站正式上线，这是第一篇博客，讲讲这个小站是怎么搭起来的。">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="网站上线啦！ · CidneyAurum の 小窝">
+  <meta property="og:description" content="我的个人小站正式上线，这是第一篇博客，讲讲这个小站是怎么搭起来的。">
+  <meta property="og:url" content="https://cidneyaurum.github.io/posts/hello-world.html">
+  <meta property="og:image" content="https://cidneyaurum.github.io/assets/avatar.webp">
+  <script type="application/ld+json">
+  {"@context": "https://schema.org", "@type": "BlogPosting",
+    "headline": "网站上线啦！", "description": "我的个人小站正式上线，这是第一篇博客，讲讲这个小站是怎么搭起来的。",
+    "datePublished": "2026-08-29", "author": {"@type": "Person", "name": "CidneyAurum"},
+    "image": "https://cidneyaurum.github.io/assets/avatar.webp"}
+  </script>
   <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
   <link rel="alternate" type="application/rss+xml" title="RSS 订阅" href="../feed.xml">
   <script defer src="https://events.vercount.one/js"></script>
   <link rel="preconnect" href="https://fonts.loli.net" crossorigin>
   <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/style.css?v=54e34ab">
+  <link rel="stylesheet" href="../css/style.css?v=ace2165">
 </head>
 <body class="page-enter" data-page="post">
   <div class="read-progress" id="read-progress"></div>
@@ -76,6 +88,11 @@
 
         <nav class="post-nav"><a class="pn-cell" href="how-to-write-post.html"><span class="pn-label">← 上一篇</span><span class="pn-title">如何发布一篇新文章 / 新照片</span></a><span class="pn-cell pn-empty"><span class="pn-label">没有更多了</span></span></nav>
         <p class="article-end">— 谢谢你看到这里 ✧ —</p>
+
+        <div class="comments-card card">
+          <div class="comments-head">留言板 · COMMENTS</div>
+          <div id="giscus-slot"></div>
+        </div>
       </div>
     </article>
 
@@ -124,9 +141,10 @@
     <button class="mini-btn js-play-toggle js-state" aria-label="播放/暂停">▶</button>
   </div>
 
-  <script src="../js/main.js?v=54e34ab"></script>
-  <script src="../js/player.js?v=54e34ab"></script>
-  <script src="../js/music.js?v=54e34ab" defer></script>
-  <script src="../js/kanban.js?v=54e34ab" defer></script>
+  <script src="../js/main.js?v=ace2165"></script>
+  <script src="../js/player.js?v=ace2165"></script>
+  <script src="../js/music.js?v=ace2165" defer></script>
+  <script src="../js/kanban.js?v=ace2165" defer></script>
+  <script src="../js/comments.js?v=ace2165" defer></script>
 </body>
 </html>

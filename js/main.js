@@ -28,6 +28,13 @@ function runPageReady() {
 }
 document.addEventListener("DOMContentLoaded", runPageReady);
 
+/* ---------- PWA Service Worker（离线缓存 + 可安装） ---------- */
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  });
+}
+
 /* 切走标签页时的标题彩蛋 */
 document.addEventListener("visibilitychange", () => {
   const base = (document.title || "").split(" ||")[0];
@@ -600,6 +607,7 @@ onPageReady(async () => {
     list.innerHTML = '<p class="empty-tip">说说加载失败…</p>';
     return;
   }
+  const liked = (id) => { try { return (localStorage.getItem("mm_liked") || "").split(",").filter(Boolean).includes(String(id)); } catch (e) { return false; } };
   const countEl = document.getElementById("says-count");
   if (countEl) countEl.textContent = says.length;
   if (!says.length) {
@@ -626,11 +634,42 @@ onPageReady(async () => {
         <div class="says-main">
           <div class="says-meta"><b>CidneyAurum</b><span class="says-time">${rel(s.time)}</span></div>
           ${s.text ? `<div class="says-text">${esc(s.text)}</div>` : ""}
+          <div class="says-actions"><button class="like-btn${liked(s.id) ? " on" : ""}" data-like="${s.id || rel(s.time)}">${liked(s.id) ? "❤" : "♡"} <span>喜欢</span></button></div>
           ${imgs.length ? `<div class="says-grid${gridCls}">${imgs.map((src) => `<img src="${photoThumb(src)}" data-full="${src}" alt="" loading="lazy" decoding="async">`).join("")}</div>` : ""}
         </div>
       </div>`;
     })
     .join("");
+  // 点赞（本机记忆 + 爱心爆裂）
+  list.querySelectorAll("[data-like]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.like;
+      let likedList = [];
+      try { likedList = (localStorage.getItem("mm_liked") || "").split(",").filter(Boolean); } catch (e) {}
+      const on = likedList.includes(id);
+      if (on) { likedList = likedList.filter((x) => x !== id); } else { likedList.push(id); }
+      try { localStorage.setItem("mm_liked", likedList.join(",")); } catch (e) {}
+      btn.classList.toggle("on", !on);
+      btn.firstChild.textContent = !on ? "❤" : "♡";
+      if (!on) {
+        const r = btn.getBoundingClientRect();
+        for (let i = 0; i < 6; i++) {
+          const s = document.createElement("span");
+          s.className = "mouse-particle";
+          s.textContent = ["❤", "💗", "✧"][i % 3];
+          s.style.left = r.left + r.width / 2 - 6 + "px";
+          s.style.top = r.top + "px";
+          s.style.color = "#ff8fb7";
+          s.style.fontSize = 9 + Math.random() * 9 + "px";
+          s.style.setProperty("--dx", (Math.random() * 80 - 40).toFixed(0) + "px");
+          s.style.setProperty("--rot", (Math.random() * 120 - 60).toFixed(0) + "deg");
+          s.style.animationDuration = 0.7 + Math.random() * 0.5 + "s";
+          document.body.appendChild(s);
+          setTimeout(() => s.remove(), 1300);
+        }
+      }
+    });
+  });
   revealScan();
 });
 

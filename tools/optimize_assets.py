@@ -101,6 +101,16 @@ def main() -> None:
               width=1280, blur=14, quality=68)
     make_webp(ASSETS / "avatar.jpg", ASSETS / "avatar.webp", size=(512, 512), quality=82)
 
+    # PWA 图标（方图 512/192）
+    for size, name in ((512, "icon-512.png"), (192, "icon-192.png")):
+        dst = ASSETS / name
+        if dst.exists() or not (ASSETS / "avatar.jpg").exists():
+            continue
+        img = Image.open(ASSETS / "avatar.jpg").convert("RGB")
+        img = ImageOps.fit(img, (size, size), Image.LANCZOS)
+        img.save(dst, "PNG", optimize=True)
+        print(f"  图标 {name}: {human(dst.stat().st_size)}")
+
     make_thumbs(ASSETS / "gallery")
     make_thumbs(ASSETS / "says")
 

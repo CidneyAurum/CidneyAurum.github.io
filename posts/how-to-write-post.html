@@ -5,12 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>如何发布一篇新文章 / 新照片 · CidneyAurum の 小窝</title>
   <meta name="description" content="三种方式从易到难：站内写作台一键发布、本地一条命令、GitHub 网页直接写。">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="如何发布一篇新文章 / 新照片 · CidneyAurum の 小窝">
+  <meta property="og:description" content="三种方式从易到难：站内写作台一键发布、本地一条命令、GitHub 网页直接写。">
+  <meta property="og:url" content="https://cidneyaurum.github.io/posts/how-to-write-post.html">
+  <meta property="og:image" content="https://cidneyaurum.github.io/assets/avatar.webp">
+  <script type="application/ld+json">
+  {"@context": "https://schema.org", "@type": "BlogPosting",
+    "headline": "如何发布一篇新文章 / 新照片", "description": "三种方式从易到难：站内写作台一键发布、本地一条命令、GitHub 网页直接写。",
+    "datePublished": "2026-08-29", "author": {"@type": "Person", "name": "CidneyAurum"},
+    "image": "https://cidneyaurum.github.io/assets/avatar.webp"}
+  </script>
   <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
   <link rel="alternate" type="application/rss+xml" title="RSS 订阅" href="../feed.xml">
   <script defer src="https://events.vercount.one/js"></script>
   <link rel="preconnect" href="https://fonts.loli.net" crossorigin>
   <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/style.css?v=54e34ab">
+  <link rel="stylesheet" href="../css/style.css?v=ace2165">
 </head>
 <body class="page-enter" data-page="post">
   <div class="read-progress" id="read-progress"></div>
@@ -63,12 +75,12 @@
 <p>首次使用需要到写作台的「设置」页粘贴一次 GitHub 令牌（Fine-grained PAT，只授权本仓库的 Contents: Read and write），之后浏览器会记住。</p>
 <h2 id="toc-2">方式一：本地一条命令</h2>
 <p>在 <code>_posts/</code> 里写一个 <code>xxx.md</code>（格式见下），然后：</p>
-<pre><code>python tools/build.py
+<pre data-lang=""><code class="hljs">python tools/build.py
 git add -A &amp;&amp; git commit -m "发布新文章" &amp;&amp; git push</code></pre>
 <h2 id="toc-3">方式二：GitHub 网页直接写</h2>
 <p>仓库 → <code>_posts/</code> → Add file → Create new file → 文件名用英文（如 <code>my-first-note.md</code>）→ 写完提交即可。</p>
 <h2 id="toc-4">Markdown 文件格式</h2>
-<pre><code>---
+<pre data-lang=""><code class="hljs">---
 title: 文章标题
 date: 2026-09-01
 tags: 日常, 笔记
@@ -89,6 +101,11 @@ summary: 一句话摘要
 
         <nav class="post-nav"><span class="pn-cell pn-empty"><span class="pn-label">没有更多了</span></span><a class="pn-cell" href="hello-world.html"><span class="pn-label">下一篇 →</span><span class="pn-title">网站上线啦！</span></a></nav>
         <p class="article-end">— 谢谢你看到这里 ✧ —</p>
+
+        <div class="comments-card card">
+          <div class="comments-head">留言板 · COMMENTS</div>
+          <div id="giscus-slot"></div>
+        </div>
       </div>
     </article>
 
@@ -137,9 +154,10 @@ summary: 一句话摘要
     <button class="mini-btn js-play-toggle js-state" aria-label="播放/暂停">▶</button>
   </div>
 
-  <script src="../js/main.js?v=54e34ab"></script>
-  <script src="../js/player.js?v=54e34ab"></script>
-  <script src="../js/music.js?v=54e34ab" defer></script>
-  <script src="../js/kanban.js?v=54e34ab" defer></script>
+  <script src="../js/main.js?v=ace2165"></script>
+  <script src="../js/player.js?v=ace2165"></script>
+  <script src="../js/music.js?v=ace2165" defer></script>
+  <script src="../js/kanban.js?v=ace2165" defer></script>
+  <script src="../js/comments.js?v=ace2165" defer></script>
 </body>
 </html>

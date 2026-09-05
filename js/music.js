@@ -878,10 +878,21 @@ document.addEventListener("DOMContentLoaded", () => {
   try { MikuMusic.buildPlayerBar(); } catch (e) {}
   try { MikuMusic.restore(); } catch (e) {}
 
-  // 空格播放/暂停（输入框聚焦时除外）；←/→ 快退快进 5s
+  // 空格播放/暂停（输入框聚焦时除外）；←/→ 快退快进 5s；Esc 收起抽屉
   document.addEventListener("keydown", (e) => {
     const tag = (document.activeElement && document.activeElement.tagName) || "";
-    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") {
+      if (e.key === "Escape") {
+        const d = document.getElementById("gp-drawer");
+        if (d && !d.hidden) { d.hidden = true; if (document.getElementById("gp-queue-btn")) document.getElementById("gp-queue-btn").classList.remove("on"); }
+        document.activeElement.blur();
+      }
+      return;
+    }
+    if (e.key === "Escape") {
+      const d = document.getElementById("gp-drawer");
+      if (d && !d.hidden) { d.hidden = true; if (document.getElementById("gp-queue-btn")) document.getElementById("gp-queue-btn").classList.remove("on"); }
+    }
     if (e.code === "Space") { e.preventDefault(); MikuMusic.toggle(); }
     else if (e.key === "ArrowLeft" && window.MikuMusic.getState().hasQueue) { e.preventDefault(); MikuMusic.seek(Math.max(0, (MikuMusic.getState().time - 5) / Math.max(1, MikuMusic.getState().duration))); }
     else if (e.key === "ArrowRight" && window.MikuMusic.getState().hasQueue) { e.preventDefault(); MikuMusic.seek(Math.min(1, (MikuMusic.getState().time + 5) / Math.max(1, MikuMusic.getState().duration))); }

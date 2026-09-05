@@ -2358,3 +2358,6 @@ body { padding-bottom: 86px; }
   border-color: rgba(217, 185, 108, 0.28);
   color: var(--gold);
 }
+
+/* hidden 属性永远生效（修复 display:flex 等声明覆盖 hidden 的 bug） */
+[hidden] { display: none !important; }

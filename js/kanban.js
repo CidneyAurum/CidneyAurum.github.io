@@ -528,7 +528,10 @@
     restorePos();
     addMsg("ai", "你好呀主人～ 我是 Miku ♪ 可以跟我聊天，也能跟我说「放 歌名」点歌哦。点 ⚙️ 配置 AI 接口。");
     bubble("欢迎来到小窝 ♪");
-    try { initPixi(); } catch (e) { console.warn("[kanban]", e); }
+    // Live2D 资源较大（数 MB），等首屏渲染完、浏览器空闲时再加载，避免阻塞首屏
+    const kick = () => { try { initPixi(); } catch (e) { console.warn("[kanban]", e); } };
+    if ("requestIdleCallback" in window) requestIdleCallback(kick, { timeout: 5000 });
+    else setTimeout(kick, 3000);
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);

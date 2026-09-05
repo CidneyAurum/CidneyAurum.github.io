@@ -17,7 +17,7 @@ files = list(root.glob("*.html")) + list((root / "posts").glob("*.html"))
 changed = 0
 for f in files:
     text = f.read_text(encoding="utf-8")
-    new = re.sub(r"\?v=[A-Za-z0-9_]+", "?v=" + sha, text)
+    new = re.sub(r"\?v=[A-Za-z0-9_-]+", "?v=" + sha, text)
     if new != text:
         f.write_text(new, encoding="utf-8")
         changed += 1

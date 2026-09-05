@@ -287,15 +287,6 @@
           if (mmSong) mmSong.textContent = d.current.name + (d.current.artist ? " - " + d.current.artist : "");
         }
       });
-      // 进度秒级更新（timeupdate 在 music.js 内部，用 rAF 轻量轮询 audio 元素）
-      const poll = () => {
-        const st = window.MikuMusic.getState();
-        if (st.current && st.playing !== undefined) {
-          mmBtn.textContent = st.playing ? "❚❚" : "▶";
-        }
-        requestAnimationFrame(() => setTimeout(poll, 500));
-      };
-      poll();
     }
   </script>
 </body>

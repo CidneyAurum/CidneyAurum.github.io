@@ -18,6 +18,12 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: 安装 Pillow（图片优化用）
+        run: pip install pillow
+
+      - name: 资产体积优化（纹理量化 / WebP / 缩略图，幂等）
+        run: python tools/optimize_assets.py
+
       - name: 计算照片默认日期（取提交年月）
         run: echo "PHOTO_DATE=$(git log -1 --format=%cd --date=format:%Y-%m)" >> "$GITHUB_ENV"
 

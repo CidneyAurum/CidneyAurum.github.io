@@ -28,25 +28,6 @@ def human(n: int) -> str:
     return f"{n:.1f}GB"
 
 
-def quantize_png(path: pathlib.Path, max_colors: int = 256) -> None:
-    """256 色量化 PNG（对动漫纹理肉眼无差）。已量化（P 模式）的跳过。"""
-    before = path.stat().st_size
-    img = Image.open(path)
-    if img.mode == "P":
-        return  # 已量化过
-    rgb = img.convert("RGB")
-    q = rgb.quantize(colors=max_colors, method=Image.MEDIANCUT, dither=Image.FLOYDSTEINBERG)
-    tmp = path.with_suffix(".tmp.png")
-    q.save(tmp, optimize=True)
-    after = tmp.stat().st_size
-    if after < before * 0.85:  # 至少省 15% 才替换
-        tmp.replace(path)
-        print(f"  纹理量化 {path.name}: {human(before)} → {human(after)}")
-    else:
-        tmp.unlink()
-        print(f"  纹理跳过 {path.name}: 量化无收益（{human(before)}）")
-
-
 def make_webp(src: pathlib.Path, dst: pathlib.Path, *, width=None, size=None,
               blur=0, quality=80) -> None:
     """生成 WebP 派生图；目标已存在则跳过。"""
@@ -89,13 +70,7 @@ def make_thumbs(folder: pathlib.Path, width: int = 420, quality: int = 78) -> No
 def main() -> None:
     print("optimize_assets 开始")
 
-    tex_dir = ASSETS / "live2d" / "miku" / "miku.4096"
-    if tex_dir.exists():
-        total_before = sum(f.stat().st_size for f in tex_dir.glob("*.png"))
-        for f in sorted(tex_dir.glob("*.png")):
-            quantize_png(f)
-        total_after = sum(f.stat().st_size for f in tex_dir.glob("*.png"))
-        print(f"  纹理总体积: {human(total_before)} → {human(total_after)}")
+    # Live2D 纹理保持原画质——量化压缩曾导致画质劣化，已应站主要求永久移除
 
     make_webp(ASSETS / "background.png", ASSETS / "background-blur.webp",
               width=1280, blur=14, quality=68)

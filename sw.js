@@ -1,6 +1,6 @@
 /* CidneyAurum の 小窝 · Service Worker
    策略：HTML network-first（保证更新及时），其余静态资源 stale-while-revalidate */
-const CACHE = "site-runtime-v1";
+const CACHE = "site-runtime-v2";
 
 self.addEventListener("install", () => self.skipWaiting());
 

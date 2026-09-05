@@ -2259,3 +2259,4 @@ body { padding-bottom: 86px; }
 }
 .like-btn:hover { border-color: #ff8fb7; color: #ff8fb7; transform: translateY(-1px); }
 .like-btn.on { color: #ff5c8a; border-color: rgba(255, 92, 138, .5); background: rgba(255, 92, 138, .08); }
+#giscus-slot { min-height: 60px; }

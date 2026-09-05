@@ -18,43 +18,31 @@
     return document.body.classList.contains("light") ? "light" : "dark_dimmed";
   }
 
-  function mount(slot) {
-    if (!slot || mounted.has(slot)) return;
-    mounted.add(slot);
-    const s = document.createElement("script");
-    s.src = "https://giscus.app/client.js";
-    s.async = true;
-    s.crossOrigin = "anonymous";
-    const cfg = {
-      "data-repo": REPO,
-      "data-repo-id": REPO_ID,
-      "data-category": CATEGORY,
-      "data-category-id": CATEGORY_ID,
-      "data-mapping": "pathname",
-      "data-strict": "0",
-      "data-reactions-enabled": "1",
-      "data-emit-metadata": "0",
-      "data-input-position": "top",
-      "data-theme": currentTheme(),
-      "data-lang": "zh-CN",
-      "data-loading": "lazy",
-    };
-    for (const k in cfg) s.setAttribute(k, cfg[k]);
-    slot.appendChild(s);
-  }
-
   function scan() {
+    // giscus 自带 data-loading="lazy"，这里直接挂载即可
     document.querySelectorAll("#giscus-slot").forEach((slot) => {
       if (mounted.has(slot)) return;
-      // 懒加载：进入视口再挂
-      if ("IntersectionObserver" in window) {
-        const io = new IntersectionObserver((es) => {
-          es.forEach((en) => {
-            if (en.isIntersecting) { mount(en.target); io.unobserve(en.target); }
-          });
-        }, { rootMargin: "200px" });
-        io.observe(slot);
-      } else mount(slot);
+      mounted.add(slot);
+      const s = document.createElement("script");
+      s.src = "https://giscus.app/client.js";
+      s.async = true;
+      s.crossOrigin = "anonymous";
+      const cfg = {
+        "data-repo": REPO,
+        "data-repo-id": REPO_ID,
+        "data-category": CATEGORY,
+        "data-category-id": CATEGORY_ID,
+        "data-mapping": "pathname",
+        "data-strict": "0",
+        "data-reactions-enabled": "1",
+        "data-emit-metadata": "0",
+        "data-input-position": "top",
+        "data-theme": currentTheme(),
+        "data-lang": "zh-CN",
+        "data-loading": "lazy",
+      };
+      for (const k in cfg) s.setAttribute(k, cfg[k]);
+      slot.appendChild(s);
     });
   }
 

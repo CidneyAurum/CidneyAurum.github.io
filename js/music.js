@@ -252,23 +252,27 @@ const MikuMusic = (function () {
   /* ---------- 队列 / 播放控制 ---------- */
   async function loadPlaylist() {
     if (queue.length) return queue.length;
-    // 主源：仓内快照（零依赖秒开）；兜底：Meting 在线 → 本机缓存
+    // 主源：仓内快照（零依赖秒开）；兜底：Meting 在线 → 本机缓存。
+    // 注意：await 期间 restore() 可能已恢复现场，每步回来都要复查，别把现场覆盖掉。
+    let list = null;
     try {
-      queue = await loadSnapshot();
-      fillPics();
+      list = await loadSnapshot();
     } catch (e) {
       try {
-        queue = normalize(await api("playlist", CFG.playlistId));
-        try { localStorage.setItem("mm_playlist_cache", JSON.stringify(queue)); } catch (err) {}
-      } catch (err) {
+        list = normalize(await api("playlist", CFG.playlistId));
+        try { localStorage.setItem("mm_playlist_cache", JSON.stringify(list)); } catch (err) {}
+      } catch (err2) {
         let cached = null;
-        try { cached = localStorage.getItem("mm_playlist_cache"); } catch (err2) {}
+        try { cached = localStorage.getItem("mm_playlist_cache"); } catch (err3) {}
         if (!cached) throw new Error("歌单快照与在线接口都失败了");
-        try { queue = JSON.parse(cached); } catch (err3) { throw new Error("本地歌单缓存损坏"); }
+        try { list = JSON.parse(cached); } catch (err4) { throw new Error("本地歌单缓存损坏"); }
       }
     }
+    if (queue.length) return queue.length; // restore() 已抢先把现场装好，保留它
+    queue = list;
     if (!queue.length) throw new Error("歌单读取失败了");
     qi = -1;
+    fillPics();
     emit();
     return queue.length;
   }

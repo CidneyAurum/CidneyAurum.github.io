@@ -58,7 +58,8 @@
         <div class="cpane" id="cpane-netease">
           <div class="track-list" id="track-list"><p class="empty-tip" role="status">正在打开歌单……</p></div>
           <div class="listening-now"><span class="status-dot"></span><span class="js-mm-song">选一首歌，让时间慢下来</span></div>
-          <div class="listening-controls"><button class="round-play js-mm-toggle" aria-label="播放或暂停歌单">▶</button><button class="icon-btn js-mm-next" aria-label="下一首" title="下一首"><span data-icon="skip-forward"></span></button><span class="music-control-note">MUSIC IS A LITTLE ESCAPE.</span><button class="icon-btn home-lyrics-launch" id="home-lyrics-button" type="button" aria-label="展开边狱风格歌词演出" aria-controls="home-lyric-stage"><span data-icon="sparkles"></span>歌词演出</button></div>
+          <div class="listening-controls"><button class="round-play js-mm-toggle" aria-label="播放或暂停歌单">▶</button><button class="icon-btn js-mm-next" aria-label="下一首" title="下一首"><span data-icon="skip-forward"></span></button><span class="music-control-note">MUSIC IS A LITTLE ESCAPE.</span><button class="icon-btn home-lyrics-launch" id="home-lyrics-button" type="button" aria-label="切换边狱风格背景歌词" aria-controls="lyric-backdrop" aria-pressed="true"><span data-icon="sparkles"></span>背景演出</button></div>
+          <div class="background-lyric-note"><span id="lyric-backdrop-status" role="status"></span><button type="button" id="lyric-backdrop-retry" hidden>重试歌词</button></div>
           <div id="music-fallback" style="display:none"><p class="empty-tip">歌单暂时无法加载。<button id="music-retry" class="retry-button">重新试试 ↻</button></p><a class="external-music" href="https://music.163.com/#/playlist?id=18205251703" target="_blank" rel="noopener noreferrer">在网易云打开歌单 ↗</a></div>
         </div>
         <div class="cpane" id="cpane-ambient" style="display:none">
@@ -67,16 +68,6 @@
         </div>
       </aside>
     </header>
-
-    <section class="lyric-stage" id="home-lyric-stage" data-lyric-stage aria-labelledby="home-stage-heading">
-      <header class="ls-topline">
-        <div class="ls-heading"><span class="ls-emblem" aria-hidden="true">Ⅻ</span><div><p class="ls-kicker">LIMBUS · LYRIC PERFORMANCE</p><h2 id="home-stage-heading" data-stage-title>边狱风格歌词演出</h2><p class="ls-artist" data-stage-artist>随歌声入场，跟随每一刻。</p></div></div>
-        <div class="ls-actions"><button type="button" data-stage-effects aria-pressed="true">动效 开</button><button type="button" data-stage-expand aria-expanded="false" aria-controls="home-lyric-stage">沉浸演出 ↗</button><button type="button" data-stage-close hidden>返回首页 ×</button></div>
-      </header>
-      <div class="ls-screen" data-stage-screen><div class="ls-lines" data-stage-lines><p class="ls-idle">点一首歌，让歌词入场。</p></div><div class="ls-slash" data-stage-slash aria-hidden="true"></div></div>
-      <footer class="ls-bottom"><p data-stage-status role="status">播放歌单后自动同步，无需手动推进。</p><button type="button" data-stage-retry hidden>重试歌词</button><div class="ls-transport"><button type="button" data-stage-toggle aria-label="播放歌曲" disabled>▶</button><button type="button" data-stage-next aria-label="下一首" disabled>↠</button></div><span class="ls-time" data-stage-time>00:00 / 00:00</span><div class="ls-progress-track" aria-hidden="true"><span data-stage-progress></span></div><input class="ls-seek" data-stage-seek type="range" min="0" max="1000" step="1" value="0" aria-label="歌词演出播放进度" disabled></footer>
-      <p class="sr-only" data-stage-live aria-live="polite" aria-atomic="true"></p>
-    </section>
 
     <section class="miku-host card" id="miku-host" aria-label="Miku 的值班室">
       <div class="miku-host-emblem" aria-hidden="true">39<span>♪</span></div>

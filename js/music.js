@@ -696,6 +696,7 @@ const MikuMusic = (function () {
             <button class="gp-btn gp-play" id="gp-toggle" title="播放/暂停（空格）">▶</button>
             <button class="gp-btn gp-big" id="gp-next" title="下一首">⏭</button>
             <button class="gp-btn" id="gp-lyric-btn" title="歌词面板">词</button>
+            <button class="gp-btn" id="gp-background-btn" title="边狱背景演出" aria-controls="lyric-backdrop" aria-pressed="true">演</button>
           </div>
           <div class="gp-progress-row">
             <span class="gp-time" id="gp-cur">00:00</span>

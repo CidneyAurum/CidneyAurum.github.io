@@ -1,264 +1,247 @@
-﻿/* One homepage performance, driven by the shared native-audio clock. */
+﻿/* Transparent whole-page lyrics, independently adapted from desktop overlay behavior.
+   The shared music engine owns audio, lyric retrieval, and the only playback clock. */
 (() => {
   "use strict";
   if (window.LyricStage) return;
-  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
-  const settings = { effects: true, expanded: false };
+  const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const settings = { enabled: true, effects: true };
   try {
-    settings.effects = localStorage.getItem("lyric_stage_effects") !== "0";
-    settings.expanded = localStorage.getItem("lyric_stage_expanded") === "1";
+    settings.enabled = localStorage.getItem("lyric_background_enabled") !== "0";
+    settings.effects = localStorage.getItem("lyric_background_effects") !== "0";
   } catch (_) {}
-  const save = (name, value) => { settings[name] = value; try { localStorage.setItem("lyric_stage_" + name, value ? "1" : "0"); } catch (_) {} };
+  const lifecycle = new AbortController(), ghosts = new Map();
   const memory = { track: "", revision: 0, seen: new Set() };
-  let view = null, frame = 0, unsubscribe = null;
-  const text = (node, value) => { if (node && node.textContent !== value) node.textContent = value; };
-  const activeEffects = () => settings.effects && !reduced.matches;
-  const clock = value => { const seconds = Math.max(0, Math.floor(Number(value) || 0)); return String(Math.floor(seconds / 60)).padStart(2, "0") + ":" + String(seconds % 60).padStart(2, "0"); };
-  const trackID = current => current ? String(current.id || current.stream || current.name + "|" + current.artist) : "";
+  let layer, lines, current = null, display = "", source = null, groups = [], sample = null;
+  let frame = 0, unsubscribe = null, engine = null, loopPending = false, phase = "idle", destroyed = false;
+  const effectsOn = () => settings.effects && !media.matches;
+  const save = (name, value) => { settings[name] = !!value; try { localStorage.setItem("lyric_background_" + name, value ? "1" : "0"); } catch (_) {} };
+  const setText = (node, value) => { if (node && node.textContent !== value) node.textContent = value; };
+  const identity = song => song ? String(song.id || song.stream || song.name + "|" + song.artist) : "";
+  const cjk = value => /[\u2e80-\u9fff\uac00-\ud7af\uf900-\ufaff]/.test(value);
+  const hash = value => [...value].reduce((sum, char) => (sum * 31 + char.codePointAt(0)) >>> 0, 7);
+  const randomFor = value => {
+    let seed = hash(value);
+    return () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
+  };
 
-  function groupLyrics(lines) {
-    const groups = [];
-    for (const line of Array.isArray(lines) ? lines : []) {
-      const time = Number(line?.t);
-      if (!Number.isFinite(time) || time < 0 || typeof line.text !== "string") continue;
-      const key = Math.round(time * 1000), content = line.text.trim();
-      let group = groups.find(item => item.key === key);
-      if (!group) { group = { key, time: key / 1000, texts: [] }; groups.push(group); }
+  function ensureLayer() {
+    if (destroyed) return false;
+    if (!layer?.isConnected) layer = document.querySelector("[data-lyric-backdrop]") || document.getElementById("lyric-backdrop");
+    if (!layer) {
+      layer = document.createElement("div"); layer.id = "lyric-backdrop"; layer.className = "lyric-backdrop";
+      layer.setAttribute("data-lyric-backdrop", "");
+    }
+    if (layer.parentNode !== document.body) document.body.appendChild(layer);
+    layer.setAttribute("aria-hidden", "true");
+    // This surface never owns input or changes the document's scroll/focus state.
+    Object.assign(layer.style, { position: "fixed", inset: "0", pointerEvents: "none", background: "transparent", overflow: "hidden" });
+    lines = layer.querySelector("[data-bg-lines]");
+    if (!lines) { lines = document.createElement("div"); lines.className = "bg-lyric-lines"; lines.setAttribute("data-bg-lines", ""); layer.appendChild(lines); }
+    return true;
+  }
+  function groupLyrics(value) {
+    const byTime = new Map();
+    for (const item of Array.isArray(value) ? value : []) {
+      const t = Number(item?.t);
+      if (!Number.isFinite(t) || t < 0 || typeof item.text !== "string") continue;
+      const key = Math.round(t * 1000), content = item.text.trim();
+      if (!byTime.has(key)) byTime.set(key, { key, time: key / 1000, texts: [] });
+      const group = byTime.get(key);
       if (content && !group.texts.includes(content)) group.texts.push(content);
     }
-    groups.sort((a, b) => a.time - b.time);
-    let ordinal = -1;
-    for (const group of groups) { if (group.texts.length) ordinal++; group.ordinal = ordinal; }
-    return groups;
+    return [...byTime.values()].sort((a, b) => a.time - b.time);
   }
-  function clearImpact() {
-    if (!view) return;
-    view.root.classList.remove("is-impact");
-    view.slash?.classList.remove("is-active");
+  function dropGhost(node) { clearTimeout(ghosts.get(node)); ghosts.delete(node); node.remove(); }
+  function clearGhosts() { [...ghosts.keys()].forEach(dropGhost); }
+  function freezeCue(node) {
+    node?.querySelectorAll(".bg-lyric-char").forEach(char => { char.style.animation = "none"; char.style.opacity = "1"; });
   }
-  function freezeCurrentLine() {
-    if (!view) return;
-    clearImpact();
-    view.lines.querySelectorAll(".ls-previous").forEach(node => node.remove());
-    view.lines.querySelectorAll(".ls-char").forEach(node => { node.style.animation = "none"; node.style.transform = "none"; node.style.opacity = "1"; node.style.filter = "none"; });
+  function clearWords() {
+    clearGhosts(); if (lines?.childNodes.length) lines.replaceChildren(); current = null; display = "";
+    if (layer) { layer.hidden = true; layer.removeAttribute("data-cue-time"); }
+    document.body.classList.remove("has-background-lyrics");
   }
-  function syncEffects() {
-    if (!view) return;
-    const enabled = activeEffects();
-    view.root.classList.toggle("effects-off", !enabled);
-    if (view.effects) {
-      view.effects.setAttribute("aria-pressed", String(enabled));
-      view.effects.disabled = reduced.matches;
-      text(view.effects, reduced.matches ? "静态演出" : enabled ? "动效 开" : "动效 关");
-      view.effects.title = reduced.matches ? "已遵循系统减少动态效果设置" : "切换歌词入场与斩击效果";
-    }
-    if (!enabled) freezeCurrentLine();
+  function makeGhost(node) {
+    if (!node) return;
+    freezeCue(node); node.classList.remove("is-current"); node.classList.add("is-ghost");
+    const timeout = setTimeout(() => dropGhost(node), 680);
+    ghosts.set(node, timeout);
+    while (ghosts.size > 3) dropGhost(ghosts.keys().next().value);
   }
-  function syncAnimations(playing) {
-    if (!view || view.animationPlaying === playing) return;
-    view.animationPlaying = playing;
-    if (playing) {
-      view.pausedAnimations.forEach(animation => { try { if (animation.playState === "paused") animation.play(); } catch (_) {} });
-      view.pausedAnimations.clear();
-    } else {
-      // Pause on a readable frame instead of leaving late-arriving glyphs invisible.
-      freezeCurrentLine();
-      for (const animation of view.root.getAnimations?.({ subtree: true }) || []) {
-        if (animation.playState === "running") { try { animation.pause(); view.pausedAnimations.add(animation); } catch (_) {} }
-      }
-    }
-  }
-  function showMessage(kind, message, status) {
-    if (!view) return;
-    view.root.dataset.stageState = kind;
-    text(view.status, status);
-    const key = "message|" + kind;
-    if (view.display !== key) {
-      view.display = key;
-      clearImpact();
-      const line = document.createElement("p"); line.className = "ls-idle"; line.textContent = message;
-      view.lines.replaceChildren(line);
-      view.root.removeAttribute("data-stage-cue");
-      text(view.live, status);
-    }
-  }
-  function showCue(group, animate) {
-    const key = "cue|" + group.key + "|" + group.texts.join("\n");
-    view.root.dataset.stageState = "lyric";
-    view.root.dataset.stageCue = String(group.time);
-    if (view.display === key) return;
-    const prior = animate ? view.lines.querySelector(".ls-line:not(.ls-previous)") : null;
-    view.display = key;
-    clearImpact();
-    const primary = document.createElement("p"); primary.className = "ls-line";
-    if ([...group.texts[0]].length > 36) primary.classList.add("is-long");
-    [...group.texts[0]].forEach((character, index) => {
-      const glyph = document.createElement("span"); glyph.className = "ls-char"; glyph.textContent = character;
-      glyph.style.setProperty("--char-index", String(index));
-      if (!animate) glyph.style.animation = "none";
-      primary.appendChild(glyph);
+  function paintedBounds(node) {
+    const bounds = node.getBoundingClientRect();
+    let left = bounds.left, top = bounds.top, right = bounds.right, bottom = bounds.bottom;
+    // The row baseline rotates while each glyph counter-rotates. Measuring just
+    // the outer cue misses the visible text that extends beyond that rectangle.
+    node.querySelectorAll(".bg-lyric-char").forEach(glyph => {
+      const rect = glyph.getBoundingClientRect();
+      left = Math.min(left, rect.left); top = Math.min(top, rect.top);
+      right = Math.max(right, rect.right); bottom = Math.max(bottom, rect.bottom);
     });
-    view.lines.replaceChildren(primary);
-    if (group.texts.length > 1) {
-      const translation = document.createElement("p"); translation.className = "ls-translation"; translation.textContent = group.texts.slice(1).join("\n");
-      view.lines.appendChild(translation);
+    return { left: left - 3, top: top - 3, right: right + 3, bottom: bottom + 3, width: right - left + 6, height: bottom - top + 6 };
+  }
+  function placeCue(node, group) {
+    const w = innerWidth, h = innerHeight, small = w < 680;
+    const seed = memory.track + "|" + group.key, random = randomFor(seed);
+    const margin = small ? 18 : Math.max(30, Math.hypot(w, h) * .03);
+    const availableW = Math.max(1, w - margin * 2), availableH = Math.max(1, h - margin * 2);
+    const maxWidth = Math.min(small ? availableW : w * .68, availableW);
+    let size = small ? Math.max(24, Math.min(32, w / 13)) : 37;
+    node.dataset.position = seed;
+    node.style.left = "0px"; node.style.top = "0px"; node.style.maxWidth = maxWidth + "px";
+    node.style.setProperty("--lyric-angle", (random() * 20 - 10).toFixed(2) + "deg");
+    node.style.setProperty("--lyric-size", size + "px");
+    let bounds = paintedBounds(node);
+    // Very long unbroken Latin tokens should wrap rather than spill outwards.
+    if (bounds.width > availableW) {
+      node.querySelectorAll(".bg-lyric-word").forEach(word => { word.style.maxWidth = "100%"; word.style.whiteSpace = "normal"; });
+      bounds = paintedBounds(node);
     }
-    if (prior) { prior.classList.add("ls-previous"); view.lines.appendChild(prior); }
-    if (animate && group.ordinal % 3 === 2) {
-      // Each timestamp is performed at most once per selected track, including seeks.
-      view.root.classList.add("is-impact");
-      if (view.slash) { void view.slash.offsetWidth; view.slash.classList.add("is-active"); }
+    for (let pass = 0; pass < 3; pass++) {
+      const fit = Math.min(1, availableW / bounds.width, availableH * .72 / bounds.height);
+      if (fit > .995 || size <= 12) break;
+      size = Math.max(12, size * fit * .98);
+      node.style.setProperty("--lyric-size", size + "px"); bounds = paintedBounds(node);
     }
-    text(view.live, group.texts.join(" / "));
+    const occupied = [...ghosts.keys()].filter(ghost => ghost.isConnected).map(paintedBounds);
+    let best = null;
+    for (let attempt = 0; attempt < 12; attempt++) {
+      const left = Math.max(margin, Math.min(w * (.05 + random() * .8), w - margin - bounds.width));
+      const top = Math.max(margin, Math.min(h * (.05 + random() * .7), h - margin - bounds.height));
+      const rect = { left, top, right: left + bounds.width, bottom: top + bounds.height };
+      const overlap = occupied.reduce((sum, prior) => sum + Math.max(0, Math.min(rect.right + 16, prior.right) - Math.max(rect.left - 16, prior.left)) * Math.max(0, Math.min(rect.bottom + 16, prior.bottom) - Math.max(rect.top - 16, prior.top)), 0);
+      if (!best || overlap < best.overlap) best = { left, top, overlap };
+      if (!overlap) break;
+    }
+    node.style.left = best.left - bounds.left + "px";
+    node.style.top = best.top - bounds.top + "px";
+  }
+  function createCue(group, index, animate) {
+    const cue = document.createElement("div");
+    cue.className = "bg-lyric-cue is-current " + (cjk(group.texts.join("")) ? "is-cjk" : "is-latin");
+    cue.dataset.cueTime = String(group.time);
+    const next = groups[index + 1], count = Math.max(1, [...group.texts.join("\n")].length);
+    const interval = next ? Math.max(30, ((next.time - group.time > 16 ? 5000 : (next.time - group.time) * 1000 - 4000)) / count) : 50;
+    cue.style.setProperty("--reveal-ms", interval + "ms");
+    let charIndex = 0;
+    group.texts.forEach((value, rowIndex) => {
+      const row = document.createElement("p");
+      row.className = "bg-lyric-row " + (cjk(value) ? "is-cjk" : "is-latin") + (rowIndex ? " bg-lyric-translation" : "");
+      for (const chunk of cjk(value) ? [...value] : value.split(/(\s+)/)) {
+        const word = document.createElement("span"); word.className = "bg-lyric-word";
+        if (!cjk(value) && !/^\s+$/.test(chunk)) { word.style.display = "inline-block"; word.style.whiteSpace = "nowrap"; }
+        for (const character of [...chunk]) {
+          const glyph = document.createElement("span"); glyph.className = "bg-lyric-char"; glyph.textContent = character;
+          glyph.style.setProperty("--char-index", String(charIndex));
+          glyph.style.setProperty("--jitter-x", ((group.key + charIndex * 7) % 5 - 2) + "px");
+          glyph.style.setProperty("--jitter-y", ((group.key + charIndex * 11) % 5 - 2) + "px");
+          if (!animate) { glyph.style.animation = "none"; glyph.style.opacity = "1"; }
+          word.appendChild(glyph); charIndex++;
+        }
+        row.appendChild(word);
+      }
+      cue.appendChild(row);
+    });
+    // A hidden overlay has no measurable bounds, so reveal its transparent
+    // surface before measuring the first cue after loading, seeking, or toggling.
+    layer.hidden = false;
+    lines.appendChild(cue); placeCue(cue, group, index); return cue;
+  }
+  function describe(state, index) {
+    if (!settings.enabled) return ["disabled", "背景歌词已关闭"];
+    if (!state.current) return ["idle", "从歌单选择一首歌，背景歌词会自动同步"];
+    if (state.lrcStatus === "loading") return ["loading", "同步歌词加载中"];
+    if (state.lrcStatus === "unavailable") return ["unavailable", "暂无可用的同步歌词，可重试歌词"];
+    if (state.lrcStatus !== "ready") return ["waiting", state.playing ? "正在准备同步歌词" : "音乐已暂停"];
+    if (index < 0) return ["intro", state.playing ? "前奏 · 等待第一句" : "音乐已暂停 · 前奏"];
+    if (!groups[index].texts.length) return [index === 0 ? "intro" : "interlude", state.playing ? "间奏" : "音乐已暂停 · 间奏"];
+    return ["lyric", state.playing ? "背景歌词演出中" : "音乐已暂停 · 歌词已定格"];
+  }
+  function syncControls(state, message) {
+    for (const selector of ["#home-lyrics-button", "#gp-background-btn"]) {
+      const control = document.querySelector(selector);
+      if (!control) continue;
+      control.setAttribute("aria-pressed", String(settings.enabled));
+      control.setAttribute("aria-label", settings.enabled ? "关闭背景歌词演出" : "开启背景歌词演出");
+      control.title = (settings.enabled ? "关闭背景歌词 · " : "开启背景歌词 · ") + message;
+    }
+    setText(document.getElementById("lyric-backdrop-status"), message);
+    const retry = document.getElementById("lyric-backdrop-retry");
+    if (retry) retry.hidden = !settings.enabled || state.lrcStatus !== "unavailable" || typeof engine?.retryLyrics !== "function";
   }
   function render(state, quiet = false) {
-    if (!view || !view.root.isConnected) return;
-    const current = state.current, track = trackID(current), playing = !!state.playing;
-    const time = Math.max(0, Number(state.time) || 0), duration = Math.max(0, Number(state.duration) || 0), wall = performance.now();
-    const revision = Number(state.selectionRevision) || 0;
-    if (memory.track !== track || memory.revision !== revision) {
-      view.loopStartPending = memory.track === track && memory.revision !== revision && state.lrcStatus === "ready" && time < .3;
-      memory.track = track; memory.revision = revision; memory.seen.clear(); view.source = null; view.groups = []; view.display = ""; view.sample = null; clearImpact(); view.lines.replaceChildren();
+    if (!ensureLayer()) return;
+    const track = identity(state.current), revision = Number(state.selectionRevision) || 0;
+    const t = Math.max(0, Number(state.time) || 0), now = performance.now();
+    if (track !== memory.track || revision !== memory.revision) {
+      loopPending = track === memory.track && revision !== memory.revision && state.lrcStatus === "ready" && t < .3;
+      memory.track = track; memory.revision = revision; memory.seen.clear(); clearWords(); source = null; sample = null;
     }
-    view.root.classList.toggle("has-track", !!current);
-    view.root.classList.toggle("is-playing", !!current && playing);
-    view.root.classList.toggle("is-paused", !!current && !playing);
-    const status = state.lrcStatus || (state.lrc?.length ? "ready" : "idle");
-    view.root.dataset.lyricStatus = status;
-    text(view.title, current?.name || view.defaultTitle);
-    text(view.artist, current?.artist || (current ? "" : "随歌声入场，跟随每一刻。"));
-    text(view.time, clock(time) + " / " + clock(duration));
-    if (view.progress) view.progress.style.width = (duration > 0 ? Math.min(100, time / duration * 100) : 0) + "%";
-    if (view.toggle) { view.toggle.disabled = typeof window.MikuMusic?.toggle !== "function"; text(view.toggle, playing ? "暂停" : current ? "继续播放" : "开始播放"); view.toggle.setAttribute("aria-label", playing ? "暂停音乐与歌词演出" : "播放音乐与歌词演出"); }
-    if (view.next) view.next.disabled = !state.hasQueue || typeof window.MikuMusic?.next !== "function";
-    if (view.seek) {
-      view.seek.disabled = !(duration > 0);
-      if (!view.seeking) view.seek.value = String(duration > 0 ? Math.round(Math.min(1, time / duration) * 1000) : 0);
-      view.seek.setAttribute("aria-valuetext", clock(time) + " / " + clock(duration));
-    }
-    if (view.retry) view.retry.hidden = !current || status !== "unavailable" || typeof window.MikuMusic?.retryLyrics !== "function";
-    if (view.source !== state.lrc) { view.source = state.lrc; view.groups = groupLyrics(state.lrc); }
-    const previous = view.sample;
-    const jump = !!state.seeking || !!previous && (time < previous.time - .15 || Math.abs(time - previous.time) > Math.max(.8, (wall - previous.wall) / 1000 + .4));
+    if (source !== state.lrc) { source = state.lrc; groups = groupLyrics(state.lrc); }
     let index = -1;
-    for (let i = 0; i < view.groups.length && view.groups[i].time <= time; i++) index = i;
-    if (!current) showMessage("idle", "点一首歌，让歌词入场。", "播放歌单后自动同步，无需手动推进。");
-    else if (status === "loading") showMessage("loading", "正在寻找这首歌的同步歌词…", playing ? "歌词加载中 · 音乐继续播放" : "歌词加载中");
-    else if (status === "unavailable") showMessage("unavailable", "这首暂时没有可用的同步歌词。", "仍可继续听歌，也可以点「重试歌词」。");
-    else if (status !== "ready") showMessage("waiting", "继续播放后，歌词会跟着歌声入场。", playing ? "正在准备歌词" : "音乐已暂停");
-    else if (index < 0) showMessage("intro", "第一句还没到，先听听前奏。", playing ? "前奏 · 等待第一句" : "已暂停 · 前奏");
+    for (let i = 0; i < groups.length && groups[i].time <= t; i++) index = i;
+    const [nextPhase, message] = describe(state, index); phase = nextPhase;
+    layer.dataset.lyricState = phase;
+    layer.classList.toggle("effects-off", !effectsOn()); layer.classList.toggle("is-paused", !state.playing);
+    syncControls(state, message);
+    const jump = !!state.seeking || !!sample && (t < sample.time - .15 || Math.abs(t - sample.time) > Math.max(.8, (now - sample.wall) / 1000 + .4));
+    const skipped = !!sample && sample.index >= 0 && index > sample.index + 1;
+    if (!settings.enabled || phase !== "lyric" || document.hidden) clearWords();
     else {
-      const group = view.groups[index];
-      if (!group.texts.length) {
-        if (group.ordinal < 0) showMessage("intro", "第一句还没到，先听听前奏。", playing ? "前奏 · 等待第一句" : "已暂停 · 前奏");
-        else showMessage("interlude", "此刻是音乐的间隙。", playing ? "间奏" : "已暂停 · 间奏");
+      const group = groups[index], key = group.key + "|" + group.texts.join("\n");
+      const waitingLoop = loopPending && (!state.playing || state.seeking), freshLoop = loopPending && !waitingLoop;
+      if (jump || skipped) { clearGhosts(); freezeCue(current); }
+      if (display !== key || freshLoop) {
+        const animate = !!state.playing && effectsOn() && !quiet && (!jump || freshLoop) && !skipped && !memory.seen.has(group.key) && !waitingLoop;
+        const prior = current;
+        if (prior) {
+          if (animate && Number(prior.dataset.cueTime) !== group.time) makeGhost(prior);
+          else prior.remove();
+        }
+        current = createCue(group, index, animate); display = key;
       }
-      else {
-        const seen = memory.seen.has(group.key);
-        const skipped = previous && previous.index >= 0 && index > previous.index + 1;
-        const waitingForLoop = view.loopStartPending && (!playing || state.seeking);
-        const freshLoop = view.loopStartPending && !waitingForLoop;
-        if (freshLoop) view.display = "";
-        showCue(group, playing && activeEffects() && !quiet && (!jump || freshLoop) && !skipped && !seen && !waitingForLoop);
-        if (!waitingForLoop) { memory.seen.add(group.key); view.loopStartPending = false; }
-        text(view.status, playing ? "随歌声同步演出" : "已暂停 · 继续播放后同步");
-      }
+      if (!state.playing) { clearGhosts(); freezeCue(current); }
+      if (!waitingLoop) { memory.seen.add(group.key); loopPending = false; }
+      layer.hidden = false; layer.dataset.cueTime = String(group.time);
+      document.body.classList.add("has-background-lyrics");
     }
-    view.sample = { time, wall, index };
-    syncAnimations(playing);
+    sample = { time: t, wall: now, index };
   }
-  function readState(quiet = false) {
-    if (!view) return;
-    try { render(window.MikuMusic?.getState?.() || {}, quiet); } catch (error) { console.warn("[lyric-stage]", error); }
+  function update(quiet = false) {
+    if (destroyed || !engine) return;
+    const state = engine.getState(); render(state, quiet === true);
+    if (state.playing && settings.enabled && !document.hidden && !frame) frame = requestAnimationFrame(tick);
+    else if ((!state.playing || !settings.enabled || document.hidden) && frame) { cancelAnimationFrame(frame); frame = 0; }
   }
-  function tick() {
-    frame = 0;
-    if (!view || !view.root.isConnected) { unmount(); return; }
-    readState();
-    if (window.MikuMusic?.getState?.().playing && !document.hidden) frame = requestAnimationFrame(tick);
+  function tick() { frame = 0; update(); }
+  function mount() {
+    if (!ensureLayer()) return;
+    if (!engine && window.MikuMusic?.on) { engine = window.MikuMusic; unsubscribe = engine.on(() => update()); }
+    update(true);
   }
-  function update() {
-    readState();
-    if (view && !frame && window.MikuMusic?.getState?.().playing && !document.hidden) frame = requestAnimationFrame(tick);
-    else if (frame && !window.MikuMusic?.getState?.().playing) { cancelAnimationFrame(frame); frame = 0; }
+  function setEnabled(enabled) { save("enabled", enabled); if (!enabled) clearWords(); update(true); }
+  function setEffects(enabled) { save("effects", enabled); clearGhosts(); freezeCue(current); update(true); }
+  async function retryLyrics() { try { return await engine?.retryLyrics?.(); } catch (_) { setText(document.getElementById("lyric-backdrop-status"), "歌词暂时没有找到，可稍后再试。"); return false; } }
+  function destroy() {
+    destroyed = true; cancelAnimationFrame(frame); frame = 0; unsubscribe?.(); unsubscribe = null;
+    lifecycle.abort(); clearWords(); media.removeEventListener("change", motionChange);
   }
-  function expand() {
-    if (!view || view.expanded) return;
-    view.focus = document.activeElement; view.overflow = document.body.style.overflow; view.expanded = true;
-    view.anchor = document.createComment("homepage lyric stage"); view.root.before(view.anchor); document.body.appendChild(view.root);
-    view.inert = [...document.body.children].filter(node => node !== view.root).map(node => ({ node, previous: node.inert }));
-    view.inert.forEach(({ node }) => { node.inert = true; });
-    view.root.classList.add("is-expanded"); view.root.setAttribute("role", "dialog"); view.root.setAttribute("aria-modal", "true");
-    document.body.style.overflow = "hidden";
-    view.expand?.setAttribute("aria-expanded", "true"); if (view.expand) view.expand.hidden = true; if (view.close) view.close.hidden = false;
-    save("expanded", true); view.close?.focus({ preventScroll: true });
-  }
-  function collapse({ remember = true, focus = true } = {}) {
-    if (!view || !view.expanded) return;
-    view.expanded = false; view.root.classList.remove("is-expanded"); view.root.removeAttribute("role"); view.root.removeAttribute("aria-modal");
-    view.inert?.forEach(({ node, previous }) => { node.inert = previous; }); view.inert = [];
-    if (view.anchor?.parentNode) view.anchor.replaceWith(view.root); view.anchor = null;
-    if (document.body.style.overflow === "hidden") document.body.style.overflow = view.overflow;
-    view.expand?.setAttribute("aria-expanded", "false"); if (view.expand) view.expand.hidden = false; if (view.close) view.close.hidden = true;
-    if (remember) save("expanded", false); if (focus && view.focus?.isConnected) view.focus.focus({ preventScroll: true });
-  }
-  function unmount() {
-    if (!view) return;
-    collapse({ remember: false, focus: false });
-    cancelAnimationFrame(frame); frame = 0;
-    unsubscribe?.(); unsubscribe = null;
-    view.controller.abort();
-    for (const animation of view.root.getAnimations?.({ subtree: true }) || []) { try { animation.cancel(); } catch (_) {} }
-    view.pausedAnimations.clear(); view = null;
-  }
-  function mount({ signal, onCleanup } = {}) {
-    const root = document.querySelector('[data-lyric-stage]');
-    if (!root || document.body.dataset.page !== "home") { unmount(); return; }
-    if (view?.root === root && !view.controller.signal.aborted) {
-      const current = view; const dispose = () => { if (view === current) unmount(); }; signal?.addEventListener("abort", dispose, { once: true }); onCleanup?.(dispose); return;
-    }
-    unmount();
-    const controller = new AbortController(), find = name => root.querySelector('[data-stage-' + name + ']');
-    view = { root, controller, title: find("title"), artist: find("artist"), status: find("status"), lines: find("lines"), slash: find("slash"), live: find("live"), time: find("time"), progress: find("progress"), effects: find("effects"), expand: find("expand"), close: find("close"), retry: find("retry"), toggle: find("toggle"), next: find("next"), seek: find("seek"), seeking: false, display: "", source: null, groups: [], sample: null, pausedAnimations: new Set(), expanded: false, animationPlaying: null };
-    if (!view.lines) { view = null; return; }
-    view.defaultTitle = view.title?.textContent || "边狱风格歌词演出";
-    const instance = view, dispose = () => { if (view === instance) unmount(); };
-    signal?.addEventListener("abort", dispose, { once: true }); onCleanup?.(dispose);
-    const options = { signal: controller.signal };
-    view.effects?.addEventListener("click", () => { save("effects", !settings.effects); syncEffects(); }, options);
-    view.expand?.addEventListener("click", expand, options); view.close?.addEventListener("click", () => collapse(), options);
-    view.toggle?.addEventListener("click", async () => { try { await window.MikuMusic?.toggle?.(); } catch (_) { if (view === instance) text(view.status, "这首歌暂时没能播放，可以重试或换一首。"); } }, options);
-    view.next?.addEventListener("click", async () => { try { await window.MikuMusic?.next?.(); } catch (_) { if (view === instance) text(view.status, "暂时没能切换歌曲，请稍后重试。"); } }, options);
-    view.seek?.addEventListener("pointerdown", () => { if (view) view.seeking = true; }, options);
-    view.seek?.addEventListener("keydown", () => { if (view) view.seeking = true; }, options);
-    view.seek?.addEventListener("input", () => { if (view?.seek) window.MikuMusic?.seek?.(Number(view.seek.value) / 1000); }, options);
-    const releaseSeek = () => { if (view === instance) { view.seeking = false; update(); } };
-    view.seek?.addEventListener("change", releaseSeek, options); view.seek?.addEventListener("keyup", releaseSeek, options);
-    window.addEventListener("pointerup", releaseSeek, options); window.addEventListener("pointercancel", releaseSeek, options);
-    document.getElementById("home-lyrics-button")?.addEventListener("click", expand, options);
-    view.retry?.addEventListener("click", async () => { const current = view; if (!current || current.retry.disabled) return; current.retry.disabled = true; try { await window.MikuMusic?.retryLyrics?.(); } catch (_) { if (view === current) text(current.status, "歌词暂时没找到，可以稍后再试。"); } finally { if (view === current) current.retry.disabled = false; } }, options);
-    root.addEventListener("animationend", event => {
-      if (event.target.classList?.contains("ls-previous")) event.target.remove();
-      if (event.target === view?.slash) view.slash.classList.remove("is-active");
-      if (event.target === view?.lines) view.root.classList.remove("is-impact");
-    }, options);
-    document.addEventListener("keydown", event => {
-      if (!view?.expanded) return;
-      if (event.key === "Escape") { event.preventDefault(); event.stopImmediatePropagation(); collapse(); }
-      else if (event.key === "Tab") {
-        const controls = [...root.querySelectorAll('button:not(:disabled),input:not(:disabled),a[href],[tabindex="0"]')].filter(node => !node.hidden && node.getClientRects().length);
-        if (!controls.length) return;
-        const index = controls.indexOf(document.activeElement);
-        event.preventDefault(); controls[(index + (event.shiftKey ? -1 : 1) + controls.length) % controls.length].focus();
-      }
-    }, { signal: controller.signal, capture: true });
-    document.addEventListener("visibilitychange", () => { if (document.hidden) { cancelAnimationFrame(frame); frame = 0; } else { readState(true); update(); } }, options);
-    syncEffects(); readState(true);
-    const off = window.MikuMusic?.on?.(update); unsubscribe = typeof off === "function" ? off : null;
-    if (settings.expanded) expand(); update();
-  }
-  reduced.addEventListener("change", syncEffects);
-  window.LyricStage = { mount, unmount, expand, collapse: () => collapse(), setEffects(enabled) { save("effects", !!enabled); syncEffects(); }, getState: () => ({ mounted: !!view, expanded: !!view?.expanded, effects: activeEffects(), track: memory.track }) };
+  const motionChange = () => { clearGhosts(); freezeCue(current); update(true); };
+  media.addEventListener("change", motionChange);
+  document.addEventListener("click", event => {
+    if (event.target.closest?.("#home-lyrics-button,#gp-background-btn")) setEnabled(!settings.enabled);
+    if (event.target.closest?.("#lyric-backdrop-retry")) retryLyrics();
+  }, { signal: lifecycle.signal });
+  document.addEventListener("visibilitychange", () => { clearGhosts(); freezeCue(current); update(true); }, { signal: lifecycle.signal });
+  document.addEventListener("pjax:complete", () => update(), { signal: lifecycle.signal });
+  window.addEventListener("resize", () => {
+    if (current && sample && groups[sample.index]) placeCue(current, groups[sample.index], sample.index);
+  }, { signal: lifecycle.signal });
+  window.LyricStage = {
+    mount, destroy, enable: () => setEnabled(true), disable: () => setEnabled(false), close: () => setEnabled(false), toggle: () => setEnabled(!settings.enabled),
+    setEffects, retryLyrics,
+    getState: () => ({ mounted: !!layer?.isConnected && !destroyed, enabled: settings.enabled, effects: effectsOn(), phase, track: memory.track, revision: memory.revision, ghosts: ghosts.size }),
+  };
   if (typeof onPageReady === "function") { onPageReady(mount); if (document.readyState !== "loading") mount(); }
-  else if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => mount(), { once: true }); else mount();
+  else if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount, { once: true }); else mount();
 })();

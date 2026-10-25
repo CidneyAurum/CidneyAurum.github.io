@@ -153,8 +153,8 @@
     document.head.appendChild(lyricStyle);
   }
   loadScript("js/lyric-stage.js").catch(() => {
-    const status = document.querySelector("[data-stage-status]");
-    if (status) status.textContent = "歌词演出暂未加载，刷新后重试；音乐仍可正常播放。";
+    const status = document.getElementById("lyric-backdrop-status");
+    if (status) status.textContent = "背景演出暂未加载，刷新后重试；音乐仍可正常播放。";
   });
   let companionLoad = null;
   window.MikuLoader = {

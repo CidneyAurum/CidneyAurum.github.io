@@ -344,6 +344,7 @@
     b.classList.add("show");
     clearTimeout(bubbleTimer);
     bubbleTimer = setTimeout(() => b.classList.remove("show"), ms || 2600);
+    fitCompanion();
   }
 
   function isVisible() {
@@ -356,6 +357,7 @@
     if (!root) return;
     const changed = !isVisible();
     root.classList.remove("hidden");
+    fitCompanion();
     $("kanban-min")?.classList.remove("show");
     if (reaction) applyReaction();
     else restoreEmotion();
@@ -794,6 +796,21 @@
   function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 
   /* ---------- 拖拽移动看板娘（按住 Miku 拖动到任意位置） ---------- */
+  function fitCompanion(position) {
+    const root = $("kanban");
+    // The listening room lays the same model out inside its dialog.
+    if (!root || root.parentElement !== document.body || root.classList.contains("hidden")) return;
+    const rect = root.getBoundingClientRect(), viewport = window.visualViewport;
+    const width = viewport?.width || innerWidth, height = viewport?.height || innerHeight;
+    const minX = (viewport?.offsetLeft || 0) + 12, minY = (viewport?.offsetTop || 0) + 12;
+    const maxX = Math.max(minX, minX + width - root.offsetWidth - 24);
+    const maxY = Math.max(minY, minY + height - root.offsetHeight - 24);
+    const x = Math.max(minX, Math.min(maxX, Number.isFinite(position?.left) ? position.left : rect.left));
+    const y = Math.max(minY, Math.min(maxY, Number.isFinite(position?.top) ? position.top : rect.top));
+    if (Math.abs(rect.left - x) > .1) root.style.left = x + "px";
+    if (Math.abs(rect.top - y) > .1) root.style.top = y + "px";
+  }
+
   function initDrag() {
     const root = $("kanban"), stage = $("kb-stage");
     if (!root || !stage) return;
@@ -811,8 +828,7 @@
       const dx = e.clientX - sx, dy = e.clientY - sy;
       if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
       if (moved) {
-        root.style.left = Math.max(0, Math.min(window.innerWidth - 60, ox + dx)) + "px";
-        root.style.top = Math.max(0, Math.min(window.innerHeight - 60, oy + dy)) + "px";
+        fitCompanion({ left: ox + dx, top: oy + dy });
       }
     });
     const end = () => {
@@ -838,8 +854,7 @@
     try {
       const p = JSON.parse(readSetting("kb_pos") || "null");
       if (p && typeof p.left === "number" && typeof p.top === "number") {
-        root.style.left = Math.max(0, Math.min(window.innerWidth - 60, p.left)) + "px";
-        root.style.top = Math.max(0, Math.min(window.innerHeight - 60, p.top)) + "px";
+        fitCompanion(p);
       }
     } catch (e) {}
   }
@@ -884,6 +899,11 @@
     $("kb-hide-btn").addEventListener("click", hide);
     min.addEventListener("click", show);
     window.addEventListener("resize", fitSettings);
+    window.addEventListener("resize", () => fitCompanion());
+    window.visualViewport?.addEventListener("resize", () => fitCompanion());
+    window.visualViewport?.addEventListener("scroll", () => fitCompanion());
+    // Captions, room transitions and model loading can change the full box size.
+    if (window.ResizeObserver) new ResizeObserver(() => fitCompanion()).observe(root);
     initDrag();
   }
 

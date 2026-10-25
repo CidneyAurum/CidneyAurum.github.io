@@ -97,7 +97,7 @@ class KanbanTests(unittest.TestCase):
     def boot(self, init="", model_stub=True):
         # Run kanban alone so failures in other components cannot mask its state.
         self.page.route(self.origin + "/posts/__companion_fixture", lambda route: route.fulfill(
-            content_type="text/html; charset=utf-8", body='<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="/css/style.css"><body></body>'))
+            content_type="text/html; charset=utf-8", body='<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="/css/garden.css"><body></body>'))
         self.page.add_init_script("window.requestIdleCallback = callback => setTimeout(callback, 0);")
         if model_stub:
             self.page.add_init_script(MODEL_STUB)
@@ -106,6 +106,102 @@ class KanbanTests(unittest.TestCase):
         self.page.goto(self.origin + "/posts/__companion_fixture")
         self.page.add_script_tag(url=self.origin + "/js/kanban.js")
         expect(self.page.locator("#kb-chat-btn")).to_be_visible()
+
+    def assert_floating_model_inside(self, bounds=None):
+        """The character and its controls must remain usable, not just 60px of its box."""
+        self.page.wait_for_function("""bounds => {
+          const root=document.querySelector('#kanban');
+          if (!root || root.parentElement!==document.body || root.classList.contains('hidden')) return false;
+          const [left,top,right,bottom]=bounds || [0,0,innerWidth,innerHeight];
+          return [root,root.querySelector('#kb-stage'),root.querySelector('.kb-bar')].every(node=>{
+            const r=node.getBoundingClientRect();
+            return r.width>0 && r.height>0 && r.left>=left-1 && r.top>=top-1 && r.right<=right+1 && r.bottom<=bottom+1;
+          });
+        }""", arg=bounds)
+
+    def test_restored_desktop_position_keeps_mobile_model_visible_while_scrolling(self):
+        self.page.set_viewport_size({"width": 390, "height": 844})
+        self.boot('localStorage.setItem("kb_pos", JSON.stringify({left:1200,top:900}));')
+        expect(self.page.locator("#kb-loading")).to_have_count(0)
+        self.assert_floating_model_inside()
+        before = self.page.locator("#kb-stage").bounding_box()
+        self.page.evaluate("document.body.style.minHeight='2200px';scrollTo({top:500,behavior:'instant'})")
+        self.page.wait_for_function("scrollY===500")
+        self.assert_floating_model_inside()
+        after = self.page.locator("#kb-stage").bounding_box()
+        self.assertAlmostEqual(before["x"], after["x"], delta=1)
+        self.assertAlmostEqual(before["y"], after["y"], delta=1)
+
+    def test_window_resize_recovers_saved_model_position(self):
+        self.page.set_viewport_size({"width": 1440, "height": 1000})
+        self.boot('localStorage.setItem("kb_pos", JSON.stringify({left:1050,top:700}));')
+        expect(self.page.locator("#kb-loading")).to_have_count(0)
+        self.assert_floating_model_inside()
+        self.page.set_viewport_size({"width": 390, "height": 650})
+        self.assert_floating_model_inside()
+
+    def test_visual_viewport_resize_and_scroll_keep_model_in_visible_area(self):
+        self.page.set_viewport_size({"width": 390, "height": 844})
+        self.boot("""
+          window.testVisualViewport=Object.assign(new EventTarget(),{
+            width:390,height:844,offsetLeft:0,offsetTop:0,scale:1
+          });
+          Object.defineProperty(window,'visualViewport',{configurable:true,value:testVisualViewport});
+          localStorage.setItem('kb_pos',JSON.stringify({left:240,top:700}));
+        """)
+        expect(self.page.locator("#kb-loading")).to_have_count(0)
+        self.assert_floating_model_inside()
+        self.page.evaluate("testVisualViewport.height=520;testVisualViewport.offsetTop=80;testVisualViewport.dispatchEvent(new Event('resize'))")
+        self.assert_floating_model_inside([0, 80, 390, 600])
+        self.page.evaluate("testVisualViewport.offsetTop=140;testVisualViewport.dispatchEvent(new Event('scroll'))")
+        self.assert_floating_model_inside([0, 140, 390, 660])
+
+    def test_drag_keeps_full_character_and_controls_inside_both_edges(self):
+        self.page.set_viewport_size({"width": 390, "height": 844})
+        self.boot()
+        expect(self.page.locator("#kb-loading")).to_have_count(0)
+        for target in ((1100, 1500), (-700, -700)):
+            stage = self.page.locator("#kb-stage").bounding_box()
+            self.page.mouse.move(stage["x"] + stage["width"] / 2, stage["y"] + stage["height"] / 2)
+            self.page.mouse.down()
+            self.page.mouse.move(*target, steps=4)
+            self.page.mouse.up()
+            self.assert_floating_model_inside()
+        self.assertIsNotNone(self.page.evaluate("JSON.parse(localStorage.getItem('kb_pos'))"))
+
+    def test_show_recovers_offscreen_position_without_loading_a_second_model(self):
+        self.page.set_viewport_size({"width": 390, "height": 650})
+        self.boot()
+        expect(self.page.locator("#kb-loading")).to_have_count(0)
+        self.page.evaluate("""() => {
+          MikuCompanion.hide();
+          const root=document.querySelector('#kanban');
+          root.style.left='900px';root.style.top='1000px';
+          MikuCompanion.show();
+        }""")
+        self.assert_floating_model_inside()
+        self.assertTrue(self.page.evaluate("MikuCompanion.isVisible()"))
+        self.assertEqual(self.page.evaluate("__modelLoads"), 1)
+
+    def test_listening_room_keeps_relative_model_and_restores_floating_bounds(self):
+        self.page.set_viewport_size({"width": 390, "height": 844})
+        self.boot('localStorage.setItem("kb_pos", JSON.stringify({left:240,top:650}));')
+        expect(self.page.locator("#kb-loading")).to_have_count(0)
+        self.page.evaluate("window.MikuMusic={getState:()=>({playing:true})}")
+        self.page.add_style_tag(url=self.origin + "/css/miku-host.css")
+        self.page.add_script_tag(url=self.origin + "/js/miku-host.js")
+        self.page.evaluate("MikuHost.openRoom()")
+        expect(self.page.locator(".miku-room-character > #kanban")).to_have_count(1)
+        saved = self.page.locator("#kanban").evaluate("node=>({left:node.style.left,top:node.style.top})")
+        self.page.set_viewport_size({"width": 390, "height": 650})
+        self.page.evaluate("MikuCompanion.show();window.dispatchEvent(new Event('resize'));visualViewport.dispatchEvent(new Event('scroll'))")
+        self.assertEqual(saved, self.page.locator("#kanban").evaluate("node=>({left:node.style.left,top:node.style.top})"))
+        self.assertEqual(self.page.locator("#kanban").evaluate("node=>getComputedStyle(node).position"), "relative")
+        self.page.locator(".miku-modal-close").click()
+        expect(self.page.locator("body > #kanban")).to_have_count(1)
+        self.assert_floating_model_inside()
+        self.assertEqual(self.page.locator("#kanban").evaluate("node=>getComputedStyle(node).position"), "fixed")
+        self.assertEqual(self.page.evaluate("__modelLoads"), 1)
 
     def configure(self, protocol="openai", base="https://chat.example/v1", key="fixture-key", model="fixture-model"):
         self.page.locator("#kb-set-btn").click()

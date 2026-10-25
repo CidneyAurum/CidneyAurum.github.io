@@ -1,34 +1,41 @@
 # 界面维护说明
 
-本次界面以 [星梦幽灵的小窝](https://xmyl-153.github.io/xingmengyouling-blog/) 为视觉参考：模糊背景、玻璃卡片、资料与音乐双栏、格言条和拼贴式内容区域。使用本站自己的 HTML/CSS/JavaScript 实现，个人资料、文章、相册、说说和音乐仍来自本站原有内容。
+界面参考 [星梦幽灵的小窝](https://xmyl-153.github.io/xingmengyouling-blog/) 的模糊背景、玻璃卡片、资料与音乐双栏、音乐下方歌词条及拼贴内容区域。本轮将首页歌词条扩展为紧凑的黑金红演出舞台，并参考 [YouRanCoder/LimbusLyricSimulator](https://github.com/YouRanCoder/LimbusLyricSimulator) 的同步、残影和双语呈现行为。
 
-## 本地预览
+参考范围仅为布局和设计行为，本站使用自己的 HTML/CSS/JavaScript 实现；没有复制 GPL-3.0 桌面项目代码，相关致谢保留在 README。个人资料、文章、相册、说说与歌单仍来自本站内容。
 
-在仓库根目录运行 `python -m http.server 8000`，访问 `http://localhost:8000/`。站点动态列表使用 fetch，不能用双击 HTML 的方式完整预览。
+## 首页音乐与歌词舞台
+
+舞台位于音乐卡下方，默认保持紧凑。播放歌曲后直接跟随同一个 MikuMusic 音频时钟，舞台自身不创建第二个播放器。
+
+主句以大号衬线字体呈现，译文较小；同时间戳内容配对显示。象牙白文字、暗金细节和黑色底构成基础，红色用于切句的短促斩痕。逐字入场与旧句淡出服务于歌词节奏，不用动画计时替代真实播放进度。
+
+暂停、恢复、seek 和切歌都应重新以当前音频时间定位。切歌或歌词结果更新时，旧句和旧残影不能覆盖新歌曲。加载中、无时间轴歌词与请求失败显示不同状态；失败提供显式重试。
+
+「动效」开关和系统 reduced motion 偏好会关闭或减弱动态效果，歌词仍完整可读。「沉浸演出」仅展开同一舞台，收起后回到首页，歌曲继续播放。独立实验室页面及导航入口移除。
 
 ## 修改位置
 
 | 内容 | 文件 |
 | --- | --- |
-| 首页布局、个人介绍、栏目入口 | `index.html` |
-| 新版全站视觉、深浅主题、手机布局 | `css/garden.css` |
-| 图标、主题卡、说说预览、看板娘按需加载 | `js/garden.js` |
-| Miku 值班室、导览、听歌房与日语短语音 | `js/miku-host.js`、`js/miku-voice.js`、`css/miku-host.css` |
-| 文章源稿 | `_posts/*.md` |
-| 新文章的导航、页脚与页面模板 | `tools/build.py` 中的 `POST_TEMPLATE` |
-| 收藏图片 | `assets/gallery/` |
-| 背景图片及来源 | `assets/night-sky.webp`、`assets/CREDITS.md` |
+| 首页布局、舞台位置、个人介绍与入口 | index.html，舞台节点 #home-lyric-stage |
+| 同步定位、双语分组、状态、重试和沉浸展开 | js/lyric-stage.js |
+| 舞台字体、黑金红视觉、逐字/残影/斩击、手机及 reduced motion | css/lyric-stage.css |
+| 当前歌曲、时间轴歌词与真实音频时钟 | js/music.js |
+| 全站视觉、深浅主题和手机布局 | css/garden.css |
+| 图标、主题卡、首页数据与组件延迟加载 | js/garden.js |
+| Miku 值班室、听歌房与日语角色短句 | js/miku-host.js、js/miku-voice.js、css/miku-host.css |
+| 文章源稿与模板 | _posts/*.md、tools/build.py 的 POST_TEMPLATE |
+| 收藏图片、背景与来源 | assets/gallery/、assets/night-sky.webp、assets/CREDITS.md |
 
-`css/style.css` 保留原有播放器、模拟器、写作台等功能组件样式，`garden.css` 在其后加载并统一外观。所有页面与文章模板都需要引用同一份新版 CSS/JS，避免无刷新换页后样式不一致。
+css/style.css 保留播放器、写作台等基础组件样式，garden.css 统一外观；歌词舞台样式独立维护。所有页面和文章模板使用相同资源引用，PJAX 换页时要清理舞台订阅与动画，返回首页后重新接入当前播放状态。
 
-相册数量、文章数量、亮灯天数及首页说说预览从现有数据计算。首页目前显示最新文章和其他文章列表；后续发文无需手工修改首页。
+## 图片、性能与验证
 
-## 图片与性能
+- 夜景素材与页脚署名见 assets/CREDITS.md；首页收藏图复用本站已有资源。
+- Live2D 按需加载，音乐封面延迟加载，歌词演出与歌单共享播放器。
+- 舞台只在当前句或播放状态变化时更新结构；帧级时间只更新进度和必要的动画状态。
+- 手机上保留清晰的歌词换行和可操作按钮，沉浸模式需支持返回、焦点恢复及视口内布局。
+- 本轮舞台的测试数量、原生音频同步检查与公网结果在 [功能验收](functional-acceptance.md) 补记；上一版通过记录不代替本轮验证。
 
-- 夜景为网上现有素材，来源及署名见 `assets/CREDITS.md`，页脚保留可见来源链接。
-- `assets/collection.webp` 由本站已有的 `assets/background.png` 转换而来，保留原图；首页文章封面复用头像 WebP。
-- 看板娘首次点击猫形按钮时才加载，模型与原有聊天功能保留。
-- 歌单封面延迟加载；选择歌曲后才展开全站播放条，换页后继续保留。
-- 减少动态效果的系统偏好会关闭过渡；键盘可操作菜单、搜索、歌单及主题卡。
-
-构建文章请运行 `python tools/build.py`。生成的 `posts/*.html` 不应单独维护，下次构建会被模板覆盖。
+开发预览可运行 python -m http.server 8000。构建文章使用 python tools/build.py，生成的 posts/*.html 不单独维护。

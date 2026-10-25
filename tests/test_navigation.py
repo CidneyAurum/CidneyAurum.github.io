@@ -139,13 +139,6 @@ class NavigationTests(unittest.TestCase):
         expect(self.page.locator("body")).to_have_attribute("data-page", "blog")
         self.assertEqual(self.errors, [])
 
-    def test_limbus_initializes_after_navigation(self):
-        self.go("/index.html")
-        self.click_nav("limbus")
-        self.page.locator("#btn-next").click()
-        expect(self.page.locator("#lyric-area .lyric-line")).to_have_count(1)
-        self.assertEqual(self.errors, [])
-
     def test_mobile_menu_announces_state_and_escape_closes(self):
         self.page.set_viewport_size({"width": 390, "height": 844})
         self.go("/index.html")

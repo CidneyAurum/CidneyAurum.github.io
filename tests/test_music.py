@@ -12,6 +12,7 @@ import json
 import re
 import unittest
 import wave
+from urllib.parse import parse_qs, urlsplit
 
 from playwright.sync_api import sync_playwright, expect
 
@@ -76,7 +77,8 @@ class MusicTests(unittest.TestCase):
                     headers["Content-Range"] = f"bytes {start}-{end}/{len(self.wav)}"
                 route.fulfill(status=206 if requested else 200, content_type="audio/wav", headers=headers, body=self.wav[start:end + 1])
         elif "lrclib.net/api/search" in url:
-            route.fulfill(content_type="application/json", body=json.dumps([{"syncedLyrics": "[00:00]First line\n[00:05]Second line"}]))
+            query = parse_qs(urlsplit(url).query)
+            route.fulfill(content_type="application/json", body=json.dumps([{"trackName": query.get("track_name", [""])[0], "artistName": "Local test", "duration": 30, "syncedLyrics": "[00:00]First line\n[00:05]Second line"}]))
         elif url.startswith(self.origin + "/"):
             route.continue_()
         else:
@@ -132,6 +134,31 @@ class MusicTests(unittest.TestCase):
         self.page.locator('[data-pane="ambient"]').click()
         self.page.locator(".js-play-toggle").first.click()
         self.page.wait_for_function("Ambient.isRunning() && !MikuMusic.getState().playing")
+        self.assertEqual(self.errors, [])
+
+    def test_visible_covers_do_not_flood_music_host_or_restart_on_pause(self):
+        cover_requests = []
+        tracks = [{"id": str(i + 1), "name": f"Fixture {i + 1}", "artist": "Local test", "pic": f"https://covers.example/{i + 1}.svg"} for i in range(107)]
+        self.page.route("**/data/playlist.json", lambda route: route.fulfill(json={"playlist": tracks}))
+
+        def cover(route):
+            cover_requests.append(route.request.url)
+            route.fulfill(content_type="image/svg+xml", body='<svg xmlns="http://www.w3.org/2000/svg" width="31" height="31"><rect width="31" height="31" fill="#333"/></svg>')
+
+        self.page.route("https://covers.example/**", cover)
+        self.page.goto(self.origin + "/index.html")
+        expect(self.page.locator("#track-list .track-item")).to_have_count(107)
+        self.page.wait_for_function("document.querySelector('#track-list img[src]')")
+        self.assertLessEqual(len(cover_requests), 12, "Offscreen covers must not occupy the audio host's connections")
+        self.page.evaluate("window.firstTrackCover=document.querySelector('#track-list img')")
+        self.page.locator("#track-list .track-item").first.click()
+        self.page.wait_for_function("MikuMusic.getState().playing && MikuMusic.getState().time>.1")
+        self.page.locator("#gp-toggle").click()
+        self.page.wait_for_function("!MikuMusic.getState().playing")
+        self.assertTrue(self.page.evaluate("firstTrackCover===document.querySelector('#track-list img')"))
+        self.page.locator("#track-list").evaluate("node=>node.scrollTop=node.scrollHeight")
+        self.page.wait_for_function("document.querySelector('#track-list .track-item:last-child img')?.getAttribute('src')?.endsWith('/107.svg')")
+        self.assertLess(len(cover_requests), 24)
         self.assertEqual(self.errors, [])
 
     def test_invalid_file_stops_cleanly_and_explains_failure(self):

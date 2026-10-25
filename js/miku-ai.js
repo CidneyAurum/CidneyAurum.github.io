@@ -80,7 +80,7 @@
       const url=new URL(raw,root);
       if(url.origin!==root.origin||url.username||url.password||!url.pathname.startsWith(root.pathname)||/%(?:2f|5c)/i.test(url.pathname))return null;
       const path=url.pathname.slice(root.pathname.length);
-      if(path!==""&&!/^(?:(?:index|blog|says|photos|about|limbus)\.html|posts\/[^/]+\.html)$/.test(path))return null;
+      if(path!==""&&!/^(?:(?:index|blog|says|photos|about)\.html|posts\/[^/]+\.html)$/.test(path))return null;
       return url.href;
     }catch(_){return null;}
   }

@@ -112,8 +112,7 @@ function syncPageHead(doc) {
 }
 
 function needsDocumentNavigation(url) {
-  // Limbus owns an audio element outside main and document-level listeners.
-  return ["limbus", "admin"].includes(document.body.dataset.page) || /\/(?:admin|limbus)\.html$/i.test(url.pathname);
+  return document.body.dataset.page === "admin" || /\/admin\.html$/i.test(url.pathname);
 }
 
 function closeMobileMenu() {
@@ -1098,14 +1097,35 @@ function renderHomeTracks() {
   const signature = JSON.stringify([st.index, st.playing, st.hasQueue,
     q.map((t) => [t.id, t.name, t.artist, t.pic])]);
   if (list.dataset.trackSignature === signature) return false;
-  list.innerHTML = q.map((t, i) => `
-    <div class="track-item${st.index === i && (st.playing || st.hasQueue) ? " on" : ""}" data-i="${i}">
-      ${t.pic ? `<img class="tk-pic" loading="lazy" decoding="async" width="31" height="31" src="${esc(t.pic)}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'tk-pic tk-no',textContent:'♪'}))">` : '<span class="tk-pic tk-no">♪</span>'}
+  const queueSignature = JSON.stringify(q.map((t) => [t.id, t.name, t.artist, t.pic]));
+  if (list.dataset.queueSignature !== queueSignature) {
+    list.coverObserver?.disconnect();
+    list.innerHTML = q.map((t, i) => `
+    <div class="track-item" data-i="${i}">
+      ${t.pic ? `<img class="tk-pic" loading="lazy" decoding="async" width="31" height="31" data-cover-src="${esc(t.pic)}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'tk-pic tk-no',textContent:'♪'}))">` : '<span class="tk-pic tk-no">♪</span>'}
       <span class="n">${esc(t.name)}</span><span class="a">${esc(t.artist)}</span>
-      ${st.index === i && st.playing ? '<span class="teq"><i></i><i></i><i></i></span>' : ""}
     </div>`).join("");
-  list.querySelectorAll(".track-item").forEach((el) =>
-    el.addEventListener("click", () => window.MikuMusic.playIndex(+el.dataset.i).catch(() => {})));
+    list.querySelectorAll(".track-item").forEach((el) =>
+      el.addEventListener("click", () => window.MikuMusic.playIndex(+el.dataset.i).catch(() => {})));
+    const loadCover = image => { if (image.dataset.coverSrc) { image.src = image.dataset.coverSrc; delete image.dataset.coverSrc; } };
+    if ("IntersectionObserver" in window) {
+      list.coverObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => { if (entry.isIntersecting) { loadCover(entry.target); list.coverObserver?.unobserve(entry.target); } });
+      }, { root: list, rootMargin: "60px 0px" });
+      list.querySelectorAll("img[data-cover-src]").forEach(image => list.coverObserver.observe(image));
+    } else {
+      list.querySelectorAll("img[data-cover-src]").forEach(loadCover);
+    }
+    list.dataset.queueSignature = queueSignature;
+  }
+  list.querySelectorAll(".track-item").forEach((row) => {
+    const active = st.index === Number(row.dataset.i);
+    row.classList.toggle("on", active);
+    const eq = row.querySelector(".teq");
+    if (active && st.playing && !eq) {
+      const bars = document.createElement("span"); bars.className = "teq"; bars.innerHTML = "<i></i><i></i><i></i>"; row.appendChild(bars);
+    } else if ((!active || !st.playing) && eq) eq.remove();
+  });
   list.dataset.trackSignature = signature;
   return true;
 }
@@ -1135,14 +1155,17 @@ document.addEventListener("mikumusic", (e) => {
   }
 });
 
-onPageReady(async ({ signal }) => {
+onPageReady(async ({ signal, onCleanup }) => {
   const list = document.getElementById("track-list");
   const fallback = document.getElementById("music-fallback");
   if (!list || !fallback || !window.MikuMusic) return;
+  onCleanup(() => list.coverObserver?.disconnect());
 
   const load = async () => {
     list.style.display = "";
     delete list.dataset.trackSignature;
+    delete list.dataset.queueSignature;
+    list.coverObserver?.disconnect();
     list.innerHTML = '<p class="empty-tip" style="padding:16px 0;">歌单加载中… 🎵</p>';
     fallback.style.display = "none";
     try {
@@ -1161,8 +1184,6 @@ onPageReady(async ({ signal }) => {
     window.MikuMusic.reloadPlaylist();
     await load();
   });
-  const lyricBtn = document.querySelector(".js-lyric");
-  if (lyricBtn) lyricBtn.addEventListener("click", () => window.MikuMusic.lyricOverlay.open());
   const mmToggle = document.querySelector(".js-mm-toggle");
   if (mmToggle) mmToggle.addEventListener("click", () => window.MikuMusic.toggle());
   const mmNext = document.querySelector(".js-mm-next");

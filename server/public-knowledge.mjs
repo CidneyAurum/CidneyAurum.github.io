@@ -1,7 +1,7 @@
 /* Public content refresh only. This module has no access to AI keys or chat. */
 export const PUBLIC_KNOWLEDGE_URL = "https://cidneyaurum.github.io/data/knowledge.json";
 const SITE = "https://cidneyaurum.github.io";
-const PAGE_URLS = new Set(["/", "/index.html", "/blog.html", "/says.html", "/photos.html", "/limbus.html", "/about.html"]);
+const PAGE_URLS = new Set(["/", "/index.html", "/blog.html", "/says.html", "/photos.html", "/about.html"]);
 const COLLECTIONS = ["pages", "articles", "says", "photos", "playlist"];
 function record(value) { return value && typeof value === "object" && !Array.isArray(value); }
 function field(value, max, optional = false) {

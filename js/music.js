@@ -29,6 +29,8 @@ const MikuMusic = (function () {
   let qi = -1;
   let playing = false;
   let currentLrc = [];
+  let lrcStatus = "idle";
+  let selectionRevision = 0;
   let mode = "list";
   let expectPlay = false;  // 处于“应当正在播放”状态（用于断流自愈判定）
   let failStreak = 0;      // 连续断流次数（防切歌死循环）
@@ -145,7 +147,11 @@ const MikuMusic = (function () {
     try { audio.volume = Math.min(1, Math.max(0, parseFloat(localStorage.getItem("mm_volume") || "0.9"))); } catch (e) {}
     audio.addEventListener("ended", () => { playing = false; window.__kbSinging = false; expectPlay = false; onEnded(); });
     audio.addEventListener("error", () => {
-      if (!expectPlay) return; // 恢复现场的装载失败不算播放中断
+      if (!expectPlay) {
+        if (!pendingPlay) { resetLyrics("unavailable"); syncAll(); }
+        return; // 恢复现场的装载失败不算播放中断
+      }
+      resetLyrics("unavailable");
       expectPlay = false;
       playing = false;
       window.__kbSinging = false;
@@ -157,6 +163,8 @@ const MikuMusic = (function () {
     audio.addEventListener("pause", () => { playing = false; window.__kbSinging = false; syncAll(); persist(); updateMediaSession(); });
     let lastLine = -2;
     audio.addEventListener("loadedmetadata", () => syncAll());
+    audio.addEventListener("seeking", syncAll);
+    audio.addEventListener("seeked", syncAll);
     audio.addEventListener("timeupdate", () => {
       const line = lrcIndexAt(audio.currentTime || 0);
       if (line !== lastLine) { lastLine = line; emit(); }
@@ -183,18 +191,19 @@ const MikuMusic = (function () {
   /* 只装载不播放（用于恢复现场） */
   function prepare(item, seekTo) {
     ensureAudio();
+    selectionRevision++;
     const id = ++playbackId;
     restoreSeekCleanup();
-    lyricController?.abort();
+    resetLyrics("loading");
     expectPlay = false;
     pendingPlay = false;
     audio.pause();
     playing = false;
     const url = streamCandidates(item)[0];
-    if (!url) return;
+    if (!url) { resetLyrics("unavailable"); syncAll(); return; }
     audio.src = url;
     if (seekTo > 0) {
-      const jump = () => { if (id === playbackId && queue[qi] === item) { try { audio.currentTime = seekTo; } catch (e) {} } };
+      const jump = () => { if (id === playbackId && queue[qi] === item) { try { audio.currentTime = seekTo; syncAll(); } catch (e) {} } };
       if (audio.readyState >= 1) jump();
       else {
         audio.addEventListener("loadedmetadata", jump, { once: true });
@@ -212,7 +221,8 @@ const MikuMusic = (function () {
     playing = false;
     window.__kbSinging = false;
     restoreSeekCleanup();
-    lyricController?.abort();
+    if (lrcStatus === "loading") resetLyrics("idle");
+    else lyricController?.abort();
     if (audio) audio.pause();
     syncAll();
     persist();
@@ -230,10 +240,10 @@ const MikuMusic = (function () {
   async function play(item, automatic = false) {
     if (window.Ambient?.isRunning()) window.Ambient.stop();
     ensureAudio();
+    selectionRevision++;
     const id = ++playbackId;
     restoreSeekCleanup();
-    lyricController?.abort();
-    currentLrc = [];
+    resetLyrics("loading");
     expectPlay = false;
     pendingPlay = true;
     audio.pause();
@@ -241,7 +251,7 @@ const MikuMusic = (function () {
     if (!automatic) failStreak = 0;
     emit();
     const candidates = streamCandidates(item);
-    if (!candidates.length) { pendingPlay = false; throw new Error("拿不到播放地址"); }
+    if (!candidates.length) { pendingPlay = false; resetLyrics("unavailable"); syncAll(); throw new Error("拿不到播放地址"); }
     let lastErr = null;
     expectPlay = false; // 候选切换期间产生的 error 不算"播放中断"
     for (const url of candidates) {
@@ -270,63 +280,141 @@ const MikuMusic = (function () {
     playing = false;
     expectPlay = false;
     window.__kbSinging = false;
+    resetLyrics("unavailable");
     syncAll();
     toast("《" + item.name + "》播放失败：" + (lastErr ? lastErr.message : "地址不可用"));
     throw new Error("播放失败：" + (lastErr ? lastErr.message : "所有地址都不可用"));
   }
 
   /* ---------- 歌词 ---------- */
+  function resetLyrics(status = "idle") {
+    lyricController?.abort();
+    lyricController = null;
+    currentLrc = [];
+    lrcStatus = status;
+  }
+
   function parseLrc(text) {
     const out = [];
     const tagRe = /\[(\d{1,2}):(\d{1,2})(?:[.:](\d{1,3}))?\]/g;
     for (const raw of text.replace(/\r/g, "").split("\n")) {
+      if (!/^\s*\[\d{1,2}:\d{1,2}(?:[.:]\d{1,3})?\]/.test(raw)) continue;
       tagRe.lastIndex = 0;
       const times = [];
       let m;
       while ((m = tagRe.exec(raw)) !== null) {
+        if (Number(m[2]) >= 60) continue;
         const frac = m[3] ? parseInt(m[3].padEnd(3, "0"), 10) / 1000 : 0;
         times.push(parseInt(m[1], 10) * 60 + parseInt(m[2], 10) + frac);
       }
       const content = raw.replace(tagRe, "").trim();
-      if (!content) continue;
-      (times.length ? times : [0]).forEach((t) => out.push({ t, text: content }));
+      // Untimed metadata/plain text is not a synchronized lyric. Empty timed
+      // cues are retained so the stage can clear a line during an interlude.
+      times.forEach((t) => out.push({ t, text: content }));
     }
     return out.sort((a, b) => a.t - b.t);
+  }
+
+  const nameKey = (value) => String(value || "").normalize("NFKC").toLowerCase()
+    .replace(/[\p{P}\p{Z}\s]/gu, "");
+  function titleKey(value) {
+    return nameKey(String(value || "")
+      .replace(/[（(\[]\s*(?:featuring\s+|feat\.?\s+|ft\.?\s+|feat\.|ft\.)\s*[^)）\]]+[)）\]]/gi, "")
+      .replace(/\s+(?:featuring\s+|feat\.?\s+|ft\.?\s+|feat\.|ft\.)\s*.+$/i, ""));
+  }
+  function artistKeys(value) {
+    return String(value || "").replace(/\b(?:featuring\s+|feat\.\s*|ft\.\s*|feat\s+|ft\s+)/gi, "/")
+      .split(/\s*(?:\/|,|;|&|、)\s*/)
+      .map(artist => nameKey(artist.replace(/\s*official\s*$/i, "")))
+      .map(artist => /^(?:初音ミク|初音未来|hatsunemiku|miku)$/.test(artist) ? "hatsunemiku" : artist).filter(Boolean);
+  }
+
+  function metingLyrics(value) {
+    let data;
+    try { data = JSON.parse(value); }
+    catch (_) { return parseLrc(value); }
+    if (Array.isArray(data)) data = data[0];
+    if (typeof data === "string") return parseLrc(data);
+    if (!data || typeof data !== "object") return [];
+    const read = part => typeof part === "string" ? part : typeof part?.lyric === "string" ? part.lyric : "";
+    const parts = [...new Set([read(data.lrc), read(data.tlyric), read(data.lyric)].filter(Boolean))];
+    return parts.flatMap(parseLrc).sort((a, b) => a.t - b.t);
+  }
+  function lyricMatch(record, item, duration) {
+    if (!record || titleKey(record.trackName || record.name) !== titleKey(item.name)) return -1;
+    const expected = artistKeys(item.artist), actual = artistKeys(record.artistName);
+    const overlap = expected.filter(artist => actual.includes(artist)).length;
+    if (!overlap) return -1;
+    const length = Number(record.duration);
+    let score = 100 + overlap * 5;
+    if (Number.isFinite(duration) && duration > 0 && Number.isFinite(length) && length > 0) {
+      const preview = duration <= 45 && length > duration + 10;
+      if (!preview && Math.abs(length - duration) > 3) return -1;
+      if (!preview) score += 10 - Math.min(3, Math.abs(length - duration));
+    }
+    return score;
   }
 
   async function loadLrc(item) {
     lyricController?.abort();
     const controller = lyricController = new AbortController();
     const id = playbackId;
-    const current = () => !controller.signal.aborted && id === playbackId && queue[qi] === item;
+    const selected = () => id === playbackId && queue[qi] === item && lyricController === controller;
+    const current = () => !controller.signal.aborted && selected();
     currentLrc = [];
-    const artistFirst = (item.artist || "").split("/")[0].trim();
-    const tries = [
-      { track_name: item.name || "", artist_name: artistFirst },
-      { track_name: item.name || "" },
+    lrcStatus = "loading";
+    emit();
+    const artistFirst = String(item.artist || "").split("/")[0].trim();
+    const duration = Number.isFinite(audio?.duration) ? audio.duration : 0;
+    const signature = { track_name: item.name || "", artist_name: artistFirst };
+    // A 30-second preview should still use the full track's verified lyrics.
+    if (duration > 45 && duration <= 3600) signature.duration = String(Math.round(duration));
+    const requests = [
+      ...(artistFirst ? [["get", signature]] : []),
+      ["search", { track_name: item.name || "", artist_name: artistFirst }],
+      ["search", { track_name: item.name || "" }],
     ];
-    for (const qp of tries) {
-      try {
-        const list = JSON.parse(await fetchText("https://lrclib.net/api/search?" + new URLSearchParams(qp).toString(), controller.signal));
-        if (!current()) return;
-        if (!Array.isArray(list)) continue;
-        const synced = list.find((d) => d.syncedLyrics) || list[0];
-        if (synced && synced.syncedLyrics) { currentLrc = parseLrc(synced.syncedLyrics); renderLyricPanel(true); return; }
-      } catch (e) { if (!current()) return; }
-    }
-    for (const base of apiSources()) {
-      try {
-        if (!item.id) break;
-        const text = (await fetchText(base + "?type=lrc&server=netease&id=" + encodeURIComponent(item.id), controller.signal, 5000)).trim();
-        if (!current()) return;
-        if (!text || text.startsWith('{"error')) continue;
-        if (text.startsWith("[") || text.includes("[00:")) { currentLrc = parseLrc(text); }
-        else { const data = JSON.parse(text); currentLrc = parseLrc((Array.isArray(data) ? data[0] : data).lrc || ""); }
-        if (currentLrc.length) { renderLyricPanel(true); return; }
-      } catch (e) { if (!current()) return; }
-    }
-    renderLyricPanel(true);
+    const find = async () => {
+      for (const [endpoint, query] of requests) {
+        try {
+          const data = JSON.parse(await fetchText("https://lrclib.net/api/" + endpoint + "?" + new URLSearchParams(query).toString(), controller.signal, 4000));
+          if (!current()) return null;
+          const candidates = (Array.isArray(data) ? data : [data])
+            .map(record => ({ record, score: lyricMatch(record, item, duration) }))
+            .filter(candidate => candidate.score >= 0).sort((a, b) => b.score - a.score);
+          for (const { record } of candidates) {
+            if (typeof record.syncedLyrics !== "string") continue;
+            const lines = parseLrc(record.syncedLyrics);
+            if (lines.some(line => line.text)) return lines;
+          }
+        } catch (e) { if (!current()) return null; }
+      }
+      for (const base of apiSources()) {
+        try {
+          if (!item.id) break;
+          const text = (await fetchText(base + "?type=lrc&server=netease&id=" + encodeURIComponent(item.id), controller.signal, 4000)).trim();
+          if (!current()) return null;
+          if (!text || text.startsWith('{"error')) continue;
+          const lines = metingLyrics(text);
+          if (lines.some(line => line.text)) return lines;
+        } catch (e) { if (!current()) return null; }
+      }
+      return null;
+    };
+    let timer;
+    try {
+      const lines = await Promise.race([find(), new Promise(resolve => {
+        timer = setTimeout(() => { controller.abort(); resolve(null); }, 20000);
+      })]);
+      if (!selected()) return false;
+      currentLrc = lines || [];
+      lrcStatus = lines ? "ready" : "unavailable";
+      renderLyricPanel(true); emit();
+      return !!lines;
+    } finally { clearTimeout(timer); }
   }
+
+  function retryLyrics() { return queue[qi] ? loadLrc(queue[qi]) : Promise.resolve(false); }
 
   function lrcIndexAt(time) {
     let idx = -1;
@@ -371,7 +459,7 @@ const MikuMusic = (function () {
     return playlistPromise;
   }
 
-  function reloadPlaylist() { stop(); queue = []; qi = -1; currentLrc = []; syncAll(); }
+  function reloadPlaylist() { stop(); queue = []; qi = -1; resetLyrics(); syncAll(); }
 
   async function playPlaylist() {
     const n = await loadPlaylist();
@@ -418,7 +506,7 @@ const MikuMusic = (function () {
 
   function onEnded() {
     failStreak = 0;
-    if (mode === "one") { audio.currentTime = 0; resume(); return; }
+    if (mode === "one") { selectionRevision++; audio.currentTime = 0; resume(); return; }
     next(true);
   }
 
@@ -432,8 +520,8 @@ const MikuMusic = (function () {
 
   function seek(frac) {
     if (!audio || !Number.isFinite(audio.duration) || !audio.duration || !Number.isFinite(frac)) return;
-    audio.currentTime = Math.min(audio.duration - 0.2, Math.max(0, frac * audio.duration));
-    syncProgress();
+    audio.currentTime = Math.min(Math.max(0, audio.duration - 0.2), Math.max(0, frac * audio.duration));
+    syncAll();
   }
 
   function setVolume(v) {
@@ -459,7 +547,7 @@ const MikuMusic = (function () {
       playing = true;
       expectPlay = true;
       window.__kbSinging = true;
-      if (!currentLrc.length && queue[qi]) loadLrc(queue[qi]).then(() => emit());
+      if (lrcStatus === "idle" && queue[qi]) loadLrc(queue[qi]).then(() => emit());
       syncAll(); updateMediaSession(); persist();
       return true;
     } catch (e) {
@@ -478,6 +566,8 @@ const MikuMusic = (function () {
   function getState() {
     return {
       playing,
+      seeking: !!audio?.seeking,
+      selectionRevision,
       current: queue[qi] || null,
       index: qi,
       total: queue.length,
@@ -487,6 +577,7 @@ const MikuMusic = (function () {
       duration: audio ? audio.duration || 0 : 0,
       time: audio ? audio.currentTime || 0 : 0,
       lrc: currentLrc,
+      lrcStatus,
       lrcLine: audio ? lrcIndexAt(audio.currentTime || 0) : -1,
     };
   }
@@ -502,7 +593,7 @@ const MikuMusic = (function () {
     syncProgress();
   }
   function syncAll() { emit(); }
-  function on(fn) { listeners.add(fn); }
+  function on(fn) { if (typeof fn !== "function") return () => {}; listeners.add(fn); return () => listeners.delete(fn); }
 
   /* ---------- 状态持久化（刷新/换页恢复现场） ---------- */
   let persistTimer = 0;
@@ -737,7 +828,7 @@ const MikuMusic = (function () {
     const st = getState();
     if (!list) return;
     if (!currentLrc.length) {
-      list.innerHTML = '<div class="gp-lrc-empty">这首暂时没有歌词（或还在加载）♪</div>';
+      list.innerHTML = '<div class="gp-lrc-empty">' + (lrcStatus === "loading" ? "歌词正在加载…" : lrcStatus === "unavailable" ? "这首暂时没有可用的同步歌词" : "选择一首歌，等待歌词开始 ♪") + '</div>';
       lastLrcIdx = -2;
       return;
     }
@@ -986,7 +1077,7 @@ const MikuMusic = (function () {
   /* ---------- 对外 API ---------- */
   return {
     searchAndPlay, playPlaylist, loadPlaylist, reloadPlaylist, playIndex, next, prev, toggle, stop,
-    seek, setVolume, cycleMode, toast,
+    seek, setVolume, cycleMode, toast, retryLyrics,
     getState, getQueue: () => queue.slice(), on, playlistId: CFG.playlistId,
     closePanels: () => {
       const active = document.activeElement;

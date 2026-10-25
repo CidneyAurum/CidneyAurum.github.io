@@ -101,7 +101,7 @@
   // while navigating. It remains tucked away during an idle first visit.
   const showPlayer = () => document.body.classList.add("music-engaged");
   document.addEventListener("click", (event) => {
-    if (event.target.closest(".track-item, .js-mm-toggle, .js-mm-next, .js-lyric")) showPlayer();
+    if (event.target.closest(".track-item, .js-mm-toggle, .js-mm-next, #home-lyrics-button")) showPlayer();
     if (event.target.closest("#mode-card")) document.getElementById("theme-toggle")?.click();
   });
   document.addEventListener("mikumusic", (event) => {
@@ -146,6 +146,16 @@
       document.body.appendChild(script);
     });
   }
+  if (![...document.querySelectorAll('link[rel="stylesheet"]')].some(link => link.href === assetURL("css/lyric-stage.css").href)) {
+    const lyricStyle = document.createElement("link");
+    lyricStyle.rel = "stylesheet";
+    lyricStyle.href = assetURL("css/lyric-stage.css");
+    document.head.appendChild(lyricStyle);
+  }
+  loadScript("js/lyric-stage.js").catch(() => {
+    const status = document.querySelector("[data-stage-status]");
+    if (status) status.textContent = "歌词演出暂未加载，刷新后重试；音乐仍可正常播放。";
+  });
   let companionLoad = null;
   window.MikuLoader = {
     load() {

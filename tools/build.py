@@ -39,7 +39,7 @@ SITE = {
     "name": "CidneyAurum の 小窝",
     "owner": "CidneyAurum",
     "motto": "直面过去，创造未来",
-    "desc": "CidneyAurum 的数字小窝：博客、照片墙，还有 Limbus 风格歌词演出模拟器。",
+    "desc": "CidneyAurum 的数字小窝：博客、照片墙，以及随歌曲同步的边狱风格歌词演出。",
 }
 
 # ---------------- Markdown → HTML（覆盖博客常用子集） ----------------
@@ -63,7 +63,7 @@ def content_url(value: str, *, image: bool = False) -> str | None:
     path = parts.path
     if not parts.scheme and not parts.netloc:
         if path.startswith(("assets/", "data/", "says/")) or path in {
-            "index.html", "blog.html", "says.html", "photos.html", "limbus.html",
+            "index.html", "blog.html", "says.html", "photos.html",
             "about.html", "admin.html", "feed.xml",
         }:
             path = "../" + path
@@ -309,7 +309,6 @@ POST_TEMPLATE = """<!DOCTYPE html>
       <a class="nav-link active" href="../blog.html" aria-current="page">手记</a>
       <a class="nav-link" href="../says.html">碎片</a>
       <a class="nav-link" href="../photos.html">相册</a>
-      <a class="nav-link" href="../limbus.html">实验室</a>
       <a class="nav-link" href="../about.html">关于</a>
     </div>
     <div class="nav-actions">
@@ -573,7 +572,7 @@ def build_meta_files(entries: list):
     (ROOT / "feed.xml").write_text(rss, encoding="utf-8")
     print("  RSS   feed.xml")
 
-    urls = ["", "blog.html", "says.html", "photos.html", "about.html", "limbus.html"] + [
+    urls = ["", "blog.html", "says.html", "photos.html", "about.html"] + [
         f"posts/{quote(e['slug'])}.html" for e in entries
     ]
     post_dates = {f"posts/{quote(e['slug'])}.html": e["date"] for e in entries}

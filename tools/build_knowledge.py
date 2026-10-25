@@ -1,6 +1,6 @@
 """Build a deterministic, public-only text index for the site's assistant.
 
-Only published Markdown, six public page headers, and the existing public
+Only published Markdown, public page headers, and the existing public
 content manifests are read. Generated article HTML, admin settings, docs,
 environment files, repository history and arbitrary linked files are not inputs.
 """
@@ -16,7 +16,7 @@ from urllib.parse import quote, unquote, urlsplit
 
 PUBLIC_PAGES = (("home", "index.html", "/"), ("blog", "blog.html", "/blog.html"),
                 ("says", "says.html", "/says.html"), ("photos", "photos.html", "/photos.html"),
-                ("limbus", "limbus.html", "/limbus.html"), ("about", "about.html", "/about.html"))
+                ("about", "about.html", "/about.html"))
 BLOCKS = {"p", "div", "section", "article", "blockquote", "ul", "ol", "li", "pre",
           "h1", "h2", "h3", "h4", "h5", "h6", "br", "hr", "table", "tr"}
 HIDDEN = {"script", "style", "template", "noscript", "iframe", "object"}

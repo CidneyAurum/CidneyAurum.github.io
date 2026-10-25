@@ -1,8 +1,8 @@
 # CidneyAurum の 小窝 🌌
 
-一个深空玻璃风格的个人网站，包含手记、说说、相册、音乐、看板娘与 Limbus 歌词演出。前端使用纯 HTML/CSS/JS，不依赖框架或打包器；Markdown 与图片由 Python 生成，GitHub Actions 在回归检查通过后构建发布。
+一个深空玻璃风格的个人网站，包含手记、说说、相册、音乐、看板娘与首页同步歌词演出。前端使用纯 HTML/CSS/JS，不依赖框架或打包器；Markdown 与图片由 Python 生成，GitHub Actions 在回归检查通过后构建发布。
 
-**线上地址**：[cidneyaurum.github.io](https://cidneyaurum.github.io/)。新版已上线并通过正式域名浏览器验收，AI 由公网 Worker 提供，直接访问即可使用。
+**线上地址**：[cidneyaurum.github.io](https://cidneyaurum.github.io/)。既有版本与公网 AI 已上线；本轮首页歌词演出整合的测试和公网发布结果另见 [功能验收](docs/functional-acceptance.md)。
 
 本次维护的功能结果与外部依赖见 [功能验收](docs/functional-acceptance.md)，界面修改位置见 [界面维护](docs/ui-redesign.md)，运行测试和发布设置见 [构建与部署](docs/build-and-deploy.md)。
 
@@ -10,18 +10,17 @@
 
 「问问 Miku」支持 DeepSeek 聊天、文章总结与选段解释、带出处的站内问答、内容与歌曲推荐，以及写作台拟标题、摘要和润色。写作建议先审阅再手动应用，可以撤销；日语短语音用于互动，长回复以文字呈现。
 
-公网网关：[cidney-miku-ai.1562614833.workers.dev](https://cidney-miku-ai.1562614833.workers.dev)。全站每日 100 次额度已生效（UTC 日），Pages 使用 GitHub Actions 发布；[本次构建与部署](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40172638665)均成功，187 项 CI 检查通过。正式域名的文章总结、真实引用、手机侧栏及写作标题应用/撤销均已验证。访客无需运行本机脚本或填写模型密钥，凭据由 Workers Secrets 管理。使用见 [AI 使用说明](docs/ai-api.md)，发布记录见 [公网 AI 部署](server/DEPLOYMENT.md)。
+公网网关：[cidney-miku-ai.1562614833.workers.dev](https://cidney-miku-ai.1562614833.workers.dev)。全站每日 100 次额度已生效（UTC 日），Pages 使用 GitHub Actions 发布；[上一版构建与部署](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40172638665)均成功，187 项 CI 检查通过，这是上一版发布记录。正式域名的文章总结、真实引用、手机侧栏及写作标题应用/撤销均已验证。访客无需运行本机脚本或填写模型密钥，凭据由 Workers Secrets 管理。使用见 [AI 使用说明](docs/ai-api.md)，发布记录见 [公网 AI 部署](server/DEPLOYMENT.md)。
 
 文章、说说和照片经 GitHub Actions 发布后，Worker 从 Pages 的公共知识索引在线同步，采用 60 秒缓存、到期后由后续请求刷新。日常内容更新无需重启本机服务或重新部署 Worker。
 
 ## 目录结构
 
 ```
-├── index.html          # 主页（资料卡 / 网易云歌单 / 环境电台 / 打字横幅 / 时钟条）
+├── index.html          # 主页（资料卡 / 歌单 / 环境电台 / 同步歌词舞台 / 时钟）
 ├── blog.html           # 拾光档案：搜索 + 标签 + 时间轴/网格双视图
 ├── says.html           # 说说：朋友圈式时间轴
 ├── photos.html         # 光影画廊：拍立得照片墙
-├── limbus.html         # Limbus 风格歌词演出模拟器（网页版）
 ├── about.html          # 关于：足迹时间线 / 技能 / 联系方式
 ├── admin.html          # 写作台：发文 / 发说说 / 发图（站主专用）
 ├── 404.html            # 404 页
@@ -32,10 +31,11 @@
 ├── css/garden.css      # 新版全站视觉、深浅主题和手机适配
 ├── js/garden.js        # 主题卡、首页数据、图标和看板娘按需加载
 ├── js/main.js          # 流萤 / 打字横幅 / 时钟 / 归档双视图 / 说说 / 照片墙
-├── js/music.js         # MikuMusic 点播引擎（歌单 / 歌词 / Limbus 弹词）
+├── js/music.js         # MikuMusic 点播引擎（歌单 / 歌词 / 真实音频时钟）
+├── js/lyric-stage.js   # 首页同步演出、双语分组、状态与沉浸展开
+├── css/lyric-stage.css # 首页舞台字体、黑金红视觉及减弱动效
 ├── js/kanban.js        # 看板娘：Live2D + AI 多协议对话 + 点歌联动
 ├── js/player.js        # 环境电台：Web Audio 合成音乐
-├── js/limbus.js        # 歌词演出引擎（手动 / 自动 / 音乐同步）
 ├── js/admin.js         # 写作台逻辑（GitHub Contents API 发布）
 ├── data/playlist.json  # 网易云歌单快照（107 首，含封面）
 ├── data/knowledge.json # 构建生成的公共知识索引，供公网 AI 在线同步
@@ -115,19 +115,24 @@ summary: 一句话摘要
 
 > 原理：GitHub Action（`.github/workflows/build.yml`）在 `_posts/` 或 `assets/gallery/` 变化时自动运行 `python tools/build.py`，生成 `posts/*.html`、`posts/posts.json`、`assets/gallery/gallery.json`。本地没有 Python 也没关系，走方式一即可。
 
-## Limbus 歌词演出模拟器
+## 首页同步歌词演出
 
-`limbus.html` 是网页版歌词演出工具：
+本轮把演出并入首页音乐区，下方保留紧凑的黑金红舞台，移除独立实验室页面和导航入口。选择歌曲后，演出跟随 MikuMusic 当前音频的真实进度自动同步。
 
-- **手动模式**：空格 / 点击舞台推进，每第 3 句触发红色斩击 + 震屏
-- **自动模式**：定时逐句演出（速度可调）
-- **音乐同步**：本地选择音频文件 + 带 `[mm:ss.xx]` 时间轴的 LRC 歌词即可同步演出，音频不会上传
-- 桌面版项目：[YouRanCoder/LimbusLyricSimulator](https://github.com/YouRanCoder/LimbusLyricSimulator)（GPL-3.0）
+- 同时间戳的原文与译文配对显示，主句有逐字入场、旧句残影和短促斩击。
+- 暂停、恢复、拖动进度与切歌同步更新舞台；收起沉浸演出不停止音乐。
+- 「动效」开关可关闭演出动画，系统 reduced motion 偏好也会降低动态效果。
+- 「沉浸演出」展开当前舞台，关闭后回到首页；紧凑布局保留日常阅读空间。
+- 歌词加载、无歌词和失败分别显示状态；失败后由「重试歌词」显式重试。
+
+舞台行为与状态维护在 js/lyric-stage.js，视觉、字体和动效在 css/lyric-stage.css，播放与歌词数据仍由 js/music.js 管理。本轮测试数量与公网结果以 [功能验收](docs/functional-acceptance.md) 的后续记录为准。
+
+布局及设计行为参考 [星梦幽灵的小窝](https://xmyl-153.github.io/xingmengyouling-blog/) 和 [YouRanCoder/LimbusLyricSimulator](https://github.com/YouRanCoder/LimbusLyricSimulator)；网页实现由本站维护，没有复制 GPL-3.0 桌面项目代码。
 
 ## 部署说明
 
 - Pages 来源已通过 GET 确认为 **GitHub Actions**（`build_type: workflow`）。
-- 本轮运行时发布提交为 51514eaa5a6f90a07a0dca8bf37502b0073eca26；[Actions](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40172638665) 的 build/deploy 均成功，公网页面和 AI 链路已验收。日后推送仍以对应提交的部署结果为准，维护步骤见 [构建与部署](docs/build-and-deploy.md)。
+- 上一版运行时发布提交为 51514eaa5a6f90a07a0dca8bf37502b0073eca26；[Actions](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40172638665) 的 build/deploy 均成功，该版本公网页面和 AI 链路已验收。本轮首页演出的测试与发布另行记录。日后推送仍以对应提交的部署结果为准，维护步骤见 [构建与部署](docs/build-and-deploy.md)。
 - 公网 AI 使用独立 Worker，后端 Secret 不进入 Pages artifact；内容知识由 Pages 公共索引在线同步。
 - 想绑自定义域名：在仓库根目录加一个 `CNAME` 文件（内容写域名），并在域名处配置解析
 
@@ -137,9 +142,9 @@ Miku 已内置。点击右下角猫形按钮按需加载；资源失败时可以
 
 ## 致谢
 
-- 设计风格参考：[xmyl-153/xingmengyouling-blog](https://github.com/xmyl-153/xingmengyouling-blog)（深空玻璃拟态布局思路，代码均为本站原创实现）
+- 设计风格参考：[xmyl-153/xingmengyouling-blog](https://github.com/xmyl-153/xingmengyouling-blog)（深空玻璃布局、音乐与歌词联动的设计参考）
 - [Tempura3 / Limbus-Like-Lyric-Simulator](https://github.com/TempuraYMY0728/Limbus-Like-Lyric-Simulator) — 歌词演出方案的开山之作
-- [YouRanCoder / LimbusLyricSimulator](https://github.com/YouRanCoder/LimbusLyricSimulator)（GPL-3.0）— 桌面版歌词模拟器
+- [YouRanCoder / LimbusLyricSimulator](https://github.com/YouRanCoder/LimbusLyricSimulator)（GPL-3.0）— 歌词演出的视觉与同步行为参考，未复制其桌面实现
 - [imsyy/home](https://github.com/imsyy/home)（MIT）— 一言 API 用法
 - 一言 API：[hitokoto.cn](https://hitokoto.cn/)
 
@@ -159,7 +164,7 @@ Miku 已内置。点击右下角猫形按钮按需加载；资源失败时可以
 - **互动**：点她触发比心、拖拽移动、滚轮缩放、🙈 可以让她躲起来。
 - **技术**：pixi.js + pixi-live2d-display 渲染；站点 AI 由服务端调用 DeepSeek，并校验引用、导航与歌曲目标。角色保留表情互动，长回复只显示文字；日语短句使用现成音频并驱动口型。
 - **🎵 音乐点播**：跟她聊就行——「放 晴天」「来一首atu」「播放歌单」「下一首」「暂停」。搜索与播放使用音乐服务，模型口型随音频联动。
-  - 歌单卡在首页「🎵 我的歌单」标签（官方外链播放器）
+  - 首页歌单、底部播放条、听歌房与歌词演出共享同一个 MikuMusic 播放状态
   - VIP 歌曲在公共源下只能试听；想全曲点播看 [docs/music-api.md](docs/music-api.md)（Cloudflare Workers 自建 API，可选）
   - 公共源偶尔不稳，可在 ⚙️ 设置里填自己的 Meting 格式 API 地址
 

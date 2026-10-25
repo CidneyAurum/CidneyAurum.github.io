@@ -1,6 +1,6 @@
 # 界面维护说明
 
-界面参考 [星梦幽灵的小窝](https://xmyl-153.github.io/xingmengyouling-blog/) 的模糊背景、玻璃卡片、资料与音乐双栏、音乐下方歌词条及拼贴内容区域。本轮将首页歌词条扩展为紧凑的黑金红演出舞台，并参考 [YouRanCoder/LimbusLyricSimulator](https://github.com/YouRanCoder/LimbusLyricSimulator) 的同步、残影和双语呈现行为。
+界面参考 [星梦幽灵的小窝](https://xmyl-153.github.io/xingmengyouling-blog/) 的模糊背景、玻璃卡片、资料与音乐双栏、音乐下方歌词条及拼贴内容区域。首页歌词条现已扩展为紧凑的黑金红演出舞台，并参考 [YouRanCoder/LimbusLyricSimulator](https://github.com/YouRanCoder/LimbusLyricSimulator) 的同步、残影和双语呈现行为。
 
 参考范围仅为布局和设计行为，本站使用自己的 HTML/CSS/JavaScript 实现；没有复制 GPL-3.0 桌面项目代码，相关致谢保留在 README。个人资料、文章、相册、说说与歌单仍来自本站内容。
 
@@ -33,9 +33,10 @@ css/style.css 保留播放器、写作台等基础组件样式，garden.css 统�
 ## 图片、性能与验证
 
 - 夜景素材与页脚署名见 assets/CREDITS.md；首页收藏图复用本站已有资源。
-- Live2D 按需加载，音乐封面延迟加载，歌词演出与歌单共享播放器。
+- Live2D 按需加载；歌单封面仅按可视行加载，避免批量请求争用音频所在域的连接。播放/暂停只更新现有状态，不重建 107 条歌单节点；歌词演出与歌单共享播放器。
 - 舞台只在当前句或播放状态变化时更新结构；帧级时间只更新进度和必要的动画状态。
 - 手机上保留清晰的歌词换行和可操作按钮，沉浸模式需支持返回、焦点恢复及视口内布局。
-- 本轮舞台的测试数量、原生音频同步检查与公网结果在 [功能验收](functional-acceptance.md) 补记；上一版通过记录不代替本轮验证。
+- 本轮已发布提交 d0452892574e90b243b780b73c909dfacf952521，[Actions](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40176783139) 的 build/deploy 成功，205 项检查通过；正式域名原生歌曲与 38 行 LRC 同步、暂停和沉浸/Escape 已实测，详见 [功能验收](functional-acceptance.md)。
+- 独立本机单次播放测试观察到 2.19 秒起播，仅代表该次环境，不作为公网用户的时延保证。
 
 开发预览可运行 python -m http.server 8000。构建文章使用 python tools/build.py，生成的 posts/*.html 不单独维护。

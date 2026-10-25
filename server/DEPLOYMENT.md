@@ -10,7 +10,7 @@
 
 Pages 来源已通过 GET 确认为 GitHub Actions（build_type=workflow）。公网 Worker 已启用，/api/status 返回 configured=true；workers_dev=true、AI_PUBLIC_ENABLED=true、AI_DAILY_REQUEST_LIMIT=100 已生效。前端使用上面的 HTTPS 公网地址，凭据由 Workers Secrets 托管。
 
-运行时发布提交为 51514eaa5a6f90a07a0dca8bf37502b0073eca26，对应 [Actions](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40172638665) 的 build/deploy 均成功，70 项 Node 与 117 项 Python/Chromium 检查全部通过。Worker 版本为 10e25d47-5b46-49ae-935d-b3e24e8b4750。
+运行时发布提交为 d0452892574e90b243b780b73c909dfacf952521，对应 [Actions](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40176783139) 的 build/deploy 均成功，83 项 Node 与 122 项 Python/Chromium 检查全部通过。Worker 版本为 e58ef309-a7e1-41b6-9731-262734ab4e8b。
 
 页面由 GitHub Pages 提供，推理由 Cloudflare Worker 调用 DeepSeek；访客无需运行本机服务。正式域名浏览器的文章总结返回 1 条真实引用，手机侧栏位于视口内，写作标题应用与撤销成功。检查中本机请求、浏览器直连模型供应商、发往网关的鉴权头和 GitHub 写入均为 0，页面脚本错误为空。
 

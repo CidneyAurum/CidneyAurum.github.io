@@ -2,7 +2,7 @@
 
 Miku 面向 GitHub Pages 公网访客提供聊天、文章问答、内容推荐和写作建议。页面由 GitHub Pages 提供，AI 在 Cloudflare Worker 执行；访客无需运行本机服务或提供模型密钥。
 
-**已上线并通过公网验收：** Pages 构建与部署成功，Worker 每日 100 次额度已生效。正式域名已验证文章引用、手机侧栏及写作标题应用/撤销，见 [发布记录](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40171647787)。
+**已上线并通过公网验收：** Pages 构建与部署成功，Worker 每日 100 次额度已生效。正式域名已验证文章引用、手机侧栏及写作标题应用/撤销，见 [发布记录](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40172638665)。
 
 - 网站：[cidneyaurum.github.io](https://cidneyaurum.github.io/)
 - AI 网关：[cidney-miku-ai.1562614833.workers.dev](https://cidney-miku-ai.1562614833.workers.dev)

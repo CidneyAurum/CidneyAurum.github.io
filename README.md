@@ -10,7 +10,7 @@
 
 「问问 Miku」支持 DeepSeek 聊天、文章总结与选段解释、带出处的站内问答、内容与歌曲推荐，以及写作台拟标题、摘要和润色。写作建议先审阅再手动应用，可以撤销；日语短语音用于互动，长回复以文字呈现。
 
-公网网关：[cidney-miku-ai.1562614833.workers.dev](https://cidney-miku-ai.1562614833.workers.dev)。全站每日 100 次额度已生效（UTC 日），Pages 使用 GitHub Actions 发布；[本次构建与部署](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40171647787)均成功，186 项 CI 检查通过。正式域名的文章总结、真实引用、手机侧栏及写作标题应用/撤销均已验证。访客无需运行本机脚本或填写模型密钥，凭据由 Workers Secrets 管理。使用见 [AI 使用说明](docs/ai-api.md)，发布记录见 [公网 AI 部署](server/DEPLOYMENT.md)。
+公网网关：[cidney-miku-ai.1562614833.workers.dev](https://cidney-miku-ai.1562614833.workers.dev)。全站每日 100 次额度已生效（UTC 日），Pages 使用 GitHub Actions 发布；[本次构建与部署](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40172638665)均成功，187 项 CI 检查通过。正式域名的文章总结、真实引用、手机侧栏及写作标题应用/撤销均已验证。访客无需运行本机脚本或填写模型密钥，凭据由 Workers Secrets 管理。使用见 [AI 使用说明](docs/ai-api.md)，发布记录见 [公网 AI 部署](server/DEPLOYMENT.md)。
 
 文章、说说和照片经 GitHub Actions 发布后，Worker 从 Pages 的公共知识索引在线同步，采用 60 秒缓存、到期后由后续请求刷新。日常内容更新无需重启本机服务或重新部署 Worker。
 
@@ -127,7 +127,7 @@ summary: 一句话摘要
 ## 部署说明
 
 - Pages 来源已通过 GET 确认为 **GitHub Actions**（`build_type: workflow`）。
-- 本轮运行时发布提交为 9e93c7d838a0969a9a833bf44c6120436fa6ddac；[Actions](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40171647787) 的 build/deploy 均成功，公网页面和 AI 链路已验收。日后推送仍以对应提交的部署结果为准，维护步骤见 [构建与部署](docs/build-and-deploy.md)。
+- 本轮运行时发布提交为 51514eaa5a6f90a07a0dca8bf37502b0073eca26；[Actions](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40172638665) 的 build/deploy 均成功，公网页面和 AI 链路已验收。日后推送仍以对应提交的部署结果为准，维护步骤见 [构建与部署](docs/build-and-deploy.md)。
 - 公网 AI 使用独立 Worker，后端 Secret 不进入 Pages artifact；内容知识由 Pages 公共索引在线同步。
 - 想绑自定义域名：在仓库根目录加一个 `CNAME` 文件（内容写域名），并在域名处配置解析
 
@@ -181,4 +181,4 @@ Miku 已内置。点击右下角猫形按钮按需加载；资源失败时可以
 - **快捷键**：按住 Shift 出提示条——`D` 主题 / `S` 搜索 / `R` 随便逛逛 / `H` 首页 / `T` 回顶 / `空格` 播放暂停 / `Ctrl+K` 搜索。
 - **右键菜单**：随便逛逛 / 复制链接 / 切换日夜 / 回到顶部 / 写作台。
 - **文章页**：构建时代码高亮（pygments + monokai）、相关文章推荐（按标签）、上/下一篇、og + JSON-LD。
-- **性能**：Live2D 纹理 CI 自动量化（25.6MB→5.8MB）、背景预模糊 WebP（1.8MB→11.5KB）、全站缩略图、版本号自动指纹化（git 短 SHA 根治 CDN 缓存）。
+- **资源**：Live2D 保留原始高清模型与纹理；背景与相册使用 WebP 和缩略图，静态资源随提交更新版本号。模型首次加载允许等待 90 秒并支持重试。

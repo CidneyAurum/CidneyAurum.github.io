@@ -2,7 +2,7 @@
 
 公网入口为 https://cidney-miku-ai.1562614833.workers.dev，供 GitHub Pages 网站直接调用。模型凭据由 Workers Secrets 提供，不进入前端、公开 JSON 或 Pages artifact。
 
-**公网已启用并完成验收。** Worker 全站每日 100 次额度已生效，/api/status 返回 configured=true，正式域名浏览器已验证真实引用与写作标题应用/撤销。Pages 来源为 workflow，[本次 build/deploy](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40171647787) 均成功。发布与停用流程见 [DEPLOYMENT.md](DEPLOYMENT.md)，访客使用见 [AI 使用指南](../docs/ai-api.md)。
+**公网已启用并完成验收。** Worker 全站每日 100 次额度已生效，/api/status 返回 configured=true，正式域名浏览器已验证真实引用与写作标题应用/撤销。Pages 来源为 workflow，[本次 build/deploy](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40172638665) 均成功。发布与停用流程见 [DEPLOYMENT.md](DEPLOYMENT.md)，访客使用见 [AI 使用指南](../docs/ai-api.md)。
 
 ## 在线知识同步
 

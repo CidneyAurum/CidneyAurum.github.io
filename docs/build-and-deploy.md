@@ -2,7 +2,7 @@
 
 网站通过 GitHub Pages 公开访问，AI 由独立的 Cloudflare Worker 提供。Pages 来源已通过 GET 确认为 GitHub Actions（build_type=workflow）。
 
-**本轮新版已发布并完成公网验收。** 运行时提交 9e93c7d838a0969a9a833bf44c6120436fa6ddac，对应 [Actions](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40171647787) 的 build/deploy 均成功；CI 为 70 项 Node 和 116 项 Python/Chromium 检查，共 186 项通过。正式域名文章引用、手机侧栏及写作标题应用/撤销已验证。
+**本轮新版已发布并完成公网验收。** 运行时提交 51514eaa5a6f90a07a0dca8bf37502b0073eca26，对应 [Actions](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40172638665) 的 build/deploy 均成功；CI 为 70 项 Node 和 117 项 Python/Chromium 检查，共 187 项通过。正式域名文章引用、手机侧栏及写作标题应用/撤销已验证。
 
 - 网站：https://cidneyaurum.github.io/
 - AI 网关：https://cidney-miku-ai.1562614833.workers.dev

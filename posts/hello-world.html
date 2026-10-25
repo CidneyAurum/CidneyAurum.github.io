@@ -5,24 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>网站上线啦！ · CidneyAurum の 小窝</title>
   <meta name="description" content="我的个人小站正式上线，这是第一篇博客，讲讲这个小站是怎么搭起来的。">
+  <meta name="theme-color" content="#0b0a18">
+  <link rel="canonical" href="https://cidneyaurum.github.io/posts/hello-world.html">
   <link rel="manifest" href="/manifest.webmanifest">
   <meta property="og:type" content="article">
   <meta property="og:title" content="网站上线啦！ · CidneyAurum の 小窝">
   <meta property="og:description" content="我的个人小站正式上线，这是第一篇博客，讲讲这个小站是怎么搭起来的。">
   <meta property="og:url" content="https://cidneyaurum.github.io/posts/hello-world.html">
   <meta property="og:image" content="https://cidneyaurum.github.io/assets/avatar.webp">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="article:published_time" content="2026-08-29">
   <script type="application/ld+json">
-  {"@context": "https://schema.org", "@type": "BlogPosting",
-    "headline": "网站上线啦！", "description": "我的个人小站正式上线，这是第一篇博客，讲讲这个小站是怎么搭起来的。",
-    "datePublished": "2026-08-29", "author": {"@type": "Person", "name": "CidneyAurum"},
-    "image": "https://cidneyaurum.github.io/assets/avatar.webp"}
+  {"@context": "https://schema.org", "@type": "BlogPosting", "headline": "网站上线啦！", "description": "我的个人小站正式上线，这是第一篇博客，讲讲这个小站是怎么搭起来的。", "datePublished": "2026-08-29", "url": "https://cidneyaurum.github.io/posts/hello-world.html", "author": {"@type": "Person", "name": "CidneyAurum"}, "image": "https://cidneyaurum.github.io/assets/avatar.webp"}
   </script>
   <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
   <link rel="alternate" type="application/rss+xml" title="RSS 订阅" href="../feed.xml">
   <script defer src="https://events.vercount.one/js"></script>
   <link rel="preconnect" href="https://fonts.loli.net" crossorigin>
   <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/style.css?v=a9cf293">
+  <link rel="stylesheet" href="../css/style.css?v=ai20261025">
+  <link rel="stylesheet" href="../css/garden.css?v=ai20261025">
 <style>pre { line-height: 125%; }
 td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
 span.linenos { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
@@ -109,6 +111,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 .hljs .vm { color: #F8F8F2 } /* Name.Variable.Magic */
 .hljs .il { color: #AE81FF } /* Literal.Number.Integer.Long */</style></head>
 <body class="page-enter" data-page="post">
+  <a class="skip-link" href="#main-content">跳到正文</a>
   <div class="read-progress" id="read-progress"></div>
   <div class="scene" aria-hidden="true">
     <img class="scene-bg" src="../assets/background-blur.webp" alt="">
@@ -118,24 +121,24 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
   <canvas id="firefly-canvas" aria-hidden="true"></canvas>
   <button id="to-top" class="to-top" aria-label="返回顶部">✦</button>
 
-  <nav class="nav">
-    <a class="logo" href="../index.html">CidneyAurum<span class="no">の</span>小窝</a>
+  <nav class="nav" aria-label="主导航">
+    <a class="logo" href="../index.html" aria-label="CidneyAurum 首页"><span class="brand-mark">A<span>.</span></span><span class="brand-copy">CidneyAurum<small>一点代码，一些生活</small></span></a>
     <div class="nav-links" id="nav-links">
       <a class="nav-link" href="../index.html">首页</a>
-      <a class="nav-link active" href="../blog.html">归档</a>
-      <a class="nav-link" href="../says.html">说说</a>
-      <a class="nav-link" href="../photos.html">照片墙</a>
-      <a class="nav-link" href="../limbus.html">歌词模拟器</a>
+      <a class="nav-link active" href="../blog.html" aria-current="page">手记</a>
+      <a class="nav-link" href="../says.html">碎片</a>
+      <a class="nav-link" href="../photos.html">相册</a>
+      <a class="nav-link" href="../limbus.html">实验室</a>
       <a class="nav-link" href="../about.html">关于</a>
-      <a class="nav-link nav-post" href="../admin.html">✍️</a>
     </div>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <button id="theme-toggle" class="icon-btn" aria-label="切换主题">✨</button>
-      <button id="hamburger" class="icon-btn" aria-label="菜单">☰</button>
+    <div class="nav-actions">
+      <a class="nav-github" href="https://github.com/CidneyAurum" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><span data-icon="github"></span></a>
+      <button id="theme-toggle" class="icon-btn" aria-label="切换主题">◐</button>
+      <button id="hamburger" class="icon-btn" aria-label="打开导航" aria-controls="nav-links" aria-expanded="false">☰</button>
     </div>
   </nav>
 
-  <div class="wrap article-layout">
+  <main class="wrap article-layout" id="main-content" tabindex="-1">
     <article class="card article-card">
       <div class="article-cover"><span>🎉</span></div>
       <div class="article-inner">
@@ -161,7 +164,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <p>整个网站是<strong>纯 HTML / CSS / JavaScript</strong> 手写的，没有用任何框架和构建工具，所以：</p>
 <ul>
 <li>改完代码 <code>git push</code> 一下就自动上线，特别省心</li>
-<li>托管在 <a href="https://pages.github.com/" target="_blank" rel="noopener">GitHub Pages</a>，免费</li>
+<li>托管在 <a href="https://pages.github.com/" target="_blank" rel="noopener noreferrer">GitHub Pages</a>，免费</li>
 <li>背景氛围、流萤粒子、时钟条、歌词演出引擎、环境电台（Web Audio 合成音乐）都是自己写的</li>
 </ul>
 <blockquote>小提示：右下角有一只像素猫在陪你逛站；点首页的「播放电台」真的会有音乐哦。</blockquote>
@@ -211,10 +214,18 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
         <div id="side-records"><div class="side-record"><div class="d">加载中…</div></div></div>
       </div>
     </aside>
-  </div>
+  </main>
 
-  <footer>
-    Made with <span class="heart">♡</span> &amp; 星光 · © 2026 CidneyAurum · Powered by GitHub Pages
+  <footer class="site-footer">
+    <div>
+      <a class="footer-brand" href="../index.html">CidneyAurum<span>的小窝</span></a>
+      <p>慢慢来，记录总会有回响。</p>
+    </div>
+    <div class="footer-meta">
+      <span>© 2026 CidneyAurum · Built with curiosity.</span>
+      <span><a href="../feed.xml">RSS 订阅</a><i>·</i><a href="https://github.com/CidneyAurum" target="_blank" rel="noopener noreferrer">GitHub ↗</a><i>·</i><a href="../admin.html">写作台 ↗</a></span>
+      <span class="footer-credits"><a class="visual-credit" href="https://manybackgrounds.com/background/blue-scenery-anime-night-sky-pzh6x27gg1g2eyph.html" target="_blank" rel="noopener noreferrer">Wallpaper by alberto1 from ManyBackgrounds.com</a><i>·</i><a class="design-credit" href="https://xmyl-153.github.io/xingmengyouling-blog/" target="_blank" rel="noopener noreferrer">UI 灵感：星梦幽灵</a></span>
+    </div>
   </footer>
 
   <div class="mini-player">
@@ -226,10 +237,10 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
     <button class="mini-btn js-play-toggle js-state" aria-label="播放/暂停">▶</button>
   </div>
 
-  <script src="../js/main.js?v=a9cf293"></script>
-  <script src="../js/player.js?v=a9cf293"></script>
-  <script src="../js/music.js?v=a9cf293" defer></script>
-  <script src="../js/kanban.js?v=a9cf293" defer></script>
-  <script src="../js/comments.js?v=a9cf293" defer></script>
+  <script src="../js/main.js?v=ai20261025"></script>
+  <script src="../js/garden.js?v=ai20261025" defer></script>
+  <script src="../js/player.js?v=ai20261025"></script>
+  <script src="../js/music.js?v=ai20261025" defer></script>
+  <script src="../js/comments.js?v=ai20261025" defer></script>
 </body>
 </html>

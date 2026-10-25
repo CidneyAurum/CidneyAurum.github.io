@@ -1,0 +1,14 @@
+{
+  "name": "初音未来 · 日语互动短句",
+  "language": "ja-JP",
+  "source": "Project SEKAI / 初音未来角色介绍 self_miku_2nd",
+  "sourcePage": "https://sekai.best/character/21",
+  "rights": "© SEGA / © Colorful Palette Inc. / © Crypton Future Media, INC. www.piapro.net",
+  "clips": {
+    "greet": { "file": "greet.wav", "label": "打个招呼", "ja": "会場のみんな、こんにちはー！", "text": "会场的各位，你们好！", "emote": "圈圈", "duration": 2.483 },
+    "identity": { "file": "identity.wav", "label": "她的自我介绍", "ja": "初音ミクです！", "text": "我是初音未来！", "emote": "前倾", "duration": 0.86 },
+    "thanks": { "file": "thanks.wav", "label": "谢谢你来", "ja": "今日は来てくれてありがとう！", "text": "谢谢你今天能来！", "emote": "比心", "duration": 1.929 },
+    "heart": { "file": "heart.wav", "label": "回应你的喜欢", "ja": "ふふ。わたしもだよ", "text": "嘿嘿，我也是哦。", "emote": "脸红", "duration": 1.98 },
+    "music": { "file": "music.wav", "label": "准备开场", "ja": "それじゃあ……。ミュージックスタート！", "text": "那么……音乐开始！", "emote": "唱歌", "duration": 4.619 }
+  }
+}

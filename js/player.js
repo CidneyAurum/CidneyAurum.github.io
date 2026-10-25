@@ -19,9 +19,9 @@ const Ambient = (function () {
 
   let ctx = null, master = null, padBus = null, filter = null;
   let running = false, mode = "synth";
-  let padVoices = [], chordIdx = 0, chordTimer = null, shimmerTimer = null, tickTimer = null;
+  let chordIdx = 0, chordTimer = null, shimmerTimer = null, tickTimer = null;
   let elapsed = 0;
-  let audioEl = null, fileTitle = "";
+  let audioEl = null, fileTitle = "", fileURL = "", startId = 0;
 
   function note(freq, when, dur, peak) {
     const osc = ctx.createOscillator();
@@ -35,7 +35,6 @@ const Ambient = (function () {
     osc.connect(g).connect(padBus);
     osc.start(when);
     osc.stop(when + dur + 0.2);
-    padVoices.push(osc);
   }
 
   function playChord(i) {
@@ -95,16 +94,29 @@ const Ambient = (function () {
     lfo.start();
   }
 
-  function start() {
-    if (mode === "file" && audioEl) {
-      audioEl.play().catch(() => {});
-      running = true;
-      startTicker();
+  async function start() {
+    const id = ++startId;
+    window.MikuMusic?.stop();
+    try {
+      if (mode === "file" && audioEl) {
+        await audioEl.play();
+        if (id !== startId) return;
+        running = true;
+        startTicker();
+        sync();
+        return;
+      }
+      if (!ctx) buildGraph();
+      await ctx.resume();
+      if (id !== startId) return;
+    } catch (e) {
+      if (id !== startId) return;
+      running = false;
+      stopTicker();
       sync();
+      window.MikuMusic?.toast(mode === "file" ? "这份本地音频无法播放，请换一个文件" : "环境电台未能启动，请再点一次播放");
       return;
     }
-    if (!ctx) buildGraph();
-    ctx.resume();
     master.gain.cancelScheduledValues(ctx.currentTime);
     master.gain.setValueAtTime(Math.max(master.gain.value, 0.0001), ctx.currentTime);
     master.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 2.2);
@@ -121,6 +133,7 @@ const Ambient = (function () {
   }
 
   function stop() {
+    ++startId;
     if (mode === "file" && audioEl) audioEl.pause();
     if (ctx && master) {
       master.gain.cancelScheduledValues(ctx.currentTime);
@@ -134,20 +147,26 @@ const Ambient = (function () {
     sync();
   }
 
-  function toggle() { running ? stop() : start(); }
+  function toggle() { return running ? stop() : start(); }
   function setFile(file) {
+    stop();
     if (!audioEl) {
       audioEl = new Audio();
       audioEl.addEventListener("ended", () => { running = false; stopTicker(); sync(); });
+      audioEl.addEventListener("error", () => {
+        if (!running) return;
+        running = false; stopTicker(); sync();
+        window.MikuMusic?.toast("本地音频播放中断，请重新选择文件");
+      });
       audioEl.addEventListener("timeupdate", () => {
         if (mode === "file" && running) updateProgress(audioEl.currentTime, audioEl.duration || 0);
       });
     }
     mode = "file";
     fileTitle = file.name.replace(/\.[^.]+$/, "");
-    if (running) stop();
-    audioEl.src = URL.createObjectURL(file);
-    start();
+    if (fileURL) URL.revokeObjectURL(fileURL);
+    audioEl.src = fileURL = URL.createObjectURL(file);
+    return start();
   }
 
   /* ---------- 进度与 UI 同步 ---------- */
@@ -184,20 +203,24 @@ const Ambient = (function () {
     }
   }
 
+  // Homepage controls are replaced by PJAX while the audio engine stays alive.
+  document.addEventListener("pjax:complete", sync);
+
   return { toggle, stop, setFile, isRunning: () => running };
 })();
 
 window.Ambient = Ambient; // 供音乐模块联动（点歌时让位）
 
-/* ---------- 绑定页面上所有播放控件 ---------- */
-document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll(".js-play-toggle").forEach((btn) => {
-    btn.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); Ambient.toggle(); });
-  });
-  const file = document.getElementById("player-file-input");
-  if (file) {
-    file.addEventListener("change", () => {
-      if (file.files && file.files[0]) Ambient.setFile(file.files[0]);
-    });
+/* ---------- 委托绑定：PJAX 换入的播放控件同样可用 ---------- */
+document.addEventListener("click", (e) => {
+  if (!e.target.closest?.(".js-play-toggle")) return;
+  e.preventDefault();
+  e.stopPropagation();
+  Ambient.toggle();
+});
+document.addEventListener("change", (e) => {
+  const file = e.target;
+  if (file.id === "player-file-input" && file.files && file.files[0]) {
+    Ambient.setFile(file.files[0]);
   }
 });

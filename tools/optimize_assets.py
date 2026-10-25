@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 """资产体积优化（CI 运行，需要 Pillow；本地没有 Pillow 可跳过）。
 
-做四件事，全部幂等（已处理过的文件自动跳过）：
-1. Live2D 纹理 256 色量化：assets/live2d/miku/miku.4096/*.png（25.6MB → 约 6MB）
-2. 背景图模糊版：assets/background.png → assets/background-blur.webp（运行时不再做 26px blur）
-3. 头像 WebP：assets/avatar.jpg → assets/avatar.webp
-4. 相册/说说缩略图：assets/gallery/thumbs/、assets/says/thumbs/（列表页用缩略图，灯箱才加载原图）
+从当前原图重新生成背景模糊图、头像、PWA 图标和相册/说说缩略图。
+不依赖 Git checkout 后不可靠的文件修改时间，替换同名图片也能更新派生图。
+Live2D 原始纹理保持不变。
 """
 import sys
 import pathlib
@@ -30,10 +28,11 @@ def human(n: int) -> str:
 
 def make_webp(src: pathlib.Path, dst: pathlib.Path, *, width=None, size=None,
               blur=0, quality=80) -> None:
-    """生成 WebP 派生图；目标已存在则跳过。"""
-    if dst.exists() or not src.exists():
+    """Generate from current originals, including when a tracked derivative exists."""
+    if not src.exists():
         return
-    img = Image.open(src).convert("RGB")
+    with Image.open(src) as original:
+        img = ImageOps.exif_transpose(original).convert("RGB")
     if size:
         img = ImageOps.fit(img, size, Image.LANCZOS)
     elif width and img.width > width:
@@ -55,16 +54,15 @@ def make_thumbs(folder: pathlib.Path, width: int = 420, quality: int = 78) -> No
         if f.suffix.lower() not in (".jpg", ".jpeg", ".png", ".webp") or f.is_dir():
             continue
         dst = out / (f.stem + ".webp")
-        if dst.exists():
-            continue
-        img = Image.open(f).convert("RGB")
+        with Image.open(f) as original:
+            img = ImageOps.exif_transpose(original).convert("RGB")
         if img.width > width:
             img = img.resize((width, round(img.height * width / img.width)), Image.LANCZOS)
         out.mkdir(parents=True, exist_ok=True)
         img.save(dst, "WEBP", quality=quality, method=6)
         made += 1
     if made:
-        print(f"  缩略图 {out.relative_to(ROOT)}/: 新增 {made} 张")
+        print(f"  缩略图 {out.relative_to(ROOT)}/: 生成 {made} 张")
 
 
 def main() -> None:
@@ -79,9 +77,10 @@ def main() -> None:
     # PWA 图标（方图 512/192）
     for size, name in ((512, "icon-512.png"), (192, "icon-192.png")):
         dst = ASSETS / name
-        if dst.exists() or not (ASSETS / "avatar.jpg").exists():
+        if not (ASSETS / "avatar.jpg").exists():
             continue
-        img = Image.open(ASSETS / "avatar.jpg").convert("RGB")
+        with Image.open(ASSETS / "avatar.jpg") as original:
+            img = ImageOps.exif_transpose(original).convert("RGB")
         img = ImageOps.fit(img, (size, size), Image.LANCZOS)
         q = img.quantize(colors=256, method=Image.MEDIANCUT, dither=Image.FLOYDSTEINBERG)
         q.save(dst, "PNG", optimize=True)
@@ -94,4 +93,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8")
     main()

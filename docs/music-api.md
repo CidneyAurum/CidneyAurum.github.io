@@ -1,7 +1,6 @@
 # 音乐 API 进阶：VIP 全曲点播（Cloudflare Workers 自建源）
 
-> 这是**可选**的进阶配置。不配置时，Miku 点播走公共 Meting 源（非 VIP 曲目全部可用，VIP 歌曲只能试听或失败）。
-> 自建源后，Miku 点播可以播放**你会员账号可听的完整曲目**。
+> 这是可选配置。默认使用公共 Meting 源；曲目版权、地区、接口状态等会影响播放，非 VIP 曲目也不能保证始终可用。自建源同样需要实际验证，不保证全部曲目或完整音频。
 
 ## 原理
 
@@ -37,4 +36,4 @@ Miku 点播用的是 Meting 协议（`?type=search|url|playlist&server=netease&i
 ## 换歌单
 
 歌单 ID 在 `js/music.js` 顶部的 `CFG.playlistId`（当前 `18205251703`）。
-首页 iframe 的歌单在 `index.html` 搜索 `outchain/player` 同步修改。
+首页列表主数据来自 `data/playlist.json` 的快照，修改歌单时也要更新快照；当前首页不再嵌入官方 iframe。

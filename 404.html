@@ -3,65 +3,55 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>404 · 页面迷路了</title>
-  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <meta name="robots" content="noindex">
+  <title>404 · 这一页走丢了 — CidneyAurum</title>
+  <meta name="description" content="这一页暂时找不到了，回到首页继续探索吧。">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
   <link rel="manifest" href="/manifest.webmanifest">
-  <!-- 本页样式全部内联，保证在任何路径深度下都不会加载失败 -->
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      text-align: center;
-      padding: 24px;
-      font-family: "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", system-ui, sans-serif;
-      color: #e8e6f2;
-      background:
-        radial-gradient(1000px 560px at 85% -8%, #221648 0%, transparent 60%),
-        radial-gradient(900px 560px at -10% 30%, #0e1e3d 0%, transparent 58%),
-        radial-gradient(800px 500px at 70% 110%, #2a1233 0%, transparent 55%),
-        #0b0d1a;
-    }
-    .code {
-      font-family: Georgia, serif;
-      font-size: 110px; line-height: 1.1; font-weight: 700;
-      background: linear-gradient(92deg, #d4453a, #d9b96c, #8b7bff);
-      -webkit-background-clip: text; background-clip: text;
-      -webkit-text-fill-color: transparent; color: transparent;
-    }
-    h1 { font-family: "Noto Serif SC", "Songti SC", serif; font-size: 22px; letter-spacing: 0.1em; }
-    p { color: #9290ab; font-size: 15px; line-height: 2; }
-    .btn {
-      display: inline-block; margin-top: 16px; padding: 12px 32px;
-      border-radius: 999px; text-decoration: none; font-size: 15.5px;
-      font-family: "Noto Serif SC", serif; letter-spacing: 0.1em;
-      color: #f3e9d7; background: linear-gradient(120deg, #8e1f1f, #b03a30 55%, #8e1f1f);
-      border: 1px solid rgba(217, 185, 108, 0.45);
-      transition: transform 0.25s ease, box-shadow 0.25s ease;
-    }
-    .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 26px rgba(212, 69, 58, 0.45); }
-    .star { position: fixed; border-radius: 50%; background: #c4b5ff; opacity: 0.5; animation: drift linear infinite; pointer-events: none; }
-    @keyframes drift {
-      0%   { transform: translateY(20px); opacity: 0; }
-      20%  { opacity: 0.6; }
-      100% { transform: translateY(-90vh); opacity: 0; }
-    }
-  </style>
+  <link rel="stylesheet" href="/css/style.css?v=ai20261025">
+  <link rel="stylesheet" href="/css/garden.css?v=ai20261025">
 </head>
-<body>
-  <span class="star" style="left:10%; bottom:0; width:3px; height:3px; animation-duration:9s;"></span>
-  <span class="star" style="left:28%; bottom:0; width:2px; height:2px; animation-duration:12s; animation-delay:3s;"></span>
-  <span class="star" style="left:52%; bottom:0; width:4px; height:4px; animation-duration:11s; animation-delay:1s;"></span>
-  <span class="star" style="left:71%; bottom:0; width:2px; height:2px; animation-duration:13s; animation-delay:5s;"></span>
-  <span class="star" style="left:88%; bottom:0; width:3px; height:3px; animation-duration:10s; animation-delay:2s;"></span>
+<body class="page-enter" data-page="404">
+  <a class="skip-link" href="#main-content">跳到正文</a>
 
-  <div class="code">404</div>
-  <h1>呜…页面迷路了 (´･ω･`)</h1>
-  <p>你要找的页面可能掉进了深空，<br>或者它根本就不存在。</p>
-  <a class="btn" href="/">✧ 带我回主页</a>
+  <nav class="nav" aria-label="主导航">
+    <a class="logo" href="/index.html" aria-label="CidneyAurum 首页"><span class="brand-mark">A<span>.</span></span><span class="brand-copy">CidneyAurum<small>一点代码，一些生活</small></span></a>
+    <div class="nav-links" id="nav-links">
+      <a class="nav-link" href="/index.html">首页</a>
+      <a class="nav-link" href="/blog.html">手记</a>
+      <a class="nav-link" href="/says.html">碎片</a>
+      <a class="nav-link" href="/photos.html">相册</a>
+      <a class="nav-link" href="/limbus.html">实验室</a>
+      <a class="nav-link" href="/about.html">关于</a>
+    </div>
+    <div class="nav-actions">
+      <a class="nav-github" href="https://github.com/CidneyAurum" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><span data-icon="github"></span></a>
+      <button id="theme-toggle" class="icon-btn" aria-label="切换主题">◐</button>
+      <button id="hamburger" class="icon-btn" aria-label="打开导航" aria-controls="nav-links" aria-expanded="false">☰</button>
+    </div>
+  </nav>
+
+  <main class="wrap error-page" id="main-content" tabindex="-1">
+    <span class="section-kicker">A LITTLE DETOUR</span>
+    <div class="error-code" aria-hidden="true">404<span>.</span></div>
+    <h1>这一页，走丢了。</h1>
+    <p>也许是旧链接，也许是还没写下的故事。<br>回到熟悉的地方，再慢慢逛吧。</p>
+    <a class="error-link" href="/index.html">回到首页 <span aria-hidden="true">↗</span></a>
+  </main>
+
+  <footer class="site-footer">
+    <div>
+      <a class="footer-brand" href="/index.html">CidneyAurum<span>的小窝</span></a>
+      <p>慢慢来，记录总会有回响。</p>
+    </div>
+    <div class="footer-meta">
+      <span>© 2026 CidneyAurum · Built with curiosity.</span>
+      <span><a href="/feed.xml">RSS 订阅</a><i>·</i><a href="https://github.com/CidneyAurum" target="_blank" rel="noopener noreferrer">GitHub ↗</a><i>·</i><a href="/admin.html">写作台 ↗</a></span>
+      <span class="footer-credits"><a class="visual-credit" href="https://manybackgrounds.com/background/blue-scenery-anime-night-sky-pzh6x27gg1g2eyph.html" target="_blank" rel="noopener noreferrer">Wallpaper by alberto1 from ManyBackgrounds.com</a><i>·</i><a class="design-credit" href="https://xmyl-153.github.io/xingmengyouling-blog/" target="_blank" rel="noopener noreferrer">UI 灵感：星梦幽灵</a></span>
+    </div>
+  </footer>
+
+  <script src="/js/main.js?v=ai20261025"></script>
+  <script src="/js/garden.js?v=ai20261025" defer></script>
 </body>
 </html>

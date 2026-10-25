@@ -3,215 +3,103 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- ✏️ 网站标题和描述，改成你自己的 -->
-  <title>CidneyAurum の 小窝 · 个人主页</title>
-  <meta name="description" content="CidneyAurum的数字小窝：博客、照片墙，还有 Limbus 风格歌词演出模拟器。">
+  <meta name="theme-color" content="#10111b">
+  <title>CidneyAurum の 小窝 · 代码、幻想与生活</title>
+  <meta name="description" content="CidneyAurum 的数字小窝：学习手记、二次元收藏、生活碎片、音乐与 Limbus 歌词演出。">
   <meta property="og:title" content="CidneyAurum の 小窝">
-  <meta property="og:description" content="博客、照片墙，还有 Limbus 风格歌词演出模拟器。">
+  <meta property="og:description" content="在代码与幻想之间，收集生活的微光。">
   <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cidneyaurum.github.io/">
+  <meta property="og:image" content="https://cidneyaurum.github.io/assets/night-sky.webp">
+  <link rel="canonical" href="https://cidneyaurum.github.io/">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="alternate" type="application/rss+xml" title="RSS 订阅" href="feed.xml">
-  <script defer src="https://events.vercount.one/js"></script>
+  <link rel="preload" as="image" href="assets/night-sky.webp" fetchpriority="high">
   <link rel="preconnect" href="https://fonts.loli.net" crossorigin>
   <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=a9cf293">
+  <link rel="stylesheet" href="css/style.css?v=ai20261025">
+  <link rel="stylesheet" href="css/garden.css?v=ai20261025">
+  <link rel="stylesheet" href="css/miku-host.css?v=ai20261025">
 </head>
-<body class="page-enter" data-page="home">
-  <!-- 全站场景层 -->
-  <div class="scene" aria-hidden="true">
-    <img class="scene-bg" src="assets/background-blur.webp" alt="">
-    <div class="scene-overlay"></div>
-    <div class="scene-grass"></div>
-  </div>
-  <canvas id="firefly-canvas" aria-hidden="true"></canvas>
-
-  <!-- 像素小装饰 -->
-  <svg class="pixel-deco cat" viewBox="0 0 11 8" aria-hidden="true"><g fill="#e8e5f2"><rect x="1" y="0" width="1" height="1"/><rect x="2" y="1" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/><rect x="1" y="2" width="8" height="4"/><rect x="2" y="6" width="6" height="2"/><rect x="9" y="5" width="2" height="1"/></g><g fill="#ff8fb7"><rect x="2" y="0" width="1" height="1"/><rect x="7" y="0" width="1" height="1"/></g><g fill="#2a2a3e"><rect x="3" y="3" width="1" height="1"/><rect x="6" y="3" width="1" height="1"/></g></svg>
-
-  <svg class="pixel-deco fish" viewBox="0 0 7 4" aria-hidden="true"><g fill="#7cc7ff"><rect x="1" y="1" width="4" height="2"/><rect x="2" y="0" width="2" height="1"/><rect x="2" y="3" width="2" height="1"/><rect x="5" y="0" width="1" height="1"/><rect x="5" y="3" width="1" height="1"/><rect x="6" y="1" width="1" height="2"/></g><rect x="2" y="1" width="1" height="1" fill="#1a2a4a"/></svg>
-  <div class="fab-group">
-    <button id="fab-music" class="fab" title="播放/暂停音乐（Miku 点播队列）">♪</button>
-    <button id="to-top" class="fab" aria-label="返回顶部">✦</button>
-  </div>
-
-  <nav class="nav">
-    <a class="logo" href="index.html">CidneyAurum<span class="no">の</span>小窝</a>
+<body data-page="home">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <div class="ambient-scene" aria-hidden="true"><div class="ambient-scene-image"></div><div class="ambient-scene-tint"></div></div>
+  <nav class="nav" aria-label="主导航">
+    <a class="logo" href="index.html" aria-label="CidneyAurum 首页"><span class="brand-mark">A<span>.</span></span><span class="brand-copy">CidneyAurum<small>一点代码，一些生活</small></span></a>
     <div class="nav-links" id="nav-links">
-      <a class="nav-link active" href="index.html">首页</a>
-      <a class="nav-link" href="blog.html">归档</a>
-        <a class="nav-link" href="says.html">说说</a>
+      <a class="nav-link active" href="index.html" aria-current="page">首页</a>
+      <a class="nav-link" href="blog.html">手记</a>
+      <a class="nav-link" href="says.html">碎片</a>
       <a class="nav-link" href="photos.html">相册</a>
-      <a class="nav-link" href="limbus.html">模拟器</a>
+      <a class="nav-link" href="limbus.html">实验室</a>
       <a class="nav-link" href="about.html">关于</a>
-        <a class="nav-link nav-post" href="admin.html">✍️</a>
     </div>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <button id="theme-toggle" class="icon-btn" aria-label="切换主题">✨</button>
-      <button id="hamburger" class="icon-btn" aria-label="菜单">☰</button>
+    <div class="nav-actions">
+      <a class="nav-github" href="https://github.com/CidneyAurum" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><span data-icon="github"></span></a>
+      <button id="theme-toggle" class="icon-btn" aria-label="切换主题">◐</button>
+      <button id="hamburger" class="icon-btn" aria-label="打开导航" aria-controls="nav-links" aria-expanded="false">☰</button>
     </div>
   </nav>
 
-  <main class="wrap">
-    <!-- ============ Hero：资料卡 + 环境电台 ============ -->
-    <header class="hero">
-      <div class="hero-grid">
-        <div class="card profile-card">
-          <div class="profile-top">
-            <!-- ✏️ 头像：想换就同名替换 assets/avatar.webp -->
-            <div class="avatar-ring"><img src="assets/avatar.webp?v=a9cf293" alt="头像"></div>
-            <div>
-              <h1 class="profile-name">CidneyAurum</h1>
-              <p class="profile-desc">一只喜欢写代码也喜欢看番的普通人类（大概）。白天写代码，晚上补番，周末折腾点小东西。</p>
-            </div>
-          </div>
-          <div class="profile-stats">
-            <div class="stat"><div class="num" id="stat-posts">-</div><div class="label">文章</div></div>
-            <div class="stat"><div class="num" id="stat-tags">-</div><div class="label">标签</div></div>
-            <div class="stat"><div class="num" id="stat-days">-</div><div class="label">运行天数</div></div>
-            <div class="stat"><div class="num" style="font-size:17px;line-height:1.6;"><span class="vercount-page-pv">…</span></div><div class="label">本页围观</div></div>
-          </div>
-          <div class="social-row">
-            <a class="social-btn" href="https://github.com/CidneyAurum" target="_blank" rel="noopener" title="GitHub">🐙</a>
-            <a class="social-btn" href="feed.xml" title="RSS 订阅">📡</a>
-          </div>
+  <main class="wrap home-main" id="main-content" tabindex="-1">
+    <div class="home-search reference-search" id="home-search"><span data-icon="search"></span><input id="hs-input" type="search" aria-label="搜索文章标题、描述或标签" placeholder="搜寻标题、描述或标签……" autocomplete="off"><kbd aria-hidden="true">Ctrl K</kbd><div class="hs-drop" id="hs-drop" hidden></div></div>
+
+    <header class="reference-hero">
+      <section class="card identity-card" aria-labelledby="profile-heading">
+        <span class="profile-orbit" aria-hidden="true">✧</span>
+        <div class="identity-top"><a class="identity-avatar" href="about.html"><img src="assets/avatar.webp" alt="CidneyAurum 的头像" width="100" height="100"></a><div><p class="identity-eyebrow">WELCOME TO MY LITTLE WORLD</p><h1 id="profile-heading">CidneyAurum</h1><p class="identity-motto">直面过去，创造未来 <span aria-hidden="true">✦</span></p></div></div>
+        <p class="identity-description">一只喜欢写代码，也喜欢看番的普通人类（大概）。<br>白天写代码，晚上补番，周末折腾点小东西。<br>这里收藏学习的足迹，也安放生活里的小小欢喜。</p>
+        <div class="identity-bottom"><div class="identity-stats"><a href="blog.html"><b id="stat-posts">—</b><span>篇手记</span></a><a href="photos.html"><b id="home-photo-count">6</b><span>张收藏</span></a><div><b id="stat-days">—</b><span>天陪伴</span></div></div><div class="identity-social"><a href="https://github.com/CidneyAurum" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><span data-icon="github"></span></a><a href="feed.xml" aria-label="RSS 订阅"><span data-icon="rss"></span></a><a href="about.html" aria-label="关于我"><span data-icon="message-circle"></span></a></div></div>
+      </section>
+            <aside class="listening card" aria-labelledby="music-heading">
+        <div class="listening-header"><span class="music-orbit" data-icon="headphones"></span><div><h2 id="music-heading">耳机里的小宇宙</h2><p>A SOUNDTRACK FOR THIS MOMENT</p></div><span class="music-spark" aria-hidden="true">✧</span></div>
+        <div class="card-tabs"><button class="ctab on" data-pane="netease">我的歌单</button><button class="ctab" data-pane="ambient">环境电台</button></div>
+        <div class="cpane" id="cpane-netease">
+          <div class="track-list" id="track-list"><p class="empty-tip" role="status">正在打开歌单……</p></div>
+          <div class="listening-now"><span class="status-dot"></span><span class="js-mm-song">选一首歌，让时间慢下来</span></div>
+          <div class="listening-controls"><button class="round-play js-mm-toggle" aria-label="播放或暂停歌单">▶</button><button class="icon-btn js-mm-next" aria-label="下一首" title="下一首"><span data-icon="skip-forward"></span></button><span class="music-control-note">MUSIC IS A LITTLE ESCAPE.</span><button class="icon-btn js-lyric" aria-label="打开歌词演出" title="歌词演出"><span data-icon="sparkles"></span></button></div>
+          <div id="music-fallback" style="display:none"><p class="empty-tip">歌单暂时无法加载。<button id="music-retry" class="retry-button">重新试试 ↻</button></p><a class="external-music" href="https://music.163.com/#/playlist?id=18205251703" target="_blank" rel="noopener noreferrer">在网易云打开歌单 ↗</a></div>
         </div>
-
-        <!-- 音乐卡：网易云歌单（官方外链）+ 环境电台 -->
-        <div class="card player-card">
-          <div class="card-tabs">
-            <button class="ctab on" data-pane="netease">🎵 我的歌单</button>
-            <button class="ctab" data-pane="ambient">✨ 电台</button>
-          </div>
-          <div class="cpane" id="cpane-netease">
-            <div class="player-head" style="margin-bottom:12px;">
-              <div>
-                <span class="player-badge">NETEASE MUSIC</span>
-                <div class="player-title serif">我的网易云歌单</div>
-                <div class="player-sub js-mm-song" style="margin-top:4px;">选择一首歌开始播放</div>
-              </div>
-            </div>
-            <div class="track-list" id="track-list"><p class="empty-tip" style="padding:16px 0;">歌单加载中… 🎵</p></div>
-            <div class="player-progress" style="margin-top:14px;"><div class="fill js-mm-fill" style="width:0%"></div></div>
-            <div class="player-times"><span class="js-mm-cur">00:00</span><span class="js-mm-total">--:--</span></div>
-            <div class="music-line">
-              <button class="icon-btn js-mm-toggle" title="播放/暂停（Miku 点播队列）">▶</button>
-              <button class="icon-btn js-mm-next" title="下一首">⏭</button>
-              <button class="icon-btn js-lyric" title="歌词演出（边狱巴士风格）">🎭</button>
-              <span class="js-mm-text">想让 Miku 点歌？跟她聊「放 歌名」♪</span>
-            </div>
-            <div id="music-fallback" style="display:none;">
-              <p style="font-size:12px;color:var(--text-light);margin:10px 0 8px;">音乐接口暂时不稳，已切换官方播放器：<button class="icon-btn" id="music-retry" title="重新加载歌单" style="width:26px;height:26px;font-size:12px;">↻</button></p>
-              <iframe allow="autoplay; encrypted-media" src="https://music.163.com/outchain/player?type=0&amp;id=18205251703&amp;auto=0&amp;height=86" width="100%" height="86" frameborder="no" marginwidth="0" marginheight="0" style="border:0;border-radius:12px;background:rgba(255,255,255,.04);"></iframe>
-            </div>
-          </div>
-          <div class="cpane" id="cpane-ambient" style="display:none;">
-            <div class="player-head">
-              <div class="vinyl"><img class="disc" src="assets/background-blur.webp" alt=""></div>
-              <div>
-                <span class="player-badge">AMBIENT RADIO</span>
-                <div class="player-title js-player-title serif">环境电台 · Ambient</div>
-                <div class="player-sub">浏览器实时合成 · 无需音频文件</div>
-              </div>
-            </div>
-            <div class="player-quote">「直面过去，创造未来」</div>
-            <div class="player-progress"><div class="fill js-progress-fill"></div></div>
-            <div class="player-times"><span class="js-time">00:00</span><span>∞</span></div>
-            <div class="player-controls">
-              <button class="play-btn js-play-toggle"><span class="js-state">▶</span><span class="js-label">播放电台</span></button>
-              <div class="player-file">
-                <label for="player-file-input" title="用本地音乐替代合成音源">📁 本地</label>
-                <input id="player-file-input" type="file" accept="audio/*">
-              </div>
-            </div>
-          </div>
+        <div class="cpane" id="cpane-ambient" style="display:none">
+          <div class="ambient-art" aria-hidden="true"><span>☾</span><i></i><i></i></div><h3 class="ambient-title js-player-title">环境电台 · Ambient</h3><p class="ambient-desc">留一点空白，听音乐慢慢流过。</p>
+          <div class="ambient-controls"><button class="button-primary js-play-toggle"><span class="js-state">▶</span><span class="js-label">播放电台</span></button><label class="local-music" for="player-file-input"><span data-icon="folder"></span> 本地音频<input id="player-file-input" type="file" accept="audio/*"></label></div>
         </div>
-      </div>
-
-        <!-- 打字横幅 -->
-      <div class="slogan-bar">
-        <div class="slogan-dots"><i></i><i></i><i></i></div>
-        <div class="slogan-text"><span id="slogan-text"></span><span class="caret"></span></div>
-        <svg class="slogan-cat" viewBox="0 0 11 8" aria-hidden="true"><g fill="#e8e5f2"><rect x="1" y="0" width="1" height="1"/><rect x="2" y="1" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/><rect x="1" y="2" width="8" height="4"/><rect x="2" y="6" width="6" height="2"/><rect x="9" y="5" width="2" height="1"/></g><g fill="#ff8fb7"><rect x="2" y="0" width="1" height="1"/><rect x="7" y="0" width="1" height="1"/></g><g fill="#2a2a3e"><rect x="3" y="3" width="1" height="1"/><rect x="6" y="3" width="1" height="1"/></g></svg>
-      </div>
-
-      <!-- 歌词横幅（播放时同步网易云歌词） -->
-      <div class="lyric-bar" id="lyric-bar">
-        <div class="eq"><i></i><i></i><i></i><i></i><i></i></div>
-        <div class="lb-text serif">点歌单里的歌，或跟 Miku 说「放 歌名」♪</div>
-        <span class="lb-note">♪</span>
-      </div>
-
-      <!-- 全站搜索胶囊 -->
-      <div class="home-search" id="home-search">
-        <span class="hs-ico">🔍</span>
-        <input id="hs-input" type="text" placeholder="搜寻标题、描述或标签…" autocomplete="off">
-        <div class="hs-drop" id="hs-drop" hidden></div>
-      </div>
+      </aside>
     </header>
 
-    <!-- ============ 最新文章区 ============ -->
-    <section class="block">
-      <div class="home-grid">
-        <a class="card featured-card" id="featured-link" href="blog.html">
-          <div class="featured-cover"><span id="featured-cover">🪐</span>
-            <div class="featured-badges">
-              <span class="badge-latest">LATEST INSIGHT</span>
-              <span class="badge-date" id="featured-date">—</span>
-            </div>
-          </div>
-          <div class="featured-body">
-            <h2 class="featured-title" id="featured-title">最新文章加载中…</h2>
-            <p class="featured-summary" id="featured-summary"></p>
-          </div>
+    <section class="miku-host card" id="miku-host" aria-label="Miku 的值班室">
+      <div class="miku-host-emblem" aria-hidden="true">39<span>♪</span></div>
+      <div class="miku-host-copy"><p class="miku-host-label">MIKU ON DUTY <span>初音的值班室</span></p><p id="miku-host-text">今天想去哪里？让我带你逛逛吧。</p><small id="miku-host-status">日语短语音 · 一点好奇心 · 陪你慢慢逛</small></div>
+      <div class="miku-host-actions"><button type="button" id="miku-ai-entry">问问 Miku ✦</button><button type="button" data-miku-action="guide">带我逛逛 ↗</button><button type="button" data-miku-action="listen">一起听歌 ♪</button><button type="button" data-miku-action="heart">比个心 ♡</button><button type="button" data-miku-action="voice" aria-label="试听初音日语角色语音">听听初音</button></div>
+    </section>
+
+    <section class="home-bento" aria-label="小窝里的最近更新">
+      <div class="bento-journal">
+        <a class="note-feature card" id="featured-link" href="posts/hello-world.html">
+          <div class="note-cover"><img src="assets/avatar.webp" alt="夏日色彩的动漫插画" loading="lazy" width="512" height="512"><div class="note-cover-badges"><span class="note-tag">LATEST INSIGHT</span><time id="featured-date">2026-08-29</time></div></div>
+          <div class="note-feature-body"><p class="bento-kicker">最近的一篇手记</p><h2 id="featured-title">网站上线啦！</h2><p id="featured-summary">我的个人小站正式上线，这是第一篇博客，讲讲这个小站是怎么搭起来的。</p><span class="read-link">翻开这篇记录 <span data-icon="arrow-right"></span></span></div>
         </a>
-
-        <div class="card records-card">
-          <div class="records-head">RECORDS <span class="line"></span> 往期记录</div>
-          <div id="records-list">
-            <div class="record-item"><div class="record-meta">加载中…</div></div>
-          </div>
-        </div>
-
-        <div class="side-stack">
-          <a class="card mini-card" href="limbus.html">
-            <span class="mini-ico">🎼</span>
-            <span class="mini-title">模拟器</span>
-            <span class="mini-desc">Limbus 风格演出</span>
-          </a>
-          <a class="card mini-card" href="photos.html">
-            <span class="mini-ico">🖼️</span>
-            <span class="mini-title">光影画廊</span>
-            <span class="mini-desc">记录视觉的触动</span>
-          </a>
+        <div class="card compact-records"><div class="compact-records-heading">RECORDS <span></span><a href="blog.html">全部手记 ↗</a></div><div id="records-list"><a class="record-item" href="posts/how-to-write-post.html"><div class="record-meta">2026-08-29 · 指南</div><div class="record-title">如何发布一篇新文章 / 新照片</div></a></div></div>
+      </div>
+      <div class="bento-side">
+        <a class="card collection-card" href="photos.html"><img src="assets/collection.webp" alt="蓝发少女的动漫插画收藏" loading="lazy" width="800" height="1412"><div class="collection-shade"></div><span class="collection-count"><span data-icon="image"></span> MY COLLECTION</span><div class="collection-copy"><h2>光影收藏</h2><p>定格时间，珍藏每一刻美好。</p></div><span class="collection-arrow" data-icon="arrow-up-right"></span></a>
+        <div class="bento-mini-grid">
+          <section class="card fragments-card" aria-labelledby="fragments-heading"><div class="mini-section-heading"><h2 id="fragments-heading"><span data-icon="message-circle"></span> 日常碎片</h2><a href="says.html" aria-label="查看全部说说">↗</a></div><p class="fragment-text" id="home-fragment">一些碎碎念，一些转瞬即逝的小心情。<br>把平凡的日子，也认真收藏。</p><a class="fragment-date" id="home-fragment-link" href="says.html">去看看最近的日常 <span data-icon="arrow-right"></span></a></section>
+          <button class="card mode-card" id="mode-card" type="button" aria-label="切换日间或夜间模式"><span class="mode-orb" aria-hidden="true">✦</span><h2 id="mode-title">夜间模式</h2><p id="mode-description">在微光里，慢慢漫游。</p></button>
         </div>
       </div>
     </section>
 
-    <!-- ============ 时钟条 ============ -->
-    <div class="clock-bar">
-      <div class="clock-time" id="clock-time">-- : -- : --</div>
-      <div class="clock-info"><span class="dot"></span><span id="clock-date">—</span> · 系统已稳定运行 <b id="uptime">…</b> · 愿每一段代码都有回响</div>
-    </div>
+    <div class="reference-clock"><div class="clock-main"><span class="clock-label">LOCAL TIME</span><time id="clock-time">-- : -- : --</time></div><div class="clock-message"><span><span class="status-dot"></span><span id="clock-date">今天也是新的一天</span></span><span>小窝已亮灯 <b id="uptime">—</b> · 愿每一段代码都有回响</span></div><span class="clock-spark" aria-hidden="true">✧</span></div>
+    <noscript><p class="noscript-note">动态列表需要 JavaScript。你仍然可以通过页面链接阅读已有手记。</p></noscript>
   </main>
 
-  <footer>
-    <a href="admin.html">✍️ 写作台</a> · Made with <span class="heart">♡</span> &amp; 星光 · © 2026 CidneyAurum · Powered by GitHub Pages
-  </footer>
-
-  <!-- 全站迷你播放器 -->
-  <div class="mini-player">
-    <img class="mini-cover" src="assets/background-blur.webp" alt="">
-    <div>
-      <div class="mini-title js-player-title">环境电台 · Ambient</div>
-      <div class="mini-sub">直面过去，创造未来</div>
-    </div>
-    <button class="mini-btn js-play-toggle js-state" aria-label="播放/暂停">▶</button>
-  </div>
-
-  <script src="js/main.js?v=a9cf293"></script>
-  <script src="js/player.js?v=a9cf293"></script>
-  <script src="js/music.js?v=a9cf293" defer></script>
-  <script src="js/kanban.js?v=a9cf293" defer></script>
+  <footer class="site-footer"><div><a class="footer-brand" href="index.html">CidneyAurum<span>的小窝</span></a><p>慢慢来，记录总会有回响。</p></div><div class="footer-meta"><span>© 2026 CidneyAurum · Built with curiosity.</span><span><a href="feed.xml">RSS 订阅</a><i>·</i><a href="https://github.com/CidneyAurum" target="_blank" rel="noopener noreferrer">GitHub ↗</a><i>·</i><a href="admin.html">写作台 ↗</a></span><span class="footer-credits"><a class="visual-credit" href="https://manybackgrounds.com/background/blue-scenery-anime-night-sky-pzh6x27gg1g2eyph.html" target="_blank" rel="noopener noreferrer">Wallpaper by alberto1 from ManyBackgrounds.com</a><i>·</i><a class="design-credit" href="https://xmyl-153.github.io/xingmengyouling-blog/" target="_blank" rel="noopener noreferrer">UI 灵感：星梦幽灵</a></span></div></footer>
+  <button id="to-top" class="to-top" aria-label="返回顶部">↑</button>
+  <script src="js/main.js?v=ai20261025"></script>
+  <script src="js/player.js?v=ai20261025"></script>
+  <script src="js/music.js?v=ai20261025" defer></script>
+  <script src="js/garden.js?v=ai20261025" defer></script>
 </body>
 </html>

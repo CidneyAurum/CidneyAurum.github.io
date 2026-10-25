@@ -5,24 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>如何发布一篇新文章 / 新照片 · CidneyAurum の 小窝</title>
   <meta name="description" content="三种方式从易到难：站内写作台一键发布、本地一条命令、GitHub 网页直接写。">
+  <meta name="theme-color" content="#0b0a18">
+  <link rel="canonical" href="https://cidneyaurum.github.io/posts/how-to-write-post.html">
   <link rel="manifest" href="/manifest.webmanifest">
   <meta property="og:type" content="article">
   <meta property="og:title" content="如何发布一篇新文章 / 新照片 · CidneyAurum の 小窝">
   <meta property="og:description" content="三种方式从易到难：站内写作台一键发布、本地一条命令、GitHub 网页直接写。">
   <meta property="og:url" content="https://cidneyaurum.github.io/posts/how-to-write-post.html">
   <meta property="og:image" content="https://cidneyaurum.github.io/assets/avatar.webp">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="article:published_time" content="2026-08-29">
   <script type="application/ld+json">
-  {"@context": "https://schema.org", "@type": "BlogPosting",
-    "headline": "如何发布一篇新文章 / 新照片", "description": "三种方式从易到难：站内写作台一键发布、本地一条命令、GitHub 网页直接写。",
-    "datePublished": "2026-08-29", "author": {"@type": "Person", "name": "CidneyAurum"},
-    "image": "https://cidneyaurum.github.io/assets/avatar.webp"}
+  {"@context": "https://schema.org", "@type": "BlogPosting", "headline": "如何发布一篇新文章 / 新照片", "description": "三种方式从易到难：站内写作台一键发布、本地一条命令、GitHub 网页直接写。", "datePublished": "2026-08-29", "url": "https://cidneyaurum.github.io/posts/how-to-write-post.html", "author": {"@type": "Person", "name": "CidneyAurum"}, "image": "https://cidneyaurum.github.io/assets/avatar.webp"}
   </script>
   <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
   <link rel="alternate" type="application/rss+xml" title="RSS 订阅" href="../feed.xml">
   <script defer src="https://events.vercount.one/js"></script>
   <link rel="preconnect" href="https://fonts.loli.net" crossorigin>
   <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/style.css?v=a9cf293">
+  <link rel="stylesheet" href="../css/style.css?v=ai20261025">
+  <link rel="stylesheet" href="../css/garden.css?v=ai20261025">
 <style>pre { line-height: 125%; }
 td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
 span.linenos { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
@@ -109,6 +111,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 .hljs .vm { color: #F8F8F2 } /* Name.Variable.Magic */
 .hljs .il { color: #AE81FF } /* Literal.Number.Integer.Long */</style></head>
 <body class="page-enter" data-page="post">
+  <a class="skip-link" href="#main-content">跳到正文</a>
   <div class="read-progress" id="read-progress"></div>
   <div class="scene" aria-hidden="true">
     <img class="scene-bg" src="../assets/background-blur.webp" alt="">
@@ -118,24 +121,24 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
   <canvas id="firefly-canvas" aria-hidden="true"></canvas>
   <button id="to-top" class="to-top" aria-label="返回顶部">✦</button>
 
-  <nav class="nav">
-    <a class="logo" href="../index.html">CidneyAurum<span class="no">の</span>小窝</a>
+  <nav class="nav" aria-label="主导航">
+    <a class="logo" href="../index.html" aria-label="CidneyAurum 首页"><span class="brand-mark">A<span>.</span></span><span class="brand-copy">CidneyAurum<small>一点代码，一些生活</small></span></a>
     <div class="nav-links" id="nav-links">
       <a class="nav-link" href="../index.html">首页</a>
-      <a class="nav-link active" href="../blog.html">归档</a>
-      <a class="nav-link" href="../says.html">说说</a>
-      <a class="nav-link" href="../photos.html">照片墙</a>
-      <a class="nav-link" href="../limbus.html">歌词模拟器</a>
+      <a class="nav-link active" href="../blog.html" aria-current="page">手记</a>
+      <a class="nav-link" href="../says.html">碎片</a>
+      <a class="nav-link" href="../photos.html">相册</a>
+      <a class="nav-link" href="../limbus.html">实验室</a>
       <a class="nav-link" href="../about.html">关于</a>
-      <a class="nav-link nav-post" href="../admin.html">✍️</a>
     </div>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <button id="theme-toggle" class="icon-btn" aria-label="切换主题">✨</button>
-      <button id="hamburger" class="icon-btn" aria-label="菜单">☰</button>
+    <div class="nav-actions">
+      <a class="nav-github" href="https://github.com/CidneyAurum" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><span data-icon="github"></span></a>
+      <button id="theme-toggle" class="icon-btn" aria-label="切换主题">◐</button>
+      <button id="hamburger" class="icon-btn" aria-label="打开导航" aria-controls="nav-links" aria-expanded="false">☰</button>
     </div>
   </nav>
 
-  <div class="wrap article-layout">
+  <main class="wrap article-layout" id="main-content" tabindex="-1">
     <article class="card article-card">
       <div class="article-cover"><span>📝</span></div>
       <div class="article-inner">
@@ -143,44 +146,48 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
         <h1 class="article-title">《如何发布一篇新文章 / 新照片》</h1>
         <div class="article-meta">
           <span>🗓 2026-08-29</span>
-          <span>📝 约 368 字 · 1 分钟</span>
+          <span>📝 约 614 字 · 2 分钟</span>
           <span>👁 <span class="vercount-page-pv">…</span> 次围观</span>
           <span class="tag-mini"># 指南</span>
         </div>
 
         <div class="prose">
-<p>发文发图已经做到最简单了，按顺手程度选一种：</p>
+<p>发文、发图可以按顺手程度选一种。本文操作说明更新于 2026-10-25。</p>
 <h2 id="toc-1">方式零：写作台（最简单，推荐）</h2>
-<p>打开网站的 <a href="admin.html" target="_blank" rel="noopener">✍️ 写作台</a>：</p>
+<p>打开网站的 <a href="../admin.html">✍️ 写作台</a>：</p>
 <ul>
-<li><strong>发文</strong>：填标题 → 写 Markdown（右边实时预览）→ 点「一键发布到 GitHub」。发布后 Actions 自动生成文章页并更新归档，约 1~2 分钟上线。</li>
-<li><strong>发图</strong>：把图片拖进虚线框（可多选）→ 每张图可以改标题 → 点「全部上传」。照片墙自动更新，连文件名都不用改。</li>
+<li><strong>发文</strong>：填标题 → 写 Markdown（右边实时预览）→ 点「一键发布到 GitHub」。文字草稿会自动保存在当前浏览器；文件重名时会停止写入，避免覆盖旧文章。</li>
+<li><strong>发图</strong>：把图片拖进虚线框（可多选）→ 每张图可以改标题 → 点「全部上传」。文件名会自动避免重名；部分上传失败时，剩余图片保留在队列里。</li>
 </ul>
+<p>提交成功后，Actions 会检查、构建并部署。只有对应提交的 Pages 部署成功，才能确认上线；完成时间取决于队列、检查与部署进度。首次启用新版流程前，需要在仓库 Settings → Pages 中将来源设为 GitHub Actions。</p>
 <p>首次使用需要到写作台的「设置」页粘贴一次 GitHub 令牌（Fine-grained PAT，只授权本仓库的 Contents: Read and write），之后浏览器会记住。</p>
 <h2 id="toc-2">方式一：本地一条命令</h2>
 <p>在 <code>_posts/</code> 里写一个 <code>xxx.md</code>（格式见下），然后：</p>
-<pre data-lang=""><code class="hljs">python tools/build.py
-git add -A &amp;&amp; git commit -m "发布新文章" &amp;&amp; git push</code></pre>
+<pre data-lang="bash"><code class="hljs">python<span class="w"> </span>tools/build.py
+git<span class="w"> </span>add<span class="w"> </span>-A<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">"发布新文章"</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>push</code></pre>
 <h2 id="toc-3">方式二：GitHub 网页直接写</h2>
 <p>仓库 → <code>_posts/</code> → Add file → Create new file → 文件名用英文（如 <code>my-first-note.md</code>）→ 写完提交即可。</p>
 <h2 id="toc-4">Markdown 文件格式</h2>
-<pre data-lang=""><code class="hljs">---
+<pre data-lang="markdown"><code class="hljs">---
 title: 文章标题
 date: 2026-09-01
 tags: 日常, 笔记
 emoji: 🪐
-summary: 一句话摘要
----
+<span class="gu">summary: 一句话摘要</span>
+<span class="gu">---</span>
 
 正文用 Markdown 写。</code></pre>
 <p><strong>其实只有标题是必须的</strong>：不写日期默认今天，不写摘要会自动截取正文第一段，标签/emoji/封面都能省略。</p>
-<p>常用语法：<code>## 标题</code>、<code><strong>加粗</strong></code>、`<code> </code>代码<code> </code><code>、</code>&gt; 引用<code>、</code><a href="网址" target="_blank" rel="noopener">链接</a><code>、</code><img src="图片路径" alt="图" loading="lazy">`、代码块用三个反引号包裹。</p>
+<p>常用语法：<code>## 标题</code>、<code>**加粗**</code>、<code>`代码`</code>、<code>&gt; 引用</code>、<code>[链接](网址)</code>、<code>![图](图片路径)</code>、代码块用三个反引号包裹。</p>
 <h2 id="toc-5">发照片的补充说明</h2>
 <ul>
 <li>图片标题默认取文件名，想改可以在写作台上传时填写</li>
-<li>不写日期的图片会自动使用上传当月</li>
+<li>写作台上传时自动添加年月；直接上传无日期文件时，构建会尽量取首次提交年月，无法确定则显示 MEMORY</li>
 <li>封面进阶：front-matter 里写 <code>cover: assets/xxx.jpg</code> 可以用图片当文章封面</li>
 </ul>
+<h2 id="toc-6">和 Miku 一起起稿</h2>
+<p>写作台的「Miku 的写作便签」可以按当前正文拟标题、提炼摘要，或润色选中的一段。先写一点正文，再点对应按钮；建议会展示在独立的框里，由你决定是否应用，也可以复制或撤销。</p>
+<p>建议不会自动覆盖新编辑的内容，也不会自动发布。AI 服务接通后才会进行模型请求；未接通时会给出明确提示。</p>
         </div>
 
         <nav class="post-nav"><span class="pn-cell pn-empty"><span class="pn-label">没有更多了</span></span><a class="pn-cell" href="hello-world.html"><span class="pn-label">下一篇 →</span><span class="pn-title">网站上线啦！</span></a></nav>
@@ -195,7 +202,7 @@ summary: 一句话摘要
     </article>
 
     <aside>
-      <div class="card side-card toc-card"><div class="side-label">CONTENTS</div><nav class="toc-list"><a class="toc-l2" href="#toc-1">方式零：写作台（最简单，推荐）</a><a class="toc-l2" href="#toc-2">方式一：本地一条命令</a><a class="toc-l2" href="#toc-3">方式二：GitHub 网页直接写</a><a class="toc-l2" href="#toc-4">Markdown 文件格式</a><a class="toc-l2" href="#toc-5">发照片的补充说明</a></nav></div>
+      <div class="card side-card toc-card"><div class="side-label">CONTENTS</div><nav class="toc-list"><a class="toc-l2" href="#toc-1">方式零：写作台（最简单，推荐）</a><a class="toc-l2" href="#toc-2">方式一：本地一条命令</a><a class="toc-l2" href="#toc-3">方式二：GitHub 网页直接写</a><a class="toc-l2" href="#toc-4">Markdown 文件格式</a><a class="toc-l2" href="#toc-5">发照片的补充说明</a><a class="toc-l2" href="#toc-6">和 Miku 一起起稿</a></nav></div>
       <div class="card side-card side-profile">
         <div class="avatar-ring"><img src="../assets/avatar.webp" alt="头像"></div>
         <div class="side-name">CidneyAurum</div>
@@ -224,10 +231,18 @@ summary: 一句话摘要
         <div id="side-records"><div class="side-record"><div class="d">加载中…</div></div></div>
       </div>
     </aside>
-  </div>
+  </main>
 
-  <footer>
-    Made with <span class="heart">♡</span> &amp; 星光 · © 2026 CidneyAurum · Powered by GitHub Pages
+  <footer class="site-footer">
+    <div>
+      <a class="footer-brand" href="../index.html">CidneyAurum<span>的小窝</span></a>
+      <p>慢慢来，记录总会有回响。</p>
+    </div>
+    <div class="footer-meta">
+      <span>© 2026 CidneyAurum · Built with curiosity.</span>
+      <span><a href="../feed.xml">RSS 订阅</a><i>·</i><a href="https://github.com/CidneyAurum" target="_blank" rel="noopener noreferrer">GitHub ↗</a><i>·</i><a href="../admin.html">写作台 ↗</a></span>
+      <span class="footer-credits"><a class="visual-credit" href="https://manybackgrounds.com/background/blue-scenery-anime-night-sky-pzh6x27gg1g2eyph.html" target="_blank" rel="noopener noreferrer">Wallpaper by alberto1 from ManyBackgrounds.com</a><i>·</i><a class="design-credit" href="https://xmyl-153.github.io/xingmengyouling-blog/" target="_blank" rel="noopener noreferrer">UI 灵感：星梦幽灵</a></span>
+    </div>
   </footer>
 
   <div class="mini-player">
@@ -239,10 +254,10 @@ summary: 一句话摘要
     <button class="mini-btn js-play-toggle js-state" aria-label="播放/暂停">▶</button>
   </div>
 
-  <script src="../js/main.js?v=a9cf293"></script>
-  <script src="../js/player.js?v=a9cf293"></script>
-  <script src="../js/music.js?v=a9cf293" defer></script>
-  <script src="../js/kanban.js?v=a9cf293" defer></script>
-  <script src="../js/comments.js?v=a9cf293" defer></script>
+  <script src="../js/main.js?v=ai20261025"></script>
+  <script src="../js/garden.js?v=ai20261025" defer></script>
+  <script src="../js/player.js?v=ai20261025"></script>
+  <script src="../js/music.js?v=ai20261025" defer></script>
+  <script src="../js/comments.js?v=ai20261025" defer></script>
 </body>
 </html>

@@ -10,7 +10,8 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="preconnect" href="https://fonts.loli.net" crossorigin>
   <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=a9cf293">
+  <link rel="stylesheet" href="css/style.css?v=ai20261025">
+  <link rel="stylesheet" href="css/garden.css?v=ai20261025">
   <style>
     /* 写作台专用布局 */
     .desk { padding: 120px 0 40px; position: relative; z-index: 5; }
@@ -86,6 +87,11 @@
     .img-name { font-size: 11.5px; color: var(--text-light); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .hint { font-size: 12.5px; color: var(--text-light); line-height: 2; margin-top: 14px; }
     .hint a { border-bottom: 1px dashed var(--accent); }
+    .draft-tools { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 20px; }
+    .draft-tools p { flex: 1; min-width: 220px; font-size: 12px; color: var(--text-light); }
+    .say-preview { position: relative; }
+    .say-preview img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+    .say-preview .ds-close { position: absolute; top: -6px; right: -6px; background: var(--card-deep); border-radius: 50%; width: 22px; height: 22px; }
     @media (max-width: 800px) {
       .field-grid { grid-template-columns: 1fr 1fr; }
       .field-grid .wide { grid-column: span 2; }
@@ -94,6 +100,7 @@
   </style>
 </head>
 <body class="page-enter" data-page="admin">
+  <a class="skip-link" href="#main-content">跳到正文</a>
   <div class="scene" aria-hidden="true">
     <img class="scene-bg" src="assets/background-blur.webp" alt="">
     <div class="scene-overlay"></div>
@@ -101,25 +108,27 @@
   </div>
   <canvas id="firefly-canvas" aria-hidden="true"></canvas>
 
-  <nav class="nav">
-    <a class="logo" href="index.html">CidneyAurum<span class="no">の</span>小窝</a>
+  <nav class="nav" aria-label="主导航">
+    <a class="logo" href="index.html" aria-label="CidneyAurum 首页"><span class="brand-mark">A<span>.</span></span><span class="brand-copy">CidneyAurum<small>一点代码，一些生活</small></span></a>
     <div class="nav-links" id="nav-links">
       <a class="nav-link" href="index.html">首页</a>
-      <a class="nav-link" href="blog.html">归档</a>
-      <a class="nav-link" href="photos.html">照片墙</a>
-      <a class="nav-link" href="limbus.html">歌词模拟器</a>
+      <a class="nav-link" href="blog.html">手记</a>
+      <a class="nav-link" href="says.html">碎片</a>
+      <a class="nav-link" href="photos.html">相册</a>
+      <a class="nav-link" href="limbus.html">实验室</a>
       <a class="nav-link" href="about.html">关于</a>
     </div>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <button id="theme-toggle" class="icon-btn" aria-label="切换主题">✨</button>
-      <button id="hamburger" class="icon-btn" aria-label="菜单">☰</button>
+    <div class="nav-actions">
+      <a class="nav-github" href="https://github.com/CidneyAurum" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><span data-icon="github"></span></a>
+      <button id="theme-toggle" class="icon-btn" aria-label="切换主题">◐</button>
+      <button id="hamburger" class="icon-btn" aria-label="打开导航" aria-controls="nav-links" aria-expanded="false">☰</button>
     </div>
   </nav>
 
-  <main class="wrap desk">
+  <main class="wrap desk" id="main-content" tabindex="-1">
     <header class="page-head left" style="padding:0;">
       <h1 class="page-title" style="font-size:36px;">写作台</h1>
-      <p class="page-sub" style="letter-spacing:.12em;">✍️ 仅站主使用 · 内容与令牌只保存在你自己的浏览器里</p>
+      <p class="page-sub" style="letter-spacing:.12em;">✍️ 仅站主使用 · 文字草稿保存在本机，发布内容提交到 GitHub</p>
     </header>
 
     <div class="tabs">
@@ -129,20 +138,26 @@
       <button class="tab-btn" data-tab="setup">⚙️ 设置</button>
     </div>
 
+    <div class="draft-tools">
+      <p id="draft-status" role="status">文字草稿自动保存在此浏览器；已选图片需要保持页面打开。</p>
+      <a class="ctrl-btn ghost" href="https://github.com/CidneyAurum/CidneyAurum.github.io/actions" target="_blank" rel="noopener noreferrer">查看部署进度 ↗</a>
+      <button class="ctrl-btn ghost" id="btn-clear-draft" type="button">清空文字草稿</button>
+    </div>
+
     <!-- ============ 发文 ============ -->
     <div class="tab-pane card pane-card" id="tab-post">
       <div class="field-grid">
-        <div class="field"><label>标题（必填）</label><input id="p-title" type="text" placeholder="文章标题"></div>
-        <div class="field"><label>日期</label><input id="p-date" type="date"></div>
-        <div class="field"><label>文件名 slug（留空自动）</label><input id="p-slug" type="text" placeholder="my-first-note"></div>
-        <div class="field wide"><label>标签（逗号分隔，可空）</label><input id="p-tags" type="text" placeholder="日常, 笔记"></div>
-        <div class="field"><label>封面 emoji（可空）</label><input id="p-emoji" type="text" maxlength="4" placeholder="🪐"></div>
-        <div class="field wide" style="grid-column: span 2;"><label>摘要（可空，自动截取正文）</label><input id="p-summary" type="text" placeholder="显示在归档列表里的一句话"></div>
+        <div class="field"><label for="p-title">标题（必填）</label><input id="p-title" type="text" placeholder="文章标题" required></div>
+        <div class="field"><label for="p-date">日期</label><input id="p-date" type="date" required></div>
+        <div class="field"><label for="p-slug">文件名 slug（留空自动）</label><input id="p-slug" type="text" placeholder="my-first-note" autocomplete="off" spellcheck="false"></div>
+        <div class="field wide"><label for="p-tags">标签（逗号分隔，可空）</label><input id="p-tags" type="text" placeholder="日常, 笔记"></div>
+        <div class="field"><label for="p-emoji">封面 emoji（可空）</label><input id="p-emoji" type="text" maxlength="8" placeholder="🪐"></div>
+        <div class="field wide" style="grid-column: span 2;"><label for="p-summary">摘要（可空，自动截取正文）</label><input id="p-summary" type="text" placeholder="显示在归档列表里的一句话"></div>
       </div>
 
       <div class="editor-split">
         <div class="field">
-          <label>正文（Markdown）</label>
+          <label for="p-body">正文（Markdown）</label>
           <textarea id="p-body" placeholder="## 小标题&#10;**加粗**、*斜体*、`代码`&#10;- 列表&#10;> 引用"></textarea>
         </div>
         <div class="field">
@@ -159,38 +174,38 @@
         <span class="js-status"></span>
       </div>
       <p class="hint">
-        「去 GitHub 发布」会打开一个<b>已经替你填好一切</b>的 GitHub 页面，拉到底点绿色 <b>Commit changes</b> 即完成发文，全程不需要令牌；
-        「令牌一键发布」是进阶选项（设置页配置后可跳过 GitHub 页面）。发布后约 1~2 分钟上线。
+        「去 GitHub 发布」打开预填的 GitHub 新建文件页面，需要登录并提交；「下载 .md」与「复制全文」可先留一份本地副本。<br>
+        令牌提交遇到同名文件会停止，防止覆盖已有文章。提交成功后仍需等待 Pages 部署，部署成功才会显示已上线。
       </p>
     </div>
 
     <!-- ============ 说说 ============ -->
     <div class="tab-pane card pane-card" id="tab-say" style="display:none;">
       <div class="field">
-        <label>说点什么…（≤500 字，可只发图）</label>
+        <label for="s-text">说点什么…（≤500 字，可只发图）</label>
         <textarea id="s-text" style="min-height:110px;resize:vertical;border-radius:12px;border:1px solid var(--border);background:rgba(4,5,12,.5);color:var(--text);font-size:14px;line-height:1.8;padding:12px 14px;outline:none;font-family:var(--font-body);" placeholder="今天……"></textarea>
         <div style="font-size:11.5px;color:var(--text-light);text-align:right;" id="s-count">0 / 500</div>
       </div>
       <div class="field" style="margin-top:12px;">
-        <label>图片（可选，多选，自动压缩到 1MB 内）</label>
-        <input id="s-imgs" type="file" accept="image/*" multiple style="color:var(--text-light);font-size:12px;">
+        <label for="s-imgs">图片（可选，最多 9 张，自动压缩到 1MB 内）</label>
+        <input id="s-imgs" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple style="color:var(--text-light);font-size:12px;">
         <div id="s-previews" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;"></div>
       </div>
       <div class="actions">
         <button class="ctrl-btn" id="btn-say">🚀 一键发布说说</button>
         <span class="js-status"></span>
       </div>
-      <p class="hint">发布后自动出现在「说说」页面（导航栏可进），约 1~2 分钟上线。需要先在「设置」配好令牌。</p>
+      <p class="hint">需要先在设置保存令牌。文字草稿自动保存，图片仅保留在当前页面；上传配图后若列表提交失败，保持页面打开重试可复用已上传图片。新内容在 Pages 部署完成后可见。</p>
     </div>
 
     <!-- ============ 发图 ============ -->
     <div class="tab-pane card pane-card" id="tab-photo" style="display:none;">
-      <div class="drop-zone" id="drop-zone">
+      <div class="drop-zone" id="drop-zone" role="button" tabindex="0" aria-label="选择相册图片">
         <span class="big">🖼️</span>
         把图片拖到这里，或点击选择（可多选）<br>
         标题和日期会自动处理，上传后照片墙自动更新
       </div>
-      <input id="img-input" type="file" accept="image/*" multiple style="display:none;">
+      <input id="img-input" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple style="display:none;">
       <div id="img-queue" style="margin-top:14px;">
         <p class="audio-state">还没有选择图片</p>
       </div>
@@ -199,14 +214,14 @@
         <button class="ctrl-btn ghost" id="btn-upload">⚡ 令牌批量上传</button>
         <span class="js-status"></span>
       </div>
-      <p class="hint">免令牌方式：点「打开上传页」→ 把图片拖进 GitHub 页面 → Commit，标题默认取文件名、日期自动取当月；令牌方式则在本页拖拽上传，一步到位。</p>
+      <p class="hint">支持 JPG、PNG、WebP 和 GIF，每张不超过 20MB。令牌上传会添加唯一编号，避免覆盖同名照片；失败后队列保留尚未完成的图片。免令牌方式需在 GitHub 上传页完成提交；照片墙在 Pages 部署完成后更新。</p>
     </div>
 
     <!-- ============ 设置 ============ -->
     <div class="tab-pane card pane-card" id="tab-setup" style="display:none;">
       <div class="field" style="max-width:520px;">
-        <label>GitHub 令牌（Fine-grained PAT）</label>
-        <input id="token-input" type="password" placeholder="github_pat_… 或 ghp_…">
+        <label for="token-input">GitHub 令牌（Fine-grained PAT）</label>
+        <input id="token-input" type="password" placeholder="github_pat_… 或 ghp_…" autocomplete="off" spellcheck="false" autocapitalize="off">
       </div>
       <div class="actions">
         <button class="ctrl-btn" id="btn-save-token">💾 保存令牌</button>
@@ -222,11 +237,20 @@
     </div>
   </main>
 
-  <footer>
-    <a href="admin.html">✍️ 写作台</a> · Made with <span class="heart">♡</span> &amp; 星光 · © 2026 CidneyAurum · Powered by GitHub Pages
+  <footer class="site-footer">
+    <div>
+      <a class="footer-brand" href="index.html">CidneyAurum<span>的小窝</span></a>
+      <p>慢慢来，记录总会有回响。</p>
+    </div>
+    <div class="footer-meta">
+      <span>© 2026 CidneyAurum · Built with curiosity.</span>
+      <span><a href="feed.xml">RSS 订阅</a><i>·</i><a href="https://github.com/CidneyAurum" target="_blank" rel="noopener noreferrer">GitHub ↗</a><i>·</i><a href="admin.html">写作台 ↗</a></span>
+      <span class="footer-credits"><a class="visual-credit" href="https://manybackgrounds.com/background/blue-scenery-anime-night-sky-pzh6x27gg1g2eyph.html" target="_blank" rel="noopener noreferrer">Wallpaper by alberto1 from ManyBackgrounds.com</a><i>·</i><a class="design-credit" href="https://xmyl-153.github.io/xingmengyouling-blog/" target="_blank" rel="noopener noreferrer">UI 灵感：星梦幽灵</a></span>
+    </div>
   </footer>
 
-  <script src="js/main.js?v=a9cf293"></script>
-  <script src="js/admin.js?v=a9cf293"></script>
+  <script src="js/main.js?v=ai20261025"></script>
+  <script src="js/garden.js?v=ai20261025" defer></script>
+  <script src="js/admin.js?v=ai20261025"></script>
 </body>
 </html>

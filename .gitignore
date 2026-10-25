@@ -2,3 +2,16 @@
 *.log
 Thumbs.db
 .DS_Store
+_site/
+/_site-*/
+__pycache__/
+*.py[cod]
+.env
+.env.*
+!.env.example
+.private/
+*.dpapi
+*.key
+.wrangler/
+.dev.vars
+.dev.vars.*

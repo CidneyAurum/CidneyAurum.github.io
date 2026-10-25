@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cidney-miku-ai",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-10-08",
+  "upload_source_maps": false,
+  "workers_dev": true,
+  "vars": {
+    "DEEPSEEK_MODEL": "deepseek-flash",
+    "AI_ALLOWED_ORIGINS": "https://cidneyaurum.github.io",
+    "AI_PUBLIC_ENABLED": "true",
+    "AI_DAILY_REQUEST_LIMIT": "100"
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "AI_BUDGET", "class_name": "AIBudget" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["AIBudget"] }]
+}

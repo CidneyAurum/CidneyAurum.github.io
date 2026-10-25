@@ -65,6 +65,7 @@
   function renderLine(i) {
     const line = lines[i];
     if (!line) return;
+    area.querySelector(".lyric-finale")?.remove();
     const idle = area.querySelector(".stage-idle");
     if (idle) idle.remove();
     // 旧句淡出
@@ -114,20 +115,25 @@
   }
 
   function renderEnd() {
+    stopAuto();
+    stage.classList.remove("slam");
     const end = document.createElement("div");
-    end.className = "lyric-line";
+    end.className = "lyric-line lyric-finale";
     end.style.fontSize = "clamp(18px, 3vw, 30px)";
     end.style.letterSpacing = "0.5em";
     end.style.color = "#d9b96c";
     end.textContent = "— FIN —";
-    area.appendChild(end);
+    area.replaceChildren(end);
     idx = -1;
   }
 
   function reset() {
     stopAuto();
+    // pause() can queue one final timeupdate; it must not repaint the reset stage.
+    mode = "manual";
     if (audio && !audio.paused) audio.pause();
     idx = -1;
+    stage.classList.remove("slam");
     area.innerHTML = '<div class="stage-idle">— LYRIC SIMULATOR —</div>';
   }
 
@@ -161,7 +167,7 @@
     const sec = Math.max(0.5, parseFloat(speed.value) || 2.2);
     renderLine(0);
     autoTimer = setInterval(() => {
-      if (idx + 1 >= lines.length) { stopAuto(); return; }
+      if (idx + 1 >= lines.length) { renderEnd(); return; }
       renderLine(idx + 1);
     }, sec * 1000);
   });
@@ -171,7 +177,7 @@
       clearInterval(autoTimer);
       const sec = Math.max(0.5, parseFloat(speed.value) || 2.2);
       autoTimer = setInterval(() => {
-        if (idx + 1 >= lines.length) { stopAuto(); return; }
+        if (idx + 1 >= lines.length) { renderEnd(); return; }
         renderLine(idx + 1);
       }, sec * 1000);
     }
@@ -210,7 +216,14 @@
       if (lines[i].time !== undefined && lines[i].time <= t) target = i;
       else break;
     }
-    if (target !== -1 && target !== idx) renderLine(target);
+    if (target === -1) {
+      // Seeking into the instrumental intro must clear a later lyric and effects.
+      if (idx !== -1 || !area.querySelector(".stage-idle")) {
+        idx = -1;
+        stage.classList.remove("slam");
+        area.innerHTML = '<div class="stage-idle">— LYRIC SIMULATOR —</div>';
+      }
+    } else if (target !== idx) renderLine(target);
     if (audio.ended) renderEnd();
   });
 

@@ -1,0 +1,65 @@
+﻿/* Miku's quiet reading corner. Colors inherit the site's dark/light palette. */
+.mai-article-tools,.mai-workshop,.mai-dialog,.mai-answer{font-family:var(--font-body,"Segoe UI","Microsoft YaHei",sans-serif);box-sizing:border-box;color:var(--text,#eeedf5)}
+.mai-dialog *, .mai-workshop *, .mai-article-tools *, .mai-answer *{box-sizing:border-box}
+.mai-article-tools{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:18px 0 22px;padding:12px 14px;border:1px solid var(--border,#303248);border-radius:13px;background:var(--chip-bg,#b7a3f412)}
+.mai-tools-label{color:var(--accent,#b7a3f4);font-size:12px;font-weight:600;margin-right:5px}
+.mai-chip{display:inline-flex;align-items:center;justify-content:center;min-height:34px;border:1px solid var(--border,#303248);border-radius:9px;padding:7px 11px;background:var(--panel-soft,#141622);color:var(--text-light,#acabc0);font:inherit;font-size:12px;text-decoration:none;cursor:pointer;line-height:1.55;transition:background-color .2s,color .2s,border-color .2s}
+.mai-chip:hover{color:var(--text,#eeedf5);border-color:var(--accent,#b7a3f4);background:var(--chip-bg,#b7a3f412)}
+.mai-chip:disabled{opacity:.5;cursor:wait}
+.mai-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.mai-dialog{position:fixed;inset:20px 20px 20px auto;margin:0;width:min(470px,calc(100vw - 40px));height:calc(100dvh - 40px);max-width:none;max-height:none;border:1px solid var(--border,#303248);border-radius:23px;padding:0;background:var(--card-deep,#1c1e2e);box-shadow:0 20px 100px #0006;overflow:hidden;z-index:140;isolation:isolate}
+.mai-dialog[open]{display:flex;flex-direction:column;animation:mai-arrive .2s ease-out}
+.mai-dialog::backdrop{background:#080b155c;backdrop-filter:blur(5px)}
+.mai-head{display:flex;align-items:center;gap:12px;padding:22px 23px 18px;border-bottom:1px solid var(--border,#303248);flex-shrink:0}
+.mai-mark{display:grid;place-items:center;width:43px;height:43px;border-radius:14px;background:var(--chip-bg,#b7a3f412);color:var(--accent,#b7a3f4);font-size:24px}
+.mai-head-copy{flex:1;min-width:0}
+.mai-head-copy small{font-size:9px;letter-spacing:1.3px;color:var(--muted,#8c8ba2)}
+.mai-head h2{font-family:var(--font-serif,serif);font-size:22px;font-weight:700;margin:5px 0 0;line-height:1.5;letter-spacing:1px}
+.mai-close{border:0;background:none;color:var(--text-light,#acabc0);width:34px;height:34px;font-size:26px;cursor:pointer;border-radius:8px}
+.mai-close:hover{background:var(--chip-bg,#b7a3f412);color:var(--text,#eeedf5)}
+.mai-info{display:flex;align-items:flex-start;gap:8px;padding:13px 23px 8px;flex-shrink:0}
+.mai-service{flex:1;min-width:0;font-size:11px;line-height:1.8;color:var(--text-light,#acabc0);margin:0}
+.mai-service.is-offline{color:var(--gold,#d6c299)}
+.mai-reconnect{font:inherit;font-size:10px;white-space:nowrap;color:var(--accent,#b7a3f4);background:none;border:0;cursor:pointer;padding:3px 0 3px 6px;text-decoration:underline;text-underline-offset:4px}
+.mai-selection{font-size:11px;line-height:1.8;max-height:100px;overflow:auto;white-space:pre-wrap;border-left:2px solid var(--accent,#b7a3f4);background:var(--chip-bg,#b7a3f412);padding:9px 12px;margin:8px 23px;color:var(--text-light,#acabc0);flex-shrink:0}
+.mai-messages{flex:1;min-height:90px;overflow-y:auto;overscroll-behavior:contain;padding:18px 23px 22px;display:flex;flex-direction:column;gap:16px;scrollbar-width:thin;scrollbar-color:var(--border,#303248) transparent}
+.mai-welcome{color:var(--text-light,#acabc0);font-size:13px;line-height:2;padding:16px;border:1px dashed var(--border,#303248);border-radius:13px;margin:0}
+.mai-user{align-self:flex-end;max-width:90%;padding:11px 15px;border-radius:15px 15px 4px 15px;background:var(--accent,#b7a3f4);color:var(--bg,#10111b);white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.85}
+.mai-assistant{align-self:flex-start;width:100%;padding:14px 15px;border:1px solid var(--border,#303248);border-radius:4px 15px 15px;background:var(--panel-soft,#141622)}
+.mai-pending,.mai-error{font-size:12px;line-height:1.9;color:var(--text-light,#acabc0);margin:0}
+.mai-pending::before{content:"✦";display:inline-block;color:var(--accent,#b7a3f4);margin-right:8px;animation:mai-think 1.2s ease-in-out infinite}
+.mai-error{color:var(--gold,#d6c299)}
+.mai-answer{font-size:13px;line-height:1.95;max-width:100%;overflow-wrap:anywhere}
+.mai-answer-text{white-space:pre-wrap}
+.mai-sources{display:flex;flex-direction:column;gap:7px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border,#303248)}
+.mai-source-label{font-size:10px;color:var(--muted,#8c8ba2);letter-spacing:1px}
+.mai-source{display:block;text-decoration:none;border-radius:8px;border:1px solid var(--border,#303248);padding:8px 10px;color:var(--accent,#b7a3f4);font-size:12px;line-height:1.8;background:var(--chip-bg,#b7a3f412)}
+.mai-source:hover{border-color:var(--accent,#b7a3f4)}
+.mai-source small{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;font-size:10px;line-height:1.8;white-space:normal;color:var(--text-light,#acabc0);margin-top:4px}
+.mai-answer .mai-chip{font-size:11px;min-height:31px;padding:5px 9px}
+.mai-retry{margin-top:10px}
+.mai-form{padding:16px 20px 18px;background:var(--card-deep,#1c1e2e);border-top:1px solid var(--border,#303248);flex-shrink:0}
+.mai-input{width:100%;font:inherit;font-size:13px;line-height:1.8;border:1px solid var(--border,#303248);border-radius:13px;background:var(--panel-soft,#141622);color:var(--text,#eeedf5);padding:12px 14px;resize:vertical;min-height:75px;max-height:180px;outline:none}
+.mai-input:focus{border-color:var(--accent,#b7a3f4)}
+.mai-form-tools{display:flex;align-items:center;gap:9px;margin-top:10px}
+.mai-form-tools small{font-size:9px;color:var(--muted,#8c8ba2);flex:1}
+.mai-submit{font:inherit;font-size:12px;font-weight:600;border:0;border-radius:9px;background:var(--accent,#b7a3f4);color:var(--bg,#10111b);padding:9px 15px;cursor:pointer;min-height:35px}
+.mai-submit:disabled{opacity:.45;cursor:not-allowed}
+.mai-cancel{font:inherit;font-size:11px;color:var(--text-light,#acabc0);border:0;background:none;cursor:pointer;padding:8px 3px}
+.mai-workshop{margin:20px 0 0;padding:19px 20px;border:1px solid var(--border,#303248);border-radius:14px;background:var(--chip-bg,#b7a3f412)}
+.mai-workshop-head{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
+.mai-workshop h3{font-family:var(--font-serif,serif);font-size:17px;letter-spacing:.3px;margin:0;color:var(--text,#eeedf5)}
+.mai-workshop-head>span{font-size:10px;color:var(--muted,#8c8ba2)}
+.mai-workshop-hint{margin:9px 0 0;font-size:12px;line-height:1.9;color:var(--text-light,#acabc0)}
+.mai-workshop-status{font-size:12px;line-height:1.9;color:var(--text-light,#acabc0);margin:12px 0 0}
+.mai-workshop-status:empty{display:none}
+.mai-proposal{margin-top:15px;padding-top:14px;border-top:1px solid var(--border,#303248)}
+.mai-proposal-label{font-size:11px;color:var(--accent,#b7a3f4);display:block;margin-bottom:8px}
+.mai-proposal-text{display:block;width:100%;font:inherit;font-size:13px;line-height:1.9;background:var(--panel-soft,#141622);color:var(--text,#eeedf5);border:1px solid var(--border,#303248);border-radius:9px;padding:10px 12px;resize:vertical;min-height:60px;max-height:340px}
+.mai-apply{color:var(--accent,#b7a3f4)}
+.mai-dialog :focus-visible,.mai-workshop :focus-visible,.mai-article-tools :focus-visible,.mai-answer :focus-visible{outline:2px solid var(--accent,#b7a3f4);outline-offset:3px}
+.mai-dialog [hidden],.mai-workshop [hidden]{display:none!important}
+@keyframes mai-arrive{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+@keyframes mai-think{50%{opacity:.35;transform:scale(.8)}}
+@media(max-width:600px){.mai-dialog{inset:auto 0 0;width:100%;height:min(92dvh,850px);border-radius:23px 23px 0 0;border-bottom:0}.mai-head{padding:19px 18px 14px}.mai-head h2{font-size:20px}.mai-info{padding:12px 18px 5px}.mai-messages{padding:15px 18px 20px;gap:13px}.mai-form{padding:13px 15px max(15px,env(safe-area-inset-bottom))}.mai-form-tools small{max-width:110px;line-height:1.7}.mai-selection{margin:8px 18px}.mai-article-tools{padding:11px;gap:7px}.mai-tools-label{width:100%;margin-bottom:2px}.mai-workshop{padding:16px 14px}.mai-answer{font-size:13px}.mai-workshop .mai-chip{padding:7px 10px}}
+@media(prefers-reduced-motion:reduce){.mai-dialog[open],.mai-pending::before{animation:none}}

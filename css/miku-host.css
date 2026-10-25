@@ -1,0 +1,92 @@
+/* A small teal presence in the midnight notebook. */
+.miku-host { position:relative; display:grid; grid-template-columns:52px minmax(0,1fr); gap:0 18px; padding:24px 28px 18px; margin:18px 0 25px; border:1px solid #7bdbd43b; border-radius:24px; background:linear-gradient(120deg,#172c3dc9,#111a31dc); color:var(--text,#eef4fa); box-shadow:0 12px 35px #0002; overflow:hidden; }
+.miku-host-emblem { grid-row:1 / 3; align-self:center; font:italic 29px Georgia,serif; color:#91e6d9; width:52px; height:66px; display:flex; align-items:center; justify-content:center; border:1px solid #9fe3d72b; border-radius:19px; background:#86d4d20b; position:relative; }
+.miku-host-emblem span { position:absolute; bottom:4px; right:7px; font-size:12px; }
+.miku-host-copy { min-width:0; }
+.miku-host-label { font:600 8px var(--font-body,sans-serif); color:#8fd1ca; letter-spacing:1.5px; margin:0; }
+.miku-host-label span { margin-left:7px; letter-spacing:1px; color:#8da8b6; }
+.miku-host > #miku-host-text,.miku-host > .miku-host-heading,.miku-host > #miku-host-status { grid-column:1 / -1; }
+.miku-host-copy #miku-host-text { margin:7px 0 4px; }
+.miku-host-copy #miku-host-status { display:block; margin:0 0 12px; }
+.miku-host::before { content:""; position:absolute; width:170px; height:170px; border-radius:50%; right:-60px; top:-80px; background:#5de5ce0a; pointer-events:none; }
+.miku-host-heading { display:flex; align-items:center; gap:9px; color:#8fe0d6; font:600 9px var(--font-body, sans-serif); letter-spacing:1.4px; }
+.miku-host-mark { font-size:19px; }
+#miku-host-text { margin:13px 0 16px; font:15px/1.9 var(--font-serif,serif); }
+.miku-host-actions { grid-column:2; display:flex; flex-wrap:wrap; gap:8px; }
+.miku-host:has(> .miku-host-heading) .miku-host-actions { grid-column:1 / -1; }
+.miku-host button,.miku-dock button,.miku-dock a,.miku-modal button { cursor:pointer; color:inherit; font:inherit; touch-action:manipulation; }
+.miku-host-actions button { padding:7px 12px; border:1px solid #96dcd531; border-radius:30px; background:#9bdedc08; font-size:10px; transition:background .2s, border-color .2s; }
+.miku-host-actions button:hover { background:#83e4d218; border-color:#8ee7d36b; }
+.miku-host-actions [data-miku-action="listen"] { background:#75d9cc22; color:#b7f1e7; }
+#miku-host-status { min-height:15px; font:9px/1.7 var(--font-body,sans-serif); color:var(--muted,#8d9bb3); margin-top:12px; }
+.miku-dock { position:fixed; bottom:26px; right:24px; width:min(330px,calc(100vw - 32px)); z-index:112; padding:17px 18px; border-radius:20px; border:1px solid #87dcd13c; background:#101c30f2; backdrop-filter:blur(20px); box-shadow:0 12px 40px #0005; color:#e1eef3; }
+body.music-engaged .miku-dock { bottom:105px; }
+.miku-dock-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; color:#9adcd6; font-size:9px; letter-spacing:1px; }
+.miku-dock-heading button { background:transparent; border:0; font-size:21px; width:25px; height:25px; line-height:1; color:#9eb3c7; }
+.miku-dock-text { font-size:12px; line-height:1.9; margin:9px 0 13px; }
+.miku-dock-actions { display:flex; flex-wrap:wrap; gap:7px; }
+.miku-dock-actions button,.miku-dock-actions a { background:#8ee7d310; border:1px solid #8ee7d32b; border-radius:8px; padding:6px 9px; font-size:10px; color:#b9e4e1; text-decoration:none; }
+.miku-guide-target { outline:2px solid #88e3d7 !important; outline-offset:7px; box-shadow:0 0 35px #76ead220 !important; scroll-margin-top:120px; }
+.miku-modal-backdrop { position:fixed; inset:0; z-index:420; display:flex; align-items:center; justify-content:center; padding:24px; background:#040917c9; backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); }
+.miku-modal { width:min(850px,100%); max-height:calc(100dvh - 48px); overflow:auto; overscroll-behavior:contain; color:#e9f2f5; border:1px solid #b5e7e03c; border-radius:27px; background:radial-gradient(ellipse at 20% 100%,#21495580,transparent 65%),#121d31; box-shadow:0 25px 100px #0008; }
+.miku-modal > header { display:flex; justify-content:space-between; gap:16px; align-items:center; padding:25px 30px 17px; }
+.miku-eyebrow { color:#79c6c2; font-size:8px; letter-spacing:2px; }
+.miku-modal h2 { font:600 24px/1.5 var(--font-serif,serif); margin:6px 0 0; }
+.miku-modal-close { width:34px; height:34px; border:1px solid #a4e2dc30; border-radius:50%; background:#b3e5df09; font-size:23px !important; flex-shrink:0; }
+.miku-modal-body { padding:12px 30px 30px; }
+.miku-room .miku-modal-body { display:grid; grid-template-columns:minmax(180px,.8fr) minmax(0,1fr); gap:20px; min-height:390px; align-items:center; }
+.miku-room-character { min-height:350px; display:flex; justify-content:center; align-items:center; border-radius:20px; background:radial-gradient(ellipse at 50% 80%,#68d8d120,transparent 70%); }
+.miku-room-wait { max-width:180px; text-align:center; color:#8eb6c3; font-size:12px; line-height:2; }
+.miku-room .kanban { position:relative !important; left:auto !important; top:auto !important; right:auto !important; bottom:auto !important; z-index:1; transform:none; }
+.miku-room .kb-bubble,.miku-room .kb-bar,.miku-room .kb-chat,.miku-room .kb-set { display:none !important; }
+.miku-room .kb-stage { width:250px; height:350px; cursor:default; }
+.miku-room-music { min-width:0; text-align:center; padding:4px 0; }
+.miku-room-album { width:110px; height:110px; position:relative; display:flex; justify-content:center; align-items:center; margin:0 auto 19px; overflow:hidden; border-radius:50%; border:1px solid #a5e2d63d; background:radial-gradient(circle,#3e6170,#1d3448 60%,#172438); color:#a7dcd6; font-size:35px; box-shadow:0 0 45px #66d5ce10; }
+.miku-room-cover { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.miku-room-artist { margin:0; color:#95b3c5; font-size:11px; }
+.miku-room-title { font:600 22px/1.6 var(--font-serif,serif); overflow-wrap:anywhere; margin:8px 0 18px; }
+.miku-room-lyric { min-height:60px; display:flex; align-items:center; justify-content:center; color:#c0e9df; font:14px/1.9 var(--font-serif,serif); margin:0 0 19px; }
+.miku-room-controls { display:flex; align-items:center; justify-content:center; gap:16px; }
+.miku-room-controls button { width:39px; height:39px; border-radius:50%; border:1px solid #7acdbf3d; background:#9be7dd08; font-size:16px; }
+.miku-room-controls [data-miku-action="room-play"] { width:74px; height:44px; border-radius:24px; font-size:13px; background:#82ddce26; border-color:#8ae6d96b; color:#d5fff5; }
+.miku-room-note { margin:18px 0 0; color:#87a3b8; font-size:10px; line-height:1.8; }
+.miku-voices { max-width:580px; }
+.miku-voice-intro { color:#a2b9cc; font-size:12px; line-height:1.9; margin:0 0 18px; }
+.miku-voice-options { display:grid; gap:9px; }
+.miku-voice-options button { display:flex; flex-direction:column; gap:5px; text-align:left; padding:12px 16px; border:1px solid #acd9d52b; border-radius:13px; background:#b2dfd806; }
+.miku-voice-options button[aria-pressed="true"] { border-color:#79e4ce; background:#7de4ce18; }
+.miku-voice-options span { font-size:13px; color:#c0efe5; }
+.miku-voice-options small { font-size:10px; color:#91adbf; }
+.miku-voice-caption { min-height:30px; font-size:11px; margin:17px 0 9px; color:#c3e1dd; line-height:1.8; }
+.miku-voice-mute { border:1px solid #abcfc83d; background:transparent; border-radius:10px; padding:8px 12px; font-size:11px !important; }
+.miku-voice-source { color:#7791a5; font-size:9px; line-height:1.8; margin:17px 0 0; }
+.miku-heart { position:fixed; z-index:500; color:#b5f1e1; font-size:20px; pointer-events:none; animation:miku-heart-drift 1.1s ease-out forwards; }
+@keyframes miku-heart-drift { from { opacity:1;transform:translate(0,0) scale(.7); } to { opacity:0;transform:translate(var(--heart-x),-75px) scale(1.2); } }
+body.light .miku-host { background:linear-gradient(120deg,#e1f0f2f2,#eef2fcf2); border-color:#6cb8b447; color:#294551; }
+body.light .miku-host-heading { color:#3c827d; }
+body.light .miku-host-actions button { border-color:#549e9d47; color:#376768; }
+@media(max-width:680px) {
+  .miku-host { padding:20px; margin:18px 0 23px; border-radius:22px; }
+  .miku-host { grid-template-columns:1fr; }
+  .miku-host-emblem { display:none; }
+  .miku-host-actions { grid-column:1; }
+  #miku-host-text { font-size:13px; }
+  .miku-host-actions { gap:7px; }
+  .miku-host-actions button { font-size:10px; padding:8px 10px; }
+  .miku-dock { right:12px; bottom:19px; padding:14px 16px; width:min(310px,calc(100vw - 24px)); }
+  body.music-engaged .miku-dock { bottom:110px; }
+  .miku-modal-backdrop { padding:14px; }
+  .miku-modal { border-radius:22px; max-height:calc(100dvh - 28px); }
+  .miku-modal > header { padding:20px 21px 12px; }
+  .miku-modal h2 { font-size:20px; }
+  .miku-modal-body { padding:10px 21px 23px; }
+  .miku-room .miku-modal-body { grid-template-columns:1fr; gap:0; }
+  .miku-room-character { min-height:220px; height:220px; overflow:hidden; }
+  .miku-room .kb-stage { width:180px; height:220px; }
+  .miku-room .kanban { margin-top:0; }
+  .miku-room-album { width:65px; height:65px; margin-bottom:12px; font-size:25px; }
+  .miku-room-title { font-size:18px; margin:6px 0 12px; }
+  .miku-room-lyric { min-height:44px; font-size:12px; margin-bottom:12px; }
+  .miku-room-note { margin-top:12px; }
+}
+@media(prefers-reduced-motion:reduce) { .miku-heart { display:none; } .miku-host *, .miku-dock *, .miku-modal * { scroll-behavior:auto !important; } }

@@ -1,0 +1,713 @@
+{
+  "version": 1,
+  "site": {
+    "owner": "CidneyAurum",
+    "name": "CidneyAurum の 小窝",
+    "description": "CidneyAurum 的数字小窝：博客、照片墙，还有 Limbus 风格歌词演出模拟器。"
+  },
+  "pages": [
+    {
+      "id": "home",
+      "title": "CidneyAurum",
+      "url": "/",
+      "summary": "CidneyAurum 的数字小窝：学习手记、二次元收藏、生活碎片、音乐与 Limbus 歌词演出。"
+    },
+    {
+      "id": "blog",
+      "title": "拾光档案",
+      "url": "/blog.html",
+      "summary": "CidneyAurum 的博客归档：学习笔记、折腾记录和日常碎碎念。"
+    },
+    {
+      "id": "says",
+      "title": "说说",
+      "url": "/says.html",
+      "summary": "CidneyAurum 的说说：碎片想法与日常图集。"
+    },
+    {
+      "id": "photos",
+      "title": "光影画廊",
+      "url": "/photos.html",
+      "summary": "CidneyAurum 的照片墙：记录视觉的一次次触动。"
+    },
+    {
+      "id": "limbus",
+      "title": "边狱放映室",
+      "url": "/limbus.html",
+      "summary": "网页版 Limbus 风格歌词演出模拟器：粘贴歌词即可逐行演出，支持手动、自动与本地音乐同步模式。"
+    },
+    {
+      "id": "about",
+      "title": "CidneyAurum",
+      "url": "/about.html",
+      "summary": "关于 CidneyAurum：经历、技能与联系方式。"
+    }
+  ],
+  "articles": [
+    {
+      "id": "hello-world",
+      "slug": "hello-world",
+      "title": "网站上线啦！",
+      "date": "2026-08-29",
+      "tags": [
+        "日常"
+      ],
+      "summary": "我的个人小站正式上线，这是第一篇博客，讲讲这个小站是怎么搭起来的。",
+      "url": "/posts/hello-world.html",
+      "text": "撒花！✧(≖ ◡ ≖✿) 我的个人小站终于上线了！这是本站的第一篇博客，趁这个机会记录一下小站是怎么搭起来的。\n\n这个网站有什么？\n\n个人主页：资料卡、环境电台、最新文章、运行状态，还有流萤和像素猫\n\n拾光档案：博客归档，带搜索，还有时间轴 / 网格双视图\n\n光影画廊：拍立得风格的照片墙\n\nLimbus 歌词演出模拟器：网页版歌词演出工具，粘贴歌词就能逐句开演\n\n用了什么技术？\n\n整个网站是纯 HTML / CSS / JavaScript 手写的，没有用任何框架和构建工具，所以：\n\n改完代码 git push 一下就自动上线，特别省心\n\n托管在 GitHub Pages，免费\n\n背景氛围、流萤粒子、时钟条、歌词演出引擎、环境电台（Web Audio 合成音乐）都是自己写的\n\n小提示：右下角有一只像素猫在陪你逛站；点首页的「播放电台」真的会有音乐哦。\n\n接下来想做什么？\n\n把占位的内容换成真实内容，然后保持每周更新一篇博客（先立个 flag 好了 🚩）。\n\n如果你也在做自己的小站，欢迎参考我的仓库，一起玩呀～",
+      "sections": [
+        {
+          "id": "toc-1",
+          "title": "这个网站有什么？",
+          "text": "个人主页：资料卡、环境电台、最新文章、运行状态，还有流萤和像素猫\n\n拾光档案：博客归档，带搜索，还有时间轴 / 网格双视图\n\n光影画廊：拍立得风格的照片墙\n\nLimbus 歌词演出模拟器：网页版歌词演出工具，粘贴歌词就能逐句开演",
+          "url": "/posts/hello-world.html#toc-1"
+        },
+        {
+          "id": "toc-2",
+          "title": "用了什么技术？",
+          "text": "整个网站是纯 HTML / CSS / JavaScript 手写的，没有用任何框架和构建工具，所以：\n\n改完代码 git push 一下就自动上线，特别省心\n\n托管在 GitHub Pages，免费\n\n背景氛围、流萤粒子、时钟条、歌词演出引擎、环境电台（Web Audio 合成音乐）都是自己写的\n\n小提示：右下角有一只像素猫在陪你逛站；点首页的「播放电台」真的会有音乐哦。",
+          "url": "/posts/hello-world.html#toc-2"
+        },
+        {
+          "id": "toc-3",
+          "title": "接下来想做什么？",
+          "text": "把占位的内容换成真实内容，然后保持每周更新一篇博客（先立个 flag 好了 🚩）。\n\n如果你也在做自己的小站，欢迎参考我的仓库，一起玩呀～",
+          "url": "/posts/hello-world.html#toc-3"
+        }
+      ]
+    },
+    {
+      "id": "how-to-write-post",
+      "slug": "how-to-write-post",
+      "title": "如何发布一篇新文章 / 新照片",
+      "date": "2026-08-29",
+      "tags": [
+        "指南"
+      ],
+      "summary": "三种方式从易到难：站内写作台一键发布、本地一条命令、GitHub 网页直接写。",
+      "url": "/posts/how-to-write-post.html",
+      "text": "发文、发图可以按顺手程度选一种。本文操作说明更新于 2026-10-25。\n\n方式零：写作台（最简单，推荐）\n\n打开网站的 ✍️ 写作台：\n\n发文：填标题 → 写 Markdown（右边实时预览）→ 点「一键发布到 GitHub」。文字草稿会自动保存在当前浏览器；文件重名时会停止写入，避免覆盖旧文章。\n\n发图：把图片拖进虚线框（可多选）→ 每张图可以改标题 → 点「全部上传」。文件名会自动避免重名；部分上传失败时，剩余图片保留在队列里。\n\n提交成功后，Actions 会检查、构建并部署。只有对应提交的 Pages 部署成功，才能确认上线；完成时间取决于队列、检查与部署进度。首次启用新版流程前，需要在仓库 Settings → Pages 中将来源设为 GitHub Actions。\n\n首次使用需要到写作台的「设置」页粘贴一次 GitHub 令牌（Fine-grained PAT，只授权本仓库的 Contents: Read and write），之后浏览器会记住。\n\n方式一：本地一条命令\n\n在 _posts/ 里写一个 xxx.md（格式见下），然后：\n\npython tools/build.py\ngit add -A && git commit -m \"发布新文章\" && git push\n\n方式二：GitHub 网页直接写\n\n仓库 → _posts/ → Add file → Create new file → 文件名用英文（如 my-first-note.md）→ 写完提交即可。\n\nMarkdown 文件格式\n\n---\ntitle: 文章标题\ndate: 2026-09-01\ntags: 日常, 笔记\nemoji: 🪐\nsummary: 一句话摘要\n---\n\n正文用 Markdown 写。\n\n其实只有标题是必须的：不写日期默认今天，不写摘要会自动截取正文第一段，标签/emoji/封面都能省略。\n\n常用语法：## 标题、**加粗**、`代码`、> 引用、[链接](网址)、![图](图片路径)、代码块用三个反引号包裹。\n\n发照片的补充说明\n\n图片标题默认取文件名，想改可以在写作台上传时填写\n\n写作台上传时自动添加年月；直接上传无日期文件时，构建会尽量取首次提交年月，无法确定则显示 MEMORY\n\n封面进阶：front-matter 里写 cover: assets/xxx.jpg 可以用图片当文章封面\n\n和 Miku 一起起稿\n\n写作台的「Miku 的写作便签」可以按当前正文拟标题、提炼摘要，或润色选中的一段。先写一点正文，再点对应按钮；建议会展示在独立的框里，由你决定是否应用，也可以复制或撤销。\n\n建议不会自动覆盖新编辑的内容，也不会自动发布。AI 服务接通后才会进行模型请求；未接通时会给出明确提示。",
+      "sections": [
+        {
+          "id": "toc-1",
+          "title": "方式零：写作台（最简单，推荐）",
+          "text": "打开网站的 ✍️ 写作台：\n\n发文：填标题 → 写 Markdown（右边实时预览）→ 点「一键发布到 GitHub」。文字草稿会自动保存在当前浏览器；文件重名时会停止写入，避免覆盖旧文章。\n\n发图：把图片拖进虚线框（可多选）→ 每张图可以改标题 → 点「全部上传」。文件名会自动避免重名；部分上传失败时，剩余图片保留在队列里。\n\n提交成功后，Actions 会检查、构建并部署。只有对应提交的 Pages 部署成功，才能确认上线；完成时间取决于队列、检查与部署进度。首次启用新版流程前，需要在仓库 Settings → Pages 中将来源设为 GitHub Actions。\n\n首次使用需要到写作台的「设置」页粘贴一次 GitHub 令牌（Fine-grained PAT，只授权本仓库的 Contents: Read and write），之后浏览器会记住。",
+          "url": "/posts/how-to-write-post.html#toc-1"
+        },
+        {
+          "id": "toc-2",
+          "title": "方式一：本地一条命令",
+          "text": "在 _posts/ 里写一个 xxx.md（格式见下），然后：\n\npython tools/build.py\ngit add -A && git commit -m \"发布新文章\" && git push",
+          "url": "/posts/how-to-write-post.html#toc-2"
+        },
+        {
+          "id": "toc-3",
+          "title": "方式二：GitHub 网页直接写",
+          "text": "仓库 → _posts/ → Add file → Create new file → 文件名用英文（如 my-first-note.md）→ 写完提交即可。",
+          "url": "/posts/how-to-write-post.html#toc-3"
+        },
+        {
+          "id": "toc-4",
+          "title": "Markdown 文件格式",
+          "text": "---\ntitle: 文章标题\ndate: 2026-09-01\ntags: 日常, 笔记\nemoji: 🪐\nsummary: 一句话摘要\n---\n\n正文用 Markdown 写。\n\n其实只有标题是必须的：不写日期默认今天，不写摘要会自动截取正文第一段，标签/emoji/封面都能省略。\n\n常用语法：## 标题、**加粗**、`代码`、> 引用、[链接](网址)、![图](图片路径)、代码块用三个反引号包裹。",
+          "url": "/posts/how-to-write-post.html#toc-4"
+        },
+        {
+          "id": "toc-5",
+          "title": "发照片的补充说明",
+          "text": "图片标题默认取文件名，想改可以在写作台上传时填写\n\n写作台上传时自动添加年月；直接上传无日期文件时，构建会尽量取首次提交年月，无法确定则显示 MEMORY\n\n封面进阶：front-matter 里写 cover: assets/xxx.jpg 可以用图片当文章封面",
+          "url": "/posts/how-to-write-post.html#toc-5"
+        },
+        {
+          "id": "toc-6",
+          "title": "和 Miku 一起起稿",
+          "text": "写作台的「Miku 的写作便签」可以按当前正文拟标题、提炼摘要，或润色选中的一段。先写一点正文，再点对应按钮；建议会展示在独立的框里，由你决定是否应用，也可以复制或撤销。\n\n建议不会自动覆盖新编辑的内容，也不会自动发布。AI 服务接通后才会进行模型请求；未接通时会给出明确提示。",
+          "url": "/posts/how-to-write-post.html#toc-6"
+        }
+      ]
+    }
+  ],
+  "says": [
+    {
+      "id": "seed1",
+      "text": "说说功能上线啦！以后碎片想法和图都发这里 ♪",
+      "time": "2026-08-30 20:00",
+      "url": "/says.html"
+    }
+  ],
+  "photos": [
+    {
+      "id": "e3bbe43b17f5bb93",
+      "caption": "Hitori",
+      "url": "/photos.html",
+      "src": "/assets/gallery/Hitori_2026-08.jpg"
+    },
+    {
+      "id": "9e3c79e00bb97a4d",
+      "caption": "Kita",
+      "url": "/photos.html",
+      "src": "/assets/gallery/Kita_2026-08.jpg"
+    },
+    {
+      "id": "ebd83ca50f7b07b6",
+      "caption": "Nijika",
+      "url": "/photos.html",
+      "src": "/assets/gallery/Nijika_2026-08.jpg"
+    },
+    {
+      "id": "5cdfd988824b5069",
+      "caption": "Ramen",
+      "url": "/photos.html",
+      "src": "/assets/gallery/Ramen_2026-08.png"
+    },
+    {
+      "id": "abe6e8be6363395d",
+      "caption": "Ryo",
+      "url": "/photos.html",
+      "src": "/assets/gallery/Ryo_2026-08.jpg"
+    },
+    {
+      "id": "2cf919a726e15726",
+      "caption": "XiaRi",
+      "url": "/photos.html",
+      "src": "/assets/gallery/XiaRi_2026-08.jpg"
+    }
+  ],
+  "playlist": [
+    {
+      "id": "33367345",
+      "name": "夜明けと蛍",
+      "artist": "n-buna/初音ミク"
+    },
+    {
+      "id": "500913304",
+      "name": "シャルル",
+      "artist": "須田景凪"
+    },
+    {
+      "id": "1345872140",
+      "name": "勾指起誓",
+      "artist": "洛天依Official/ilem"
+    },
+    {
+      "id": "1439814454",
+      "name": "我的悲伤是水做的",
+      "artist": "ChiliChill乐团/洛天依Official"
+    },
+    {
+      "id": "2006735434",
+      "name": "深海少女 -deep sea girl- (feat. 初音ミク)",
+      "artist": "ゆうゆ/初音ミク"
+    },
+    {
+      "id": "3341026792",
+      "name": "月が綺麗ねと言われたい！",
+      "artist": "柿崎ユウタ"
+    },
+    {
+      "id": "2722447380",
+      "name": "少女A (feat. 鏡音リン)",
+      "artist": "椎名もた/鏡音リン"
+    },
+    {
+      "id": "3324045181",
+      "name": "メンタルチェンソー",
+      "artist": "かいりきベア"
+    },
+    {
+      "id": "4885285",
+      "name": "夢と葉桜",
+      "artist": "初音ミク/青木月光"
+    },
+    {
+      "id": "1864338280",
+      "name": "ルマ",
+      "artist": "かいりきベア/初音ミク"
+    },
+    {
+      "id": "26142121",
+      "name": "六兆年と一夜物語",
+      "artist": "KEMU VOXX/IA"
+    },
+    {
+      "id": "557579433",
+      "name": "DAYBREAK FRONTLINE",
+      "artist": "めありー/Orangestar"
+    },
+    {
+      "id": "31830623",
+      "name": "アスノヨゾラ哨戒班",
+      "artist": "Orangestar/IA"
+    },
+    {
+      "id": "34509838",
+      "name": "だんだん早くなる",
+      "artist": "40mP/初音ミク"
+    },
+    {
+      "id": "28953243",
+      "name": "恋愛裁判",
+      "artist": "40mP/初音ミク"
+    },
+    {
+      "id": "1876028528",
+      "name": "幽霊東京",
+      "artist": "Ayase"
+    },
+    {
+      "id": "2048012723",
+      "name": "バカ通信 (feat. 知声)",
+      "artist": "isonosuke/知声"
+    },
+    {
+      "id": "526473118",
+      "name": "炉心融解",
+      "artist": "鏡音リン/iroha(sasaki)"
+    },
+    {
+      "id": "1805381913",
+      "name": "もうどくちゅうい",
+      "artist": "でんの子P/蒼姫ラピス"
+    },
+    {
+      "id": "400689157",
+      "name": "ゆるふわ菩薩ガール",
+      "artist": "初音ミク/GUMI/zakooon"
+    },
+    {
+      "id": "1899686964",
+      "name": "カトラリー",
+      "artist": "神山羊/初音ミク"
+    },
+    {
+      "id": "1817733945",
+      "name": "あしゅらしゅら",
+      "artist": "ユリイ・カノン/GUMI"
+    },
+    {
+      "id": "1335373476",
+      "name": "おどりゃんせ",
+      "artist": "ユリイ・カノン/GUMI/初音ミク"
+    },
+    {
+      "id": "1335362744",
+      "name": "スーサイドパレヱド",
+      "artist": "ユリイ・カノン/GUMI"
+    },
+    {
+      "id": "546730659",
+      "name": "だれかの心臓になれたなら",
+      "artist": "GUMI/ユリイ・カノン"
+    },
+    {
+      "id": "1912598037",
+      "name": "くうになる (feat. 可不&初音ミク)",
+      "artist": "MIMI/可不/初音ミク"
+    },
+    {
+      "id": "1895261682",
+      "name": "抜刀 (feat. 花譜)",
+      "artist": "花譜/羽生まゐご"
+    },
+    {
+      "id": "2660469961",
+      "name": "ぼくのかみさま",
+      "artist": "羽生まゐご"
+    },
+    {
+      "id": "1838030532",
+      "name": "オノマトペ",
+      "artist": "羽生まゐご/りりあ。"
+    },
+    {
+      "id": "1835378673",
+      "name": "阿吽のビーツ",
+      "artist": "羽生まゐご"
+    },
+    {
+      "id": "2738977436",
+      "name": "マジック・メイド (feat. 重音テト)",
+      "artist": "MIMI/重音テト"
+    },
+    {
+      "id": "1905586708",
+      "name": "ただ声一つ",
+      "artist": "ロクデナシ/MIMI"
+    },
+    {
+      "id": "2656567752",
+      "name": "サイエンス (feat. 重音テト)",
+      "artist": "MIMI/重音テト"
+    },
+    {
+      "id": "422790936",
+      "name": "ラプンツェル",
+      "artist": "n-buna/初音ミク"
+    },
+    {
+      "id": "28917380",
+      "name": "背景、夏に溺れる",
+      "artist": "初音ミク/n-buna"
+    },
+    {
+      "id": "33367337",
+      "name": "拝啓、夏に溺れる",
+      "artist": "n-buna/初音ミク"
+    },
+    {
+      "id": "33367346",
+      "name": "花と水飴、最終電車",
+      "artist": "n-buna/初音ミク"
+    },
+    {
+      "id": "423997819",
+      "name": "ウミユリ海底譚",
+      "artist": "初音ミク/n-buna"
+    },
+    {
+      "id": "33367332",
+      "name": "もうじき夏が終わるから",
+      "artist": "n-buna/初音ミク"
+    },
+    {
+      "id": "33367339",
+      "name": "透明エレジー",
+      "artist": "n-buna/GUMI"
+    },
+    {
+      "id": "26136782",
+      "name": "脳漿炸裂ガール",
+      "artist": "れるりり/初音ミク/GUMI"
+    },
+    {
+      "id": "33856838",
+      "name": "とある一家の御茶会議",
+      "artist": "くるりんご/GUMI"
+    },
+    {
+      "id": "1493975799",
+      "name": "魚類による考古学",
+      "artist": "シャノン/GUMI"
+    },
+    {
+      "id": "2018936468",
+      "name": "ひとりぼっち産業革命 (feat. 裏命)",
+      "artist": "シャノン/裏命"
+    },
+    {
+      "id": "2149794626",
+      "name": "私は雨",
+      "artist": "稲葉曇/歌愛ユキ"
+    },
+    {
+      "id": "2636993952",
+      "name": "炜WARD ROMANCE",
+      "artist": "FLAVOR FOLEY"
+    },
+    {
+      "id": "1991191322",
+      "name": "熱異常 (feat. 足立レイ)",
+      "artist": "いよわ/足立レイ"
+    },
+    {
+      "id": "22677573",
+      "name": "メルト",
+      "artist": "初音ミク/ryo (supercell)"
+    },
+    {
+      "id": "415786416",
+      "name": "Miku",
+      "artist": "Anamanaguchi/初音ミク"
+    },
+    {
+      "id": "3378813781",
+      "name": "numb numb (feat. Hatsune Miku, Kasane Teto)",
+      "artist": "TAK/初音ミク/重音テト"
+    },
+    {
+      "id": "26440351",
+      "name": "蜘蛛糸モノポリー",
+      "artist": "sasakure.UK/初音ミク"
+    },
+    {
+      "id": "2674765182",
+      "name": "超主人公",
+      "artist": "ピノキオピー/初音ミク"
+    },
+    {
+      "id": "2670919880",
+      "name": "バケモノの唄 (feat. 初音ミク)",
+      "artist": "Shino/初音ミク"
+    },
+    {
+      "id": "3322691810",
+      "name": "ループザルーム (feat. 初音ミク)",
+      "artist": "ルシノ/初音ミク"
+    },
+    {
+      "id": "22677570",
+      "name": "ワールドイズマイン",
+      "artist": "初音ミク/ryo (supercell)"
+    },
+    {
+      "id": "502455381",
+      "name": "アンノウン・マザーグース",
+      "artist": "wowaka/初音ミク"
+    },
+    {
+      "id": "30148963",
+      "name": "ツギハギスタッカート",
+      "artist": "とあ/初音ミク"
+    },
+    {
+      "id": "28152560",
+      "name": "弱虫モンブラン",
+      "artist": "DECO*27/GUMI"
+    },
+    {
+      "id": "28364369",
+      "name": "妄想税",
+      "artist": "DECO*27/初音ミク"
+    },
+    {
+      "id": "1878313261",
+      "name": "神っぽいな",
+      "artist": "ピノキオピー/初音ミク"
+    },
+    {
+      "id": "2716424334",
+      "name": "T氏の話を信じるな (feat. 初音ミク & 重音テト)",
+      "artist": "ピノキオピー/初音ミク/重音テト"
+    },
+    {
+      "id": "2742965504",
+      "name": "PPPP (feat. Hatsune Miku, Kasane Teto)",
+      "artist": "TAK/初音ミク/重音テト"
+    },
+    {
+      "id": "459717345",
+      "name": "太陽系デスコ",
+      "artist": "ナユタン星人/初音ミク"
+    },
+    {
+      "id": "2711062652",
+      "name": "偽中国語 (feat. 重音テト & 足立レイ)",
+      "artist": "音無あふ/重音テト/足立レイ"
+    },
+    {
+      "id": "2675459832",
+      "name": "踊っチャイナ (feat. 初音ミク & 重音テト)",
+      "artist": "Atena/初音ミク/重音テト"
+    },
+    {
+      "id": "432486474",
+      "name": "妄想感傷代償連盟",
+      "artist": "DECO*27/初音ミク"
+    },
+    {
+      "id": "2730639960",
+      "name": "いますぐ輪廻",
+      "artist": "なきそ/初音ミク"
+    },
+    {
+      "id": "1951285318",
+      "name": "転生林檎",
+      "artist": "ピノキオピー/初音ミク"
+    },
+    {
+      "id": "1919802219",
+      "name": "魔法少女とチョコレゐト",
+      "artist": "ピノキオピー/初音ミク"
+    },
+    {
+      "id": "1385116338",
+      "name": "乙女解剖",
+      "artist": "DECO*27/初音ミク"
+    },
+    {
+      "id": "1864338286",
+      "name": "失敗作少女 (MARETU Remix)",
+      "artist": "かいりきベア/MARETU/初音ミク"
+    },
+    {
+      "id": "2639291583",
+      "name": "モニタリング",
+      "artist": "DECO*27/初音ミク"
+    },
+    {
+      "id": "1826139261",
+      "name": "グッバイ宣言",
+      "artist": "Chinozo"
+    },
+    {
+      "id": "2156144064",
+      "name": "せかいしね",
+      "artist": "はるな。"
+    },
+    {
+      "id": "1825056882",
+      "name": "1000年生きてる",
+      "artist": "いよわ/初音ミク"
+    },
+    {
+      "id": "2707954263",
+      "name": "Static",
+      "artist": "FLAVOR FOLEY"
+    },
+    {
+      "id": "2132169876",
+      "name": "ころしちゃった! (feat. 初音ミク)",
+      "artist": "夏山よつぎ/初音ミク"
+    },
+    {
+      "id": "1921983207",
+      "name": "ラグトレイン",
+      "artist": "稲葉曇/歌愛ユキ"
+    },
+    {
+      "id": "1440693335",
+      "name": "バケモノの唄",
+      "artist": "Shino/初音ミク"
+    },
+    {
+      "id": "1913871308",
+      "name": "親愛なるあなたは火葬",
+      "artist": "虻瀬"
+    },
+    {
+      "id": "1859603835",
+      "name": "ねぇねぇねぇ。",
+      "artist": "ピノキオピー/鏡音リン/初音ミク"
+    },
+    {
+      "id": "29124079",
+      "name": "脳漿炸裂ガール",
+      "artist": "初音ミク/GUMI/れるりり"
+    },
+    {
+      "id": "2118849639",
+      "name": "Aじゃないか (feat. 初音ミク & 鏡音リン)",
+      "artist": "ピノキオピー/初音ミク/鏡音リン"
+    },
+    {
+      "id": "26096272",
+      "name": "千本桜",
+      "artist": "黒うさP/初音ミク"
+    },
+    {
+      "id": "2648491185",
+      "name": "テトリス",
+      "artist": "柊マグネタイト/重音テト"
+    },
+    {
+      "id": "2700788167",
+      "name": "臙脂 ft. 重音テト",
+      "artist": "bk/重音テト"
+    },
+    {
+      "id": "2105374808",
+      "name": "オーバーライド",
+      "artist": "吉田夜世/重音テト"
+    },
+    {
+      "id": "29277770",
+      "name": "蜘蛛糸モノポリー",
+      "artist": "初音ミク/sasakure.UK"
+    },
+    {
+      "id": "29185031",
+      "name": "しかばねの踊り",
+      "artist": "きくお/初音ミク"
+    },
+    {
+      "id": "1875436617",
+      "name": "きゅうくらりん",
+      "artist": "いよわ/可不"
+    },
+    {
+      "id": "2759783977",
+      "name": "どりーむもーど",
+      "artist": "Atena"
+    },
+    {
+      "id": "2720452383",
+      "name": "クローンクローン (feat. GUMI & 鏡音リン)",
+      "artist": "Atena/GUMI/鏡音リン"
+    },
+    {
+      "id": "1939575649",
+      "name": "まにまに",
+      "artist": "r-906/初音ミク"
+    },
+    {
+      "id": "32431066",
+      "name": "神のまにまに",
+      "artist": "初音ミク/鏡音リン/GUMI/れるりり"
+    },
+    {
+      "id": "1456486939",
+      "name": "春嵐",
+      "artist": "john/初音ミク"
+    },
+    {
+      "id": "469073360",
+      "name": "深海少女",
+      "artist": "ゆうゆ/初音ミク"
+    },
+    {
+      "id": "2138520986",
+      "name": "ビノミ",
+      "artist": "MARETU/初音ミク"
+    },
+    {
+      "id": "2134872913",
+      "name": "死別",
+      "artist": "シャノン/GUMI"
+    },
+    {
+      "id": "1928250636",
+      "name": "Bad Apple",
+      "artist": "Rimi/初音ミク"
+    },
+    {
+      "id": "1855988913",
+      "name": "あだぽしゃ",
+      "artist": "いよわ/初音ミク"
+    },
+    {
+      "id": "29827560",
+      "name": "おちゃめ機能",
+      "artist": "重音テト/ラマーズP"
+    },
+    {
+      "id": "1999253939",
+      "name": "ハナタバ",
+      "artist": "MIMI/可不"
+    },
+    {
+      "id": "29185036",
+      "name": "君はできない子",
+      "artist": "きくお/初音ミク"
+    },
+    {
+      "id": "561307164",
+      "name": "ハレハレヤ",
+      "artist": "羽生まゐご/v flower/初音ミク"
+    },
+    {
+      "id": "1308818780",
+      "name": "Seyana.",
+      "artist": "琴葉茜/結月ゆかり/琴葉葵/GYARI"
+    },
+    {
+      "id": "1309901145",
+      "name": "アカリがやってきたぞっ",
+      "artist": "紲星あかり/GYARI"
+    },
+    {
+      "id": "1387392404",
+      "name": "無限にホメてくれる桜乃そら先生",
+      "artist": "桜乃そら/GYARI"
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+# Browser regression tests use unittest and local/mocked fixtures; no API keys.
+playwright==1.62.0

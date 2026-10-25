@@ -9,9 +9,11 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="preconnect" href="https://fonts.loli.net" crossorigin>
   <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700;900&family=Noto+Sans+SC:wght@900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=a9cf293">
+  <link rel="stylesheet" href="css/style.css?v=ai20261025">
+  <link rel="stylesheet" href="css/garden.css?v=ai20261025">
 </head>
 <body class="page-enter" data-page="limbus">
+  <a class="skip-link" href="#main-content">跳到正文</a>
   <div class="scene" aria-hidden="true">
     <img class="scene-bg" src="assets/background-blur.webp" alt="">
     <div class="scene-overlay"></div>
@@ -23,24 +25,29 @@
   <svg class="pixel-deco fish" viewBox="0 0 7 4" aria-hidden="true"><g fill="#7cc7ff"><rect x="1" y="1" width="4" height="2"/><rect x="2" y="0" width="2" height="1"/><rect x="2" y="3" width="2" height="1"/><rect x="5" y="0" width="1" height="1"/><rect x="5" y="3" width="1" height="1"/><rect x="6" y="1" width="1" height="2"/></g><rect x="2" y="1" width="1" height="1" fill="#1a2a4a"/></svg>
   <button id="to-top" class="to-top" aria-label="返回顶部">✦</button>
 
-  <nav class="nav">
-    <a class="logo" href="index.html">CidneyAurum<span class="no">の</span>小窝</a>
+  <nav class="nav" aria-label="主导航">
+    <a class="logo" href="index.html" aria-label="CidneyAurum 首页"><span class="brand-mark">A<span>.</span></span><span class="brand-copy">CidneyAurum<small>一点代码，一些生活</small></span></a>
     <div class="nav-links" id="nav-links">
       <a class="nav-link" href="index.html">首页</a>
-      <a class="nav-link" href="blog.html">归档</a>
-        <a class="nav-link" href="says.html">说说</a>
+      <a class="nav-link" href="blog.html">手记</a>
+      <a class="nav-link" href="says.html">碎片</a>
       <a class="nav-link" href="photos.html">相册</a>
-      <a class="nav-link active" href="limbus.html">模拟器</a>
+      <a class="nav-link active" href="limbus.html" aria-current="page">实验室</a>
       <a class="nav-link" href="about.html">关于</a>
-        <a class="nav-link nav-post" href="admin.html">✍️</a>
     </div>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <button id="theme-toggle" class="icon-btn" aria-label="切换主题">✨</button>
-      <button id="hamburger" class="icon-btn" aria-label="菜单">☰</button>
+    <div class="nav-actions">
+      <a class="nav-github" href="https://github.com/CidneyAurum" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><span data-icon="github"></span></a>
+      <button id="theme-toggle" class="icon-btn" aria-label="切换主题">◐</button>
+      <button id="hamburger" class="icon-btn" aria-label="打开导航" aria-controls="nav-links" aria-expanded="false">☰</button>
     </div>
   </nav>
 
-  <main class="wrap">
+  <main class="wrap" id="main-content" tabindex="-1">
+    <header class="page-head">
+      <h1 class="page-title">边狱放映室</h1>
+      <p class="page-sub">把喜欢的歌词，变成一场属于你的演出。</p>
+    </header>
+
     <!-- ============ 演出舞台（黑金红是刻意的反差风格） ============ -->
     <div class="stage" id="limbus-stage">
       <div class="stage-topbar"><span>LIMBUS · LIKE · LYRIC</span><span>SIMULATOR WEB</span></div>
@@ -115,8 +122,16 @@
     </section>
   </main>
 
-  <footer>
-    <a href="admin.html">✍️ 写作台</a> · Made with <span class="heart">♡</span> &amp; 星光 · © 2026 CidneyAurum · Powered by GitHub Pages
+  <footer class="site-footer">
+    <div>
+      <a class="footer-brand" href="index.html">CidneyAurum<span>的小窝</span></a>
+      <p>慢慢来，记录总会有回响。</p>
+    </div>
+    <div class="footer-meta">
+      <span>© 2026 CidneyAurum · Built with curiosity.</span>
+      <span><a href="feed.xml">RSS 订阅</a><i>·</i><a href="https://github.com/CidneyAurum" target="_blank" rel="noopener noreferrer">GitHub ↗</a><i>·</i><a href="admin.html">写作台 ↗</a></span>
+      <span class="footer-credits"><a class="visual-credit" href="https://manybackgrounds.com/background/blue-scenery-anime-night-sky-pzh6x27gg1g2eyph.html" target="_blank" rel="noopener noreferrer">Wallpaper by alberto1 from ManyBackgrounds.com</a><i>·</i><a class="design-credit" href="https://xmyl-153.github.io/xingmengyouling-blog/" target="_blank" rel="noopener noreferrer">UI 灵感：星梦幽灵</a></span>
+    </div>
   </footer>
 
   <div class="mini-player">
@@ -129,11 +144,11 @@
   </div>
 
   <audio id="limbus-audio" preload="auto" style="display:none;"></audio>
-  <script src="js/main.js?v=a9cf293"></script>
-  <script src="js/limbus.js?v=a9cf293"></script>
-  <script src="js/music.js?v=a9cf293" defer></script>
-  <script src="js/player.js?v=a9cf293"></script>
-  <script src="js/kanban.js?v=a9cf293" defer></script>
+  <script src="js/main.js?v=ai20261025"></script>
+  <script src="js/garden.js?v=ai20261025" defer></script>
+  <script src="js/limbus.js?v=ai20261025"></script>
+  <script src="js/music.js?v=ai20261025" defer></script>
+  <script src="js/player.js?v=ai20261025"></script>
   <script>
     // 速度滑杆的数值显示
     const speedRange = document.getElementById("speed-range");

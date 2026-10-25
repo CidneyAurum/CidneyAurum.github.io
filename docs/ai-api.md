@@ -1,115 +1,64 @@
-# 看板娘 AI 接入指南（含「基元律动 / TokenRhythm」）
+# Miku AI 使用指南
 
-> 为什么看板娘填了 key 还是「连接不上」？——因为 `tokenrhythm.studio` 的 API **没有开放跨域（CORS）**。
-> 浏览器里前端直连一个不开放 CORS 的接口，请求会被浏览器直接拦截（控制台报
-> `blocked by CORS policy` / `Failed to fetch`）。这跟 key 对不对、协议对不对都无关。
-> 解决办法是加一层**你自己的 CORS 代理**（免费 Cloudflare Worker）。
+Miku 面向 GitHub Pages 公网访客提供聊天、文章问答、内容推荐和写作建议。页面由 GitHub Pages 提供，AI 在 Cloudflare Worker 执行；访客无需运行本机服务或提供模型密钥。
 
----
+**本轮发布状态：Pages 来源已确认为 GitHub Actions，公网地址与每日 100 次配置已准备；Worker 最终部署和新版 Pages 的公网验收待完成。**
 
-## 一、哪些接口可以直接连（不用代理）
+- 网站：[cidneyaurum.github.io](https://cidneyaurum.github.io/)
+- AI 网关：[cidney-miku-ai.1562614833.workers.dev](https://cidney-miku-ai.1562614833.workers.dev)
+- 状态接口：[GET /api/status](https://cidney-miku-ai.1562614833.workers.dev/api/status)
 
-支持浏览器跨域的 OpenAI 兼容接口，看板娘能**直连**，比如：
+## 怎样使用
 
-- DeepSeek：`https://api.deepseek.com`（模型 `deepseek-chat`）
-- 多数 one-api/new-api 系的中转站如果开了 CORS 也能直连
+| 功能 | 使用方式 |
+| --- | --- |
+| chat 聊天 | 从 Miku 聊天入口发送问题，继续追问或取消生成。 |
+| article 文章问答 | 使用「一句话读懂」「问问这篇」，或选中文字后解释上下文。 |
+| discover 内容推荐 | 请 Miku 推荐站内已有的手记、照片、碎片或歌单内容。 |
+| write 写作建议 | 写作台「Miku 的写作便签」可拟标题、提炼摘要、润色选段。 |
 
-凡是在看板娘 ⚙️ 设置里填完 key、点 🔄 能读到模型列表的，就是能直连的。
+站点事实依据公共知识索引，引用可跳到真实文章章节。没有相应文章或经历记录时，应说明资料缺口。跳转、听歌、比心等 action 展示为按钮，由你点击后执行。
 
-## 二、哪些需要代理（如基元律动）
+写作建议先出现在可编辑的建议框。确认后点「应用到标题」「应用到摘要」或「替换选中段落」，也可以复制建议；「撤销这次修改」可恢复应用前的内容。应用后继续编辑过的草稿会受到保护，AI 不会自动发布内容。
 
-`tokenrhythm.studio` 这类不开放 CORS 的，必须走代理。本站已内置「基元律动（TokenRhythm）」预设：
+欢迎、回应、比心等互动使用已收录的日语角色短句，并显示中文字幕；长 AI 回复以文字呈现。语音可单独试听或静音。
 
-- Base URL：`https://tokenrhythm.studio/v1`
-- 协议：OpenAI 兼容（`/chat/completions`）
-- 可用模型：`glm-5`、`glm-5.1`、`minimax-m2.7` 等（点 🔄 可读取）
+## 额度与资料更新
 
----
+全站共享每天 100 次已接受请求，按 UTC 日计数；另有每客户端每分钟 6 次、同时 2 个请求的限制。上游失败也计入已接受次数，失败不会自动重复调用。达到额度时稍后再试，正常阅读、音乐和相册仍可使用。
 
-## 三、部署 CORS 代理（约 3 分钟，一次性）
+站主发布新文章、说说或照片后，Actions 自动生成并发布公共 data/knowledge.json。Worker 从固定的 Pages 地址读取索引，缓存 60 秒，到期后由后续请求刷新；远端暂不可用时保留最近有效的公开快照。内容更新不需要在本机运行服务、重启网关或再次部署 Worker。
 
-1. 打开 <https://dash.cloudflare.com/> → 左侧 **Workers & Pages** → **创建** → **创建 Worker**。
-2. 起个名字（如 `ai-proxy`），点「部署」（先随便部署一个默认的也行）。
-3. 点 **编辑代码**，把默认内容清空，粘贴下方完整代码，点 **部署**。
-4. 记住你的 Worker 地址，形如 `https://ai-proxy.你的账号.workers.dev`。
+## 连接与故障提示
 
-### Worker 完整代码
+- 「AI 暂未连接」：先刷新状态或使用重试入口；上线准备期间以部署记录为准。
+- 超时、取消或限流：界面会显示状态，可稍后重试。
+- 内容过长：问题最多 4,000 字符，选段最多 8,000 字符，请缩小范围；请求同时受总大小限制。
+- 文章尚未被引用：先确认对应 Pages 部署成功，再等待索引缓存到期后的下一次请求。
+- 发布状态和后端维护见 [Worker 部署说明](../server/DEPLOYMENT.md)。
 
-```js
-// Cloudflare Worker：AI API CORS 代理
-// 用法：浏览器请求 https://你的worker.workers.dev/?url=<encodeURIComponent(目标API完整URL)>
-// 效果：Worker 转发请求（含 Authorization 等 header），并补上 CORS 头，绕过浏览器跨域限制。
+## 可选：本机开发
 
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Authorization, Content-Type, x-api-key, anthropic-version, anthropic-dangerous-direct-browser-access",
-  "Access-Control-Max-Age": "86400",
-};
+本机调试需要 Node.js 24 和 Python。Windows 开发者可自行配置 DPAPI 凭据并启动回环网关：
 
-// 只转发这些 header，避免把 Origin/Referer/Cookie 带给上游
-const FORWARD = [
-  "authorization",
-  "content-type",
-  "x-api-key",
-  "anthropic-version",
-  "anthropic-dangerous-direct-browser-access",
-];
+~~~powershell
+python tools/build.py
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/configure_ai.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/start_ai.ps1
+~~~
 
-export default {
-  async fetch(request) {
-    if (request.method === "OPTIONS") {
-      return new Response(null, { status: 204, headers: CORS });
-    }
+配置脚本隐藏输入并用当前 Windows 用户的 DPAPI 加密；启动脚本为本次开发进程提供凭据，监听 http://127.0.0.1:8787。另起 8000 端口预览网站时，可在开发副本中临时把 endpoint 指向该回环地址；发布配置保持公网 URL。开发脚本不是线上运行条件。
 
-    const url = new URL(request.url);
-    const target = url.searchParams.get("url");
-    if (!target || !/^https?:\/\//.test(target)) {
-      return new Response(JSON.stringify({ error: "缺少 url 参数" }), {
-        status: 400,
-        headers: { ...CORS, "Content-Type": "application/json" },
-      });
-    }
+## 高级个人接口兼容
 
-    const headers = new Headers();
-    for (const k of FORWARD) {
-      const v = request.headers.get(k);
-      if (v) headers.set(k, v);
-    }
+看板娘设置仍保留 OpenAI 兼容 / TokenRhythm、Gemini 和 Claude 协议以及模型列表读取，供自行配置个人服务时使用：
 
-    const res = await fetch(target, {
-      method: request.method,
-      headers,
-      body: request.method === "GET" || request.method === "HEAD" ? undefined : await request.text(),
-    });
+| 协议 | 支持的地址形式 |
+| --- | --- |
+| OpenAI 兼容 | 服务根地址或以 /v1 结尾的 Base URL；请求 chat/completions。 |
+| Gemini | 服务根地址或 /v1beta；请求模型的 generateContent。 |
+| Claude | 服务根地址或 /v1；请求 messages。 |
 
-    const body = await res.text();
-    return new Response(body, {
-      status: res.status,
-      headers: {
-        ...CORS,
-        "Content-Type": res.headers.get("Content-Type") || "application/json",
-      },
-    });
-  },
-};
-```
+填写个人 Key 后，看板娘普通聊天优先使用个人接口；文章工具和写作便签继续使用站点网关。个人接口不会自动获得站内知识索引。将个人 Key 留空可使用已连接的站点网关。
 
----
-
-## 四、接入本站
-
-1. 打开网站右下角看板娘 → ⚙️ 设置。
-2. 「接口协议」选 **基元律动（TokenRhythm）**（会自动填好 Base URL 和默认模型 `glm-5`）。
-3. 「API Key」填你的 `sk_tr_...`。
-4. 「CORS 代理地址」填第 3 步的 Worker 地址（如 `https://ai-proxy.你的账号.workers.dev`）。
-5. 点 🔄 读取模型列表，能看到 `glm-5` 等就说明通了；跟 Miku 说句话试试。
-
----
-
-## 五、安全说明
-
-- API key 只保存在**你自己浏览器**的 localStorage 里，不会进仓库代码。
-- 代理是你**自己**的 Cloudflare Worker，key 只在你浏览器 → 你的 Worker → tokenrhythm 之间传输，
-  **不经过任何公共第三方代理**。
-- 本站对 OpenAI 兼容 / Gemini / Claude 三种协议都支持代理字段：填了代理就走代理，留空则直连。
+个人接口设置保存在当前浏览器的 localStorage；它与本机 DPAPI 网关凭据分别管理。模型名、访问权限和 CORS 以服务提供方的实际配置为准。只有在自己管理的代理服务已正确配置时才填写 CORS 代理地址，本文不再使用任意 URL 转发代理作为站点网关。

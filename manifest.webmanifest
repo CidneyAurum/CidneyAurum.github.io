@@ -1,15 +1,30 @@
 {
   "name": "CidneyAurum の 小窝",
   "short_name": "小窝",
-  "description": "深空玻璃拟态风格的个人小窝：博客、说说、音乐与看板娘 Miku。",
+  "description": "CidneyAurum 的数字小窝：手记、收藏、音乐和生活碎片。",
   "start_url": "/index.html",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#07060f",
-  "theme_color": "#0b0a18",
+  "background_color": "#070b1d",
+  "theme_color": "#070b1d",
   "icons": [
-    { "src": "/assets/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
-    { "src": "/assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    {
+      "src": "/assets/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ]
 }

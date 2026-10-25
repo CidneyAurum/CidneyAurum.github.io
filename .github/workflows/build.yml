@@ -1,46 +1,70 @@
-name: build content
+name: Build and deploy Pages
 
-# 任何 push 都会：构建文章/照片墙数据 + 把全站资源版本号统一为 git 短 SHA（根治 CDN 缓存）。
 on:
   push:
+    branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-
-      - name: 安装 Pillow（图片优化用）
-        run: pip install pillow pygments
-
-      - name: 资产体积优化（纹理量化 / WebP / 缩略图，幂等）
-        run: python tools/optimize_assets.py
-
-      - name: 计算照片默认日期（取提交年月）
-        run: echo "PHOTO_DATE=$(git log -1 --format=%cd --date=format:%Y-%m)" >> "$GITHUB_ENV"
-
-      - name: 构建文章与照片墙
-        run: python tools/build.py
-
-      - name: 资源版本号统一为本次提交短 SHA
-        run: python tools/version_pin.py "${GITHUB_SHA::7}"
-
-      - name: 提交构建结果
+          cache: pip
+          cache-dependency-path: |
+            requirements-build.txt
+            requirements-test.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Install build and test dependencies
+        run: python -m pip install -r requirements-build.txt -r requirements-test.txt
+      - name: Install Chromium and system dependencies
+        run: python -m playwright install --with-deps chromium
+      - name: Run Node regression checks
+        run: node --test tests/*.test.cjs tests/*.test.mjs
+      - name: Run Python and browser regression checks
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Build content and assets
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          if git diff --cached --quiet; then
-            echo "没有需要提交的变更"
-          else
-            git commit -m "build: 自动更新文章数据 + 版本号指纹 [skip ci]"
-            git push
-          fi
+          python tools/optimize_assets.py
+          SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)" python tools/build.py
+          python tools/version_pin.py "${GITHUB_SHA::12}"
+          python tools/prepare_site.py
+      - name: Upload public site
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Deploy built site
+        id: deployment
+        uses: actions/deploy-pages@v4

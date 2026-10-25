@@ -1,0 +1,3 @@
+# Optional locally; installed by CI for deterministic image output/highlighting.
+Pillow==13.0.0
+Pygments==2.21.0

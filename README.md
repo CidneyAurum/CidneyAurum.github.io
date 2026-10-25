@@ -1,8 +1,18 @@
 # CidneyAurum の 小窝 🌌
 
-一个深空玻璃拟态风格的个人网站（主页 + 博客 + Limbus 歌词演出模拟器），纯 HTML/CSS/JS 手写，部署在 GitHub Pages 上，**没有任何构建步骤**——改完代码 push 即上线。
+一个深空玻璃风格的个人网站，包含手记、说说、相册、音乐、看板娘与 Limbus 歌词演出。前端使用纯 HTML/CSS/JS，不依赖框架或打包器；Markdown 与图片由 Python 生成，GitHub Actions 在回归检查通过后构建发布。
 
-**线上地址**：`https://cidneyaurum.github.io`（部署完成后替换）
+**线上地址**：[cidneyaurum.github.io](https://cidneyaurum.github.io/)。浏览器直接访问即可，AI 由公网 Worker 提供。**本轮新版正在发布，最终公网验收待完成。**
+
+本次维护的功能结果与外部依赖见 [功能验收](docs/functional-acceptance.md)，界面修改位置见 [界面维护](docs/ui-redesign.md)，运行测试和发布设置见 [构建与部署](docs/build-and-deploy.md)。
+
+首页「初音的值班室」可以带逛真实内容、比心、试听日语角色短句，或进入「耳机分你一半」听歌房。角色语音使用现成短音频，AI 长回复只显示文字。操作与维护见 [Miku 的陪伴体验](docs/miku-companion.md)。
+
+「问问 Miku」支持 DeepSeek 聊天、文章总结与选段解释、带出处的站内问答、内容与歌曲推荐，以及写作台拟标题、摘要和润色。写作建议先审阅再手动应用，可以撤销；日语短语音用于互动，长回复以文字呈现。
+
+公网网关：[cidney-miku-ai.1562614833.workers.dev](https://cidney-miku-ai.1562614833.workers.dev)。本轮配置为全站每日 100 次（UTC 日），Pages 来源已确认 GitHub Actions；Worker 最终启用与新版页面的公网验证仍待完成。访客不需要运行本机脚本或填写模型密钥；凭据由 Workers Secrets 管理。使用与限额见 [AI 使用说明](docs/ai-api.md)，部署进度见 [公网 AI 部署](server/DEPLOYMENT.md)。
+
+文章、说说和照片经 GitHub Actions 发布后，Worker 从 Pages 的公共知识索引在线同步，采用 60 秒缓存、到期后由后续请求刷新。日常内容更新无需重启本机服务或重新部署 Worker。
 
 ## 目录结构
 
@@ -19,6 +29,8 @@
 │   ├── posts.json      # 文章目录（build.py 自动生成）
 │   └── *.html          # 每篇文章一个 HTML 文件（build.py 自动生成）
 ├── css/style.css       # 全站样式（主题色在这里改）
+├── css/garden.css      # 新版全站视觉、深浅主题和手机适配
+├── js/garden.js        # 主题卡、首页数据、图标和看板娘按需加载
 ├── js/main.js          # 流萤 / 打字横幅 / 时钟 / 归档双视图 / 说说 / 照片墙
 ├── js/music.js         # MikuMusic 点播引擎（歌单 / 歌词 / Limbus 弹词）
 ├── js/kanban.js        # 看板娘：Live2D + AI 多协议对话 + 点歌联动
@@ -26,14 +38,17 @@
 ├── js/limbus.js        # 歌词演出引擎（手动 / 自动 / 音乐同步）
 ├── js/admin.js         # 写作台逻辑（GitHub Contents API 发布）
 ├── data/playlist.json  # 网易云歌单快照（107 首，含封面）
+├── data/knowledge.json # 构建生成的公共知识索引，供公网 AI 在线同步
+├── data/ai-config.json # 公网网关地址，不保存模型密钥
+├── server/worker.mjs   # Cloudflare AI 网关与持久请求额度
 ├── tools/build.py      # 内容构建（md → 文章页 / RSS / sitemap）
 ├── tools/version_pin.py# CI 资源版本号指纹（git 短 SHA，根治 CDN 缓存）
 └── assets/             # 头像、背景图（background.png）、照片墙（gallery/）、Live2D 模型
 ```
 
-> **版本号机制**：所有页面引用静态资源都带 `?v=N`；CI 部署时会自动把全站版本号统一替换为本次提交的 git 短 SHA（`tools/version_pin.py`），每次部署 URL 必然变化，彻底绕开 GitHub Pages CDN 的 10 分钟缓存——改完代码 push 即生效，无需手动改版本号。
+> **版本号机制**：页面的静态资源引用带 `?v=N`；CI 构建时会用本次提交的 git 短 SHA 更新版本号（`tools/version_pin.py`），让新资源获得新的 URL。等待测试、构建与 Pages 部署成功后，再刷新检查线上版本，无需手动改版本号。
 
-## 本地预览
+## 可选：本机开发预览
 
 网站用了 `fetch` 加载文章列表，**直接双击 HTML 打开是不行的**，需要起一个本地服务器：
 
@@ -84,7 +99,7 @@ summary: 一句话摘要
 正文用 Markdown 写，## 标题、**加粗**、列表、引用、代码块都支持。
 ```
 
-3. Commit 提交 → GitHub Actions 自动生成文章页并更新归档 → 约 1 分钟后线上可见
+3. Commit 提交 → GitHub Actions 自动生成文章页并更新归档 → 等待该次提交的 Pages 部署成功后检查线上页面
 
 **方式二：本地**
 
@@ -111,19 +126,14 @@ summary: 一句话摘要
 
 ## 部署说明
 
-- 代码推送到 GitHub 后，GitHub Pages 自动部署（约 1 分钟生效）
-- 仓库设置在 GitHub 的 **Settings → Pages**，来源是 `main` 分支根目录
+- Pages 来源已通过 GET 确认为 **GitHub Actions**（`build_type: workflow`）。
+- 推送到 `main` 后，测试、构建和部署都成功才算上线；本轮新版仍待最终部署与公网验收，进度在 Actions 查看，步骤见 [构建与部署](docs/build-and-deploy.md)。
+- 公网 AI 使用独立 Worker，后端 Secret 不进入 Pages artifact；内容知识由 Pages 公共索引在线同步。
 - 想绑自定义域名：在仓库根目录加一个 `CNAME` 文件（内容写域名），并在域名处配置解析
 
 ## 可选：开启看板娘
 
-想加 Live2D 看板娘，在 `index.html` 的 `</body>` 前加一行（模型资源走公共 CDN）：
-
-```html
-<script src="https://fastly.jsdelivr.net/npm/live2d-widgets@1.0.1/dist/autoload.js"></script>
-```
-
-> 注意：Live2D 模型版权归模型作者所有，仅供个人非商用。不想要时删掉这行即可。
+Miku 已内置。点击右下角猫形按钮按需加载；资源失败时可以在组件里重试。点击 💬 聊天、⚙️ 配置个人接口，▾ 收起后可再次展开。连接站点 AI 网关后，访客无需填写 Key；网关不可用时仍可使用本地简短互动。
 
 ## 致谢
 
@@ -143,12 +153,12 @@ summary: 一句话摘要
 
 ## 看板娘 🎵
 
-右下角的 Live2D 看板娘（Miku）：
+点击右下角猫形按钮后出现的 Live2D 看板娘（Miku）：
 
-- **AI 对话**：点她的 💬 打开对话框。首次使用点 ⚙️ 填三个东西：接口地址（默认 DeepSeek 官方，可换任何 OpenAI 兼容接口）、模型名、API Key（只存你自己浏览器的 localStorage）。没有 Key 也能用本地卖萌语料聊天。
+- **AI 对话**：点她的 💬 打开对话框。站点网关可用时自动接入带引用的站内问答；文章页另有总结、提问和选段解释入口。⚙️ 中的个人接口配置会覆盖站点网关，个人填写的 Key 仅保存于该浏览器。网关和个人接口均不可用时提供本地简短互动。
 - **互动**：点她触发比心、拖拽移动、滚轮缩放、🙈 可以让她躲起来。
-- **技术**：pixi.js + pixi-live2d-display 渲染，AI 走 OpenAI 兼容 `/chat/completions`，回复支持触发表情（让她带【表情:比心】标记即可）。
-- **🎵 音乐点播**：跟她聊就行——「放 晴天」「来一首atu」「播放歌单」「下一首」「暂停」。她会搜索网易云并**开口唱**（口型同步）。
+- **技术**：pixi.js + pixi-live2d-display 渲染；站点 AI 由服务端调用 DeepSeek，并校验引用、导航与歌曲目标。角色保留表情互动，长回复只显示文字；日语短句使用现成音频并驱动口型。
+- **🎵 音乐点播**：跟她聊就行——「放 晴天」「来一首atu」「播放歌单」「下一首」「暂停」。搜索与播放使用音乐服务，模型口型随音频联动。
   - 歌单卡在首页「🎵 我的歌单」标签（官方外链播放器）
   - VIP 歌曲在公共源下只能试听；想全曲点播看 [docs/music-api.md](docs/music-api.md)（Cloudflare Workers 自建 API，可选）
   - 公共源偶尔不稳，可在 ⚙️ 设置里填自己的 Meting 格式 API 地址
@@ -165,7 +175,7 @@ summary: 一句话摘要
 
 - **全站音乐中枢**：PJAX 无刷新换页——浏览整站音乐不断；任意页面底部玻璃播放条（拖拽进度 / 音量 / 列表循环·单曲·随机 / 上一首 / 队列抽屉 / 歌词面板点击跳播）；系统媒体键可控；刷新自动恢复播放现场；外链断流自动切歌。
 - **歌单快照主源**：`data/playlist.json`（107 首，含封面）秒开零依赖，公共接口仅作在线搜索兜底。
-- **giscus 评论**：文章页与说说页可评论（GitHub Discussions，需安装 [giscus App](https://github.com/apps/giscus)）。
+- **giscus 评论**：文章页与说说页已集成 GitHub Discussions 评论，当前本站服务授权失败，待恢复；界面提供重试和讨论区入口。详见 [功能验收](docs/functional-acceptance.md)。
 - **PWA**：可安装到桌面，静态资源离线缓存（`sw.js` 运行时缓存）。
 - **视觉动效**：主题切换圆形扩散、进站加载遮罩、导航下滑隐藏、卡片 3D 倾斜光晕、鼠标点击爱心。
 - **快捷键**：按住 Shift 出提示条——`D` 主题 / `S` 搜索 / `R` 随便逛逛 / `H` 首页 / `T` 回顶 / `空格` 播放暂停 / `Ctrl+K` 搜索。

@@ -32,6 +32,9 @@ const MikuMusic = (function () {
   let mode = "list";
   let expectPlay = false;  // 处于“应当正在播放”状态（用于断流自愈判定）
   let failStreak = 0;      // 连续断流次数（防切歌死循环）
+  let playbackId = 0, pendingPlay = false, playlistPromise = null;
+  let lyricController = null, restoreSeekCleanup = () => {};
+  try { const savedMode = localStorage.getItem("mm_mode"); if (MODES.some((m) => m.id === savedMode)) mode = savedMode; } catch (e) {}
   const listeners = new Set();
 
   function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
@@ -43,20 +46,32 @@ const MikuMusic = (function () {
 
   /* ---------- 数据源 ---------- */
   function apiSources() {
-    const custom = (localStorage.getItem("kb_musicapi") || "").trim();
+    let custom = "";
+    try { custom = (localStorage.getItem("kb_musicapi") || "").trim(); } catch (e) {}
     return custom ? [custom, ...CFG.publicApis] : [...CFG.publicApis];
+  }
+
+  async function fetchText(url, signal, timeout = 7000) {
+    const controller = new AbortController();
+    const abort = () => controller.abort();
+    if (signal?.aborted) controller.abort();
+    signal?.addEventListener("abort", abort, { once: true });
+    const timer = setTimeout(abort, timeout);
+    try {
+      const res = await fetch(url, { signal: controller.signal, cache: "no-cache" });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return await res.text();
+    } finally {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", abort);
+    }
   }
 
   async function api(type, id) {
     const errors = [];
     for (const base of apiSources()) {
       try {
-        const ctrl = new AbortController();
-        const timer = setTimeout(() => ctrl.abort(), 8000);
-        const res = await fetch(base + "?type=" + type + "&server=netease&id=" + encodeURIComponent(id), { signal: ctrl.signal });
-        clearTimeout(timer);
-        if (!res.ok) { errors.push(res.status); continue; }
-        const text = await res.text();
+        const text = await fetchText(base + "?type=" + type + "&server=netease&id=" + encodeURIComponent(id));
         if (!text.trim()) { errors.push("empty"); continue; }
         const data = JSON.parse(text);
         const ok = Array.isArray(data) ? data.length > 0 : !!data;
@@ -68,8 +83,8 @@ const MikuMusic = (function () {
   }
 
   function normalize(list) {
-    return (list || []).map((s) => {
-      const raw = String(s.url || "");
+    return (Array.isArray(list) ? list : []).filter((s) => s && typeof s === "object").map((s) => {
+      const raw = String(s.stream || s.url || "");
       const m = raw.match(/[?&]id=(\d+)/);
       return {
         name: s.name || s.title || "未知",
@@ -83,9 +98,7 @@ const MikuMusic = (function () {
 
   /* 歌单快照（仓内 107 首，秒开零依赖） */
   async function loadSnapshot() {
-    const res = await fetch(CFG.snapshot, { cache: "no-cache" });
-    if (!res.ok) throw new Error("快照 " + res.status);
-    const data = await res.json();
+    const data = JSON.parse(await fetchText(CFG.snapshot));
     const list = normalize((data.playlist || []).map((s) => ({ ...s, url: "" })));
     if (!list.length) throw new Error("快照为空");
     return list;
@@ -101,12 +114,7 @@ const MikuMusic = (function () {
     try { if (localStorage.getItem(missKey)) return ""; } catch (e) {}
     for (const base of apiSources()) {
       try {
-        const ctrl = new AbortController();
-        const timer = setTimeout(() => ctrl.abort(), 6000);
-        const res = await fetch(base + "?type=pic&server=netease&id=" + id, { signal: ctrl.signal });
-        clearTimeout(timer);
-        if (!res.ok) continue;
-        const text = (await res.text()).trim();
+        const text = (await fetchText(base + "?type=pic&server=netease&id=" + encodeURIComponent(id))).trim();
         if (/^https?:\/\//.test(text)) {
           try { localStorage.setItem(key, text); } catch (e) {}
           return text;
@@ -135,26 +143,25 @@ const MikuMusic = (function () {
     audio = new Audio();
     audio.preload = "metadata";
     try { audio.volume = Math.min(1, Math.max(0, parseFloat(localStorage.getItem("mm_volume") || "0.9"))); } catch (e) {}
-    audio.addEventListener("ended", () => { window.__kbSinging = false; expectPlay = false; onEnded(); });
+    audio.addEventListener("ended", () => { playing = false; window.__kbSinging = false; expectPlay = false; onEnded(); });
     audio.addEventListener("error", () => {
       if (!expectPlay) return; // 恢复现场的装载失败不算播放中断
-      failStreak++;
-      if (failStreak >= 3) {
-        expectPlay = false; failStreak = 0;
-        toast("连续播放失败，先停一停～ 点播放键重试");
-        return;
-      }
+      expectPlay = false;
+      playing = false;
+      window.__kbSinging = false;
+      if (++failStreak >= Math.min(3, queue.length)) { stop(); toast("连续播放失败，请稍后重试或使用本地音频"); return; }
       toast("播放中断了，自动换下一首 ♪");
       next(true);
     });
-    audio.addEventListener("play", () => { playing = true; window.__kbSinging = true; syncAll(); updateMediaSession(); });
-    audio.addEventListener("pause", () => { playing = false; window.__kbSinging = false; syncAll(); persist(); });
+    audio.addEventListener("play", () => { if (expectPlay || pendingPlay) { playing = true; window.__kbSinging = true; syncAll(); updateMediaSession(); } });
+    audio.addEventListener("pause", () => { playing = false; window.__kbSinging = false; syncAll(); persist(); updateMediaSession(); });
     let lastLine = -2;
     audio.addEventListener("loadedmetadata", () => syncAll());
     audio.addEventListener("timeupdate", () => {
       const line = lrcIndexAt(audio.currentTime || 0);
       if (line !== lastLine) { lastLine = line; emit(); }
       syncProgress();
+      if (audio.currentTime > 2 && playing) failStreak = 0;
       if (Math.floor(audio.currentTime || 0) % 3 === 0) persist();
     });
     return audio;
@@ -165,7 +172,7 @@ const MikuMusic = (function () {
     const list = [];
     if (item.stream) list.push(item.stream);
     if (item.id) {
-      for (const base of apiSources().slice(0, 3)) {
+      for (const base of apiSources()) {
         list.push(base + "?server=netease&type=url&id=" + item.id);
       }
       list.push("https://music.163.com/song/media/outer/url?id=" + item.id + ".mp3");
@@ -176,43 +183,94 @@ const MikuMusic = (function () {
   /* 只装载不播放（用于恢复现场） */
   function prepare(item, seekTo) {
     ensureAudio();
+    const id = ++playbackId;
+    restoreSeekCleanup();
+    lyricController?.abort();
+    expectPlay = false;
+    pendingPlay = false;
+    audio.pause();
     playing = false;
     const url = streamCandidates(item)[0];
     if (!url) return;
     audio.src = url;
     if (seekTo > 0) {
-      const jump = () => { try { audio.currentTime = seekTo; } catch (e) {} };
+      const jump = () => { if (id === playbackId && queue[qi] === item) { try { audio.currentTime = seekTo; } catch (e) {} } };
       if (audio.readyState >= 1) jump();
-      else audio.addEventListener("loadedmetadata", jump, { once: true });
+      else {
+        audio.addEventListener("loadedmetadata", jump, { once: true });
+        restoreSeekCleanup = () => audio.removeEventListener("loadedmetadata", jump);
+      }
     }
     loadLrc(item).then(() => emit());
     syncAll();
   }
 
-  async function play(item) {
-    if (window.Ambient && window.Ambient.isRunning && window.Ambient.isRunning()) window.Ambient.toggle();
-    ensureAudio();
+  function stop() {
+    ++playbackId;
+    pendingPlay = false;
+    expectPlay = false;
     playing = false;
+    window.__kbSinging = false;
+    restoreSeekCleanup();
+    lyricController?.abort();
+    if (audio) audio.pause();
+    syncAll();
+    persist();
+    updateMediaSession();
+  }
+
+  function playWithTimeout() {
+    let timer;
+    return Promise.race([
+      Promise.resolve().then(() => audio.play()),
+      new Promise((_, reject) => { timer = setTimeout(() => reject(new Error("音频加载超时")), 10000); }),
+    ]).finally(() => clearTimeout(timer));
+  }
+
+  async function play(item, automatic = false) {
+    if (window.Ambient?.isRunning()) window.Ambient.stop();
+    ensureAudio();
+    const id = ++playbackId;
+    restoreSeekCleanup();
+    lyricController?.abort();
+    currentLrc = [];
+    expectPlay = false;
+    pendingPlay = true;
+    audio.pause();
+    playing = false;
+    if (!automatic) failStreak = 0;
     emit();
     const candidates = streamCandidates(item);
-    if (!candidates.length) throw new Error("拿不到播放地址");
+    if (!candidates.length) { pendingPlay = false; throw new Error("拿不到播放地址"); }
     let lastErr = null;
     expectPlay = false; // 候选切换期间产生的 error 不算"播放中断"
     for (const url of candidates) {
       try {
         audio.removeAttribute("crossorigin");
         audio.src = url;
-        await audio.play();
+        await playWithTimeout();
+        if (id !== playbackId) return false;
         window.__kbSinging = true;
-        expectPlay = true; failStreak = 0;
+        playing = true;
+        expectPlay = true;
+        pendingPlay = false;
         loadLrc(item).then(() => emit());
         emit();
         persist();
         updateMediaSession();
-        return;
-      } catch (e) { lastErr = e; }
+        return true;
+      } catch (e) {
+        if (id !== playbackId) return false;
+        lastErr = e;
+        audio.pause();
+        if (e.name === "NotAllowedError") break;
+      }
     }
+    pendingPlay = false;
+    playing = false;
+    expectPlay = false;
     window.__kbSinging = false;
+    syncAll();
     toast("《" + item.name + "》播放失败：" + (lastErr ? lastErr.message : "地址不可用"));
     throw new Error("播放失败：" + (lastErr ? lastErr.message : "所有地址都不可用"));
   }
@@ -237,6 +295,10 @@ const MikuMusic = (function () {
   }
 
   async function loadLrc(item) {
+    lyricController?.abort();
+    const controller = lyricController = new AbortController();
+    const id = playbackId;
+    const current = () => !controller.signal.aborted && id === playbackId && queue[qi] === item;
     currentLrc = [];
     const artistFirst = (item.artist || "").split("/")[0].trim();
     const tries = [
@@ -245,27 +307,23 @@ const MikuMusic = (function () {
     ];
     for (const qp of tries) {
       try {
-        const res = await fetch("https://lrclib.net/api/search?" + new URLSearchParams(qp).toString());
-        if (!res.ok) continue;
-        const list = await res.json();
+        const list = JSON.parse(await fetchText("https://lrclib.net/api/search?" + new URLSearchParams(qp).toString(), controller.signal));
+        if (!current()) return;
+        if (!Array.isArray(list)) continue;
         const synced = list.find((d) => d.syncedLyrics) || list[0];
         if (synced && synced.syncedLyrics) { currentLrc = parseLrc(synced.syncedLyrics); renderLyricPanel(true); return; }
-      } catch (e) { /* 下一种组合 */ }
+      } catch (e) { if (!current()) return; }
     }
     for (const base of apiSources()) {
       try {
         if (!item.id) break;
-        const ctrl = new AbortController();
-        const timer = setTimeout(() => ctrl.abort(), 5000);
-        const res = await fetch(base + "?type=lrc&server=netease&id=" + encodeURIComponent(item.id), { signal: ctrl.signal });
-        clearTimeout(timer);
-        if (!res.ok) continue;
-        const text = (await res.text()).trim();
+        const text = (await fetchText(base + "?type=lrc&server=netease&id=" + encodeURIComponent(item.id), controller.signal, 5000)).trim();
+        if (!current()) return;
         if (!text || text.startsWith('{"error')) continue;
         if (text.startsWith("[") || text.includes("[00:")) { currentLrc = parseLrc(text); }
         else { const data = JSON.parse(text); currentLrc = parseLrc((Array.isArray(data) ? data[0] : data).lrc || ""); }
         if (currentLrc.length) { renderLyricPanel(true); return; }
-      } catch (e) { /* 试下一个源 */ }
+      } catch (e) { if (!current()) return; }
     }
     renderLyricPanel(true);
   }
@@ -280,7 +338,7 @@ const MikuMusic = (function () {
   }
 
   /* ---------- 队列 / 播放控制 ---------- */
-  async function loadPlaylist() {
+  async function loadPlaylistData() {
     if (queue.length) return queue.length;
     // 主源：仓内快照（零依赖秒开）；兜底：Meting 在线 → 本机缓存。
     // 注意：await 期间 restore() 可能已恢复现场，每步回来都要复查，别把现场覆盖掉。
@@ -295,7 +353,7 @@ const MikuMusic = (function () {
         let cached = null;
         try { cached = localStorage.getItem("mm_playlist_cache"); } catch (err3) {}
         if (!cached) throw new Error("歌单快照与在线接口都失败了");
-        try { list = JSON.parse(cached); } catch (err4) { throw new Error("本地歌单缓存损坏"); }
+        try { list = normalize(JSON.parse(cached)); } catch (err4) { throw new Error("本地歌单缓存损坏"); }
       }
     }
     if (queue.length) return queue.length; // restore() 已抢先把现场装好，保留它
@@ -307,7 +365,13 @@ const MikuMusic = (function () {
     return queue.length;
   }
 
-  function reloadPlaylist() { queue = []; qi = -1; }
+  async function loadPlaylist() {
+    if (queue.length) return queue.length;
+    if (!playlistPromise) playlistPromise = loadPlaylistData().finally(() => { playlistPromise = null; });
+    return playlistPromise;
+  }
+
+  function reloadPlaylist() { stop(); queue = []; qi = -1; currentLrc = []; syncAll(); }
 
   async function playPlaylist() {
     const n = await loadPlaylist();
@@ -316,13 +380,13 @@ const MikuMusic = (function () {
   }
 
   async function playIndex(i, opts) {
-    if (!queue[i]) return;
+    if (!queue[i]) return false;
     qi = i;
     if (opts && opts.seekTo !== undefined && opts.autoplay === false) {
       prepare(queue[i], opts.seekTo);
       return;
     }
-    await play(queue[i]);
+    return play(queue[i]);
   }
 
   function pickRandom() {
@@ -336,20 +400,25 @@ const MikuMusic = (function () {
     if (!queue.length) return false;
     if (mode === "random") qi = pickRandom();
     else qi = (qi + 1) % queue.length;
-    play(queue[qi]).catch(() => { if (auto) next(true); });
+    play(queue[qi], !!auto).catch(() => {
+      if (!auto) return;
+      if (++failStreak < Math.min(3, queue.length)) next(true);
+      else { stop(); toast("连续播放失败，请稍后重试或使用本地音频"); }
+    });
     return true;
   }
 
   function prev() {
     if (!queue.length) return false;
     if (mode === "random") qi = pickRandom();
-    else qi = (qi - 1 + queue.length) % queue.length;
+    else qi = qi <= 0 ? queue.length - 1 : qi - 1;
     play(queue[qi]).catch(() => {});
     return true;
   }
 
   function onEnded() {
-    if (mode === "one") { audio.currentTime = 0; audio.play().catch(() => {}); return; }
+    failStreak = 0;
+    if (mode === "one") { audio.currentTime = 0; resume(); return; }
     next(true);
   }
 
@@ -358,28 +427,52 @@ const MikuMusic = (function () {
     try { localStorage.setItem("mm_mode", mode); } catch (e) {}
     toast("播放模式：" + MODES.find((m) => m.id === mode).tip);
     syncAll();
+    persist();
   }
 
   function seek(frac) {
-    if (!audio || !audio.duration) return;
+    if (!audio || !Number.isFinite(audio.duration) || !audio.duration || !Number.isFinite(frac)) return;
     audio.currentTime = Math.min(audio.duration - 0.2, Math.max(0, frac * audio.duration));
     syncProgress();
   }
 
   function setVolume(v) {
     ensureAudio();
-    audio.volume = Math.min(1, Math.max(0, v));
+    audio.volume = Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : 0.9;
     try { localStorage.setItem("mm_volume", String(audio.volume)); } catch (e) {}
     const bar = document.querySelector(".gp-vol input");
     if (bar) bar.value = audio.volume;
   }
 
-  function toggle() {
-    if (!audio || !audio.src) return playPlaylist().catch(() => {});
+  async function resume() {
+    if (window.Ambient?.isRunning()) window.Ambient.stop();
+    if (!audio || !audio.src || audio.error) {
+      try { if (queue[qi]) return await play(queue[qi]); return await playPlaylist(); }
+      catch (e) { return false; }
+    }
+    const id = ++playbackId;
+    pendingPlay = true;
     try {
-      if (audio.paused) { audio.play(); playing = true; expectPlay = true; } else { audio.pause(); playing = false; expectPlay = false; }
-    } catch (e) { /* ignore */ }
-    emit();
+      await playWithTimeout();
+      if (id !== playbackId) return false;
+      pendingPlay = false;
+      playing = true;
+      expectPlay = true;
+      window.__kbSinging = true;
+      if (!currentLrc.length && queue[qi]) loadLrc(queue[qi]).then(() => emit());
+      syncAll(); updateMediaSession(); persist();
+      return true;
+    } catch (e) {
+      if (id !== playbackId) return false;
+      stop();
+      toast("播放失败，请重试或使用本地音频：" + e.message);
+      return false;
+    }
+  }
+
+  function toggle() {
+    if (pendingPlay || (audio && !audio.paused)) { stop(); return Promise.resolve(false); }
+    return resume();
   }
 
   function getState() {
@@ -431,7 +524,8 @@ const MikuMusic = (function () {
     let saved = null;
     try { saved = JSON.parse(localStorage.getItem("mm_state") || "null"); } catch (e) {}
     if (!saved || !Array.isArray(saved.queue) || !saved.queue.length) return;
-    queue = saved.queue;
+    queue = normalize(saved.queue);
+    if (!queue.length) return;
     qi = Math.min(Math.max(0, saved.qi | 0), queue.length - 1);
     mode = MODES.some((m) => m.id === saved.mode) ? saved.mode : "list";
     prepare(queue[qi], saved.time || 0);
@@ -450,8 +544,8 @@ const MikuMusic = (function () {
         album: "CidneyAurum の 小窝",
         artwork: cur.pic ? [{ src: cur.pic, sizes: "512x512", type: "image/jpeg" }] : [],
       });
-      navigator.mediaSession.setActionHandler("play", () => toggle());
-      navigator.mediaSession.setActionHandler("pause", () => toggle());
+      navigator.mediaSession.setActionHandler("play", () => { if (!playing && !pendingPlay) resume(); });
+      navigator.mediaSession.setActionHandler("pause", stop);
       navigator.mediaSession.setActionHandler("previoustrack", () => prev());
       navigator.mediaSession.setActionHandler("nexttrack", () => next());
       navigator.mediaSession.setActionHandler("seekto", (d) => { if (audio && d.seekTime != null) { audio.currentTime = d.seekTime; } });
@@ -514,7 +608,7 @@ const MikuMusic = (function () {
           </div>
           <div class="gp-progress-row">
             <span class="gp-time" id="gp-cur">00:00</span>
-            <div class="gp-progress" id="gp-progress"><div class="gp-fill" id="gp-fill"></div><div class="gp-knob" id="gp-knob"></div></div>
+            <div class="gp-progress" id="gp-progress" role="slider" tabindex="0" aria-label="播放进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="gp-fill" id="gp-fill"></div><div class="gp-knob" id="gp-knob"></div></div>
             <span class="gp-time" id="gp-total">00:00</span>
           </div>
         </div>
@@ -524,6 +618,8 @@ const MikuMusic = (function () {
         </div>
       </div>`;
     document.body.appendChild(el);
+    el.querySelectorAll("button[title]").forEach((button) => button.setAttribute("aria-label", button.title));
+    $("gp-qsearch").setAttribute("aria-label", "搜索播放队列或在线歌曲");
 
     $("gp-toggle").addEventListener("click", toggle);
     $("gp-next").addEventListener("click", () => next());
@@ -572,6 +668,18 @@ const MikuMusic = (function () {
       dragging = false;
       seek(fracAt(e));
     });
+    const cancelDrag = () => { dragging = false; syncProgress(); };
+    prog.addEventListener("pointercancel", cancelDrag);
+    prog.addEventListener("lostpointercapture", cancelDrag);
+    prog.addEventListener("keydown", (e) => {
+      if (!audio || !Number.isFinite(audio.duration) || !audio.duration) return;
+      const current = audio.currentTime / audio.duration;
+      const changes = { ArrowLeft: current - 5 / audio.duration, ArrowRight: current + 5 / audio.duration, Home: 0, End: 1 };
+      if (!(e.key in changes)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      seek(changes[e.key]);
+    });
 
     // 歌词行点击 seek（事件委托）
     $("gp-lrc-list").addEventListener("click", (e) => {
@@ -588,13 +696,19 @@ const MikuMusic = (function () {
         if (i === qi) { toast("先切到别的歌再删这首吧"); return; }
         queue.splice(i, 1);
         if (i < qi) qi--;
-        renderQueue();
+        syncAll();
         persist();
         return;
       }
       const row = e.target.closest("[data-i]");
       if (row) playIndex(+row.dataset.i).catch((err) => toast(err.message));
     });
+    ["gp-qlist", "gp-lrc-list"].forEach((id) => $(id).addEventListener("keydown", (e) => {
+      const row = e.target.closest(".gp-qrow, .gp-lrc-line");
+      if (row && e.target === row && (e.key === "Enter" || e.key === " ")) {
+        e.preventDefault(); e.stopPropagation(); row.click();
+      }
+    }));
   }
 
   function $(id) { return document.getElementById(id); }
@@ -614,7 +728,7 @@ const MikuMusic = (function () {
     const d = $("gp-drawer");
     if (d) d.hidden = !open;
     $("gp-queue-btn").classList.toggle("on", open);
-    if (open) { renderQueue(); const s = $("gp-qsearch"); if (s) s.value = ""; }
+    if (open) { const s = $("gp-qsearch"); if (s) s.value = ""; renderQueue(); }
   }
 
   function renderLyricPanel(force) {
@@ -630,7 +744,7 @@ const MikuMusic = (function () {
     if (!list.children.length || force || list.dataset.song !== (st.current ? st.current.id : "")) {
       list.dataset.song = st.current ? st.current.id : "";
       list.innerHTML = currentLrc.map((l, i) =>
-        `<div class="gp-lrc-line" data-i="${i}">${esc(l.text)}</div>`).join("");
+        `<div class="gp-lrc-line" role="button" tabindex="0" aria-label="跳转到 ${esc(fmt(l.t))} ${esc(l.text)}" data-i="${i}">${esc(l.text)}</div>`).join("");
       lastLrcIdx = -2;
     }
     if (st.lrcLine !== lastLrcIdx) {
@@ -639,7 +753,8 @@ const MikuMusic = (function () {
       const cur = list.children[st.lrcLine];
       if (cur) {
         cur.classList.add("on");
-        cur.scrollIntoView({ block: "center", behavior: "smooth" });
+        const row = cur.getBoundingClientRect(), box = list.getBoundingClientRect();
+        list.scrollTop += row.top - box.top - (list.clientHeight - row.height) / 2;
       }
     }
   }
@@ -651,9 +766,12 @@ const MikuMusic = (function () {
     const kw = ($("gp-qsearch").value || "").trim().toLowerCase();
     const shown = queue.map((s, i) => ({ s, i })).filter(({ s }) =>
       !kw || (s.name + " " + s.artist).toLowerCase().includes(kw));
+    const signature = JSON.stringify([st.index, st.playing, kw, queue.map((s) => [s.id, s.name, s.artist])]);
+    if (list.dataset.queueSignature === signature) return;
+    list.dataset.queueSignature = signature;
     $("gp-qcount").textContent = queue.length + " 首";
     list.innerHTML = shown.length ? shown.map(({ s, i }) => `
-      <div class="gp-qrow${i === st.index ? " on" : ""}" data-i="${i}">
+      <div class="gp-qrow${i === st.index ? " on" : ""}" role="button" tabindex="0" aria-label="播放 ${esc(s.name)}" data-i="${i}">
         <span class="gp-q-idx">${i === st.index && st.playing ? "♪" : i + 1}</span>
         <span class="gp-q-main"><b>${esc(s.name)}</b><small>${esc(s.artist)}</small></span>
         <button class="gp-q-del" data-del="${i}" title="移出队列">✕</button>
@@ -670,12 +788,17 @@ const MikuMusic = (function () {
     if (knob) knob.style.left = pct + "%";
     if (cur) cur.textContent = fmt(st.time);
     if (total) total.textContent = st.duration ? fmt(st.duration) : "00:00";
+    const progress = $("gp-progress");
+    if (progress) {
+      progress.setAttribute("aria-valuenow", String(Math.round(pct)));
+      progress.setAttribute("aria-valuetext", fmt(st.time) + " / " + fmt(st.duration));
+    }
   }
 
   function syncPlayerBar(st) {
     if (!barBuilt) return;
     const btn = $("gp-toggle");
-    if (btn) btn.textContent = st.playing ? "❚❚" : "▶";
+    if (btn) { btn.textContent = st.playing ? "❚❚" : "▶"; btn.setAttribute("aria-label", st.playing ? "暂停音乐" : "播放音乐"); }
     const modeBtn = $("gp-mode");
     if (modeBtn) {
       const m = MODES.find((x) => x.id === st.mode) || MODES[0];
@@ -862,9 +985,17 @@ const MikuMusic = (function () {
 
   /* ---------- 对外 API ---------- */
   return {
-    searchAndPlay, playPlaylist, loadPlaylist, reloadPlaylist, playIndex, next, prev, toggle,
+    searchAndPlay, playPlaylist, loadPlaylist, reloadPlaylist, playIndex, next, prev, toggle, stop,
     seek, setVolume, cycleMode, toast,
     getState, getQueue: () => queue.slice(), on, playlistId: CFG.playlistId,
+    closePanels: () => {
+      const active = document.activeElement;
+      const focusQueue = drawerOpen && $("gp-drawer")?.contains(active);
+      const focusLyrics = lyricOpen && $("gp-lyric")?.contains(active);
+      setDrawer(false); setLyricPanel(false);
+      if (focusQueue) $("gp-queue-btn")?.focus();
+      else if (focusLyrics) $("gp-lyric-btn")?.focus();
+    },
     popLyric,
     lyricOverlay: { toggle: loToggle, open: () => setOverlay(true), close: () => setOverlay(false) },
     buildPlayerBar, restore,
@@ -880,31 +1011,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 空格播放/暂停（输入框聚焦时除外）；←/→ 快退快进 5s；Esc 收起抽屉
   document.addEventListener("keydown", (e) => {
-    const tag = (document.activeElement && document.activeElement.tagName) || "";
-    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") {
-      if (e.key === "Escape") {
-        const d = document.getElementById("gp-drawer");
-        if (d && !d.hidden) { d.hidden = true; if (document.getElementById("gp-queue-btn")) document.getElementById("gp-queue-btn").classList.remove("on"); }
-        document.activeElement.blur();
-      }
+    if (e.defaultPrevented) return;
+    if (e.key === "Escape") {
+      MikuMusic.closePanels();
       return;
     }
-    if (e.key === "Escape") {
-      const d = document.getElementById("gp-drawer");
-      if (d && !d.hidden) { d.hidden = true; if (document.getElementById("gp-queue-btn")) document.getElementById("gp-queue-btn").classList.remove("on"); }
-    }
+    if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || document.body.dataset.page === "limbus") return;
+    if (document.activeElement?.closest("input, textarea, select, button, a, [role=button], [role=slider], [contenteditable=true]")) return;
     if (e.code === "Space") { e.preventDefault(); MikuMusic.toggle(); }
     else if (e.key === "ArrowLeft" && window.MikuMusic.getState().hasQueue) { e.preventDefault(); MikuMusic.seek(Math.max(0, (MikuMusic.getState().time - 5) / Math.max(1, MikuMusic.getState().duration))); }
     else if (e.key === "ArrowRight" && window.MikuMusic.getState().hasQueue) { e.preventDefault(); MikuMusic.seek(Math.min(1, (MikuMusic.getState().time + 5) / Math.max(1, MikuMusic.getState().duration))); }
   });
-});
-
-/* ---------- 悬浮音乐钮 ---------- */
-document.addEventListener("DOMContentLoaded", () => {
-  const fab = document.getElementById("fab-music");
-  if (!fab || !window.MikuMusic) return;
-  const sync = (st) => { fab.textContent = st.playing ? "❚❚" : "♪"; };
-  document.addEventListener("mikumusic", (e) => sync(e.detail || {}));
-  fab.addEventListener("click", () => window.MikuMusic.toggle());
-  sync(window.MikuMusic.getState());
 });

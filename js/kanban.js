@@ -201,7 +201,7 @@
     root.innerHTML = `
       <div class="kb-bubble" id="kb-bubble"></div>
       <div class="kb-stage" id="kb-stage">
-        <div class="kb-loading" id="kb-loading"><span class="spin">◌</span><br>Miku 加载中…</div>
+        <div class="kb-loading" id="kb-loading"><span class="spin">◌</span><br>初音加载中…首次打开可能稍慢</div>
       </div>
       <div class="kb-bar">
         <button class="kb-btn" id="kb-chat-btn" title="和 Miku 聊天">💬</button>
@@ -588,7 +588,7 @@
     let app = null;
     let loadedModel = null;
     try {
-      if (loading) loading.textContent = "Miku 加载中…";
+      if (loading) loading.textContent = "初音加载中…首次打开可能稍慢";
       if (!window.Live2DCubismCore) await loadScript("https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js");
       if (!window.PIXI?.Application) await loadScript("https://cdn.jsdelivr.net/npm/pixi.js@7.4.2/dist/pixi.min.js");
       if (!window.PIXI?.live2d?.Live2DModel) await loadScript("https://cdn.jsdelivr.net/npm/pixi-live2d-display-lipsyncpatch@0.5.0-ls-8/dist/cubism4.min.js");
@@ -610,7 +610,7 @@
             if (!accepting) { try { value.destroy(); } catch (e) {} return null; }
             return value;
           }),
-          new Promise((_, reject) => { timer = setTimeout(() => reject(new Error("模型加载超时")), 25000); }),
+          new Promise((_, reject) => { timer = setTimeout(() => reject(new Error("模型加载超时")), 90000); }),
         ]);
       } finally { clearTimeout(timer); accepting = false; }
       if (!loadedModel?.internalModel?.height) throw new Error("模型数据不完整");

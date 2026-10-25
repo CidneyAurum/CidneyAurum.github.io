@@ -257,13 +257,28 @@ class KanbanTests(unittest.TestCase):
         self.assertEqual(self.page.evaluate("window.__lastModelUrl"), self.origin + "/assets/live2d/miku/miku.model3.json")
 
     def test_timed_out_model_is_cleaned_after_successful_retry(self):
-        self.boot("window.__holdFirstModel = true; const nativeTimer = setTimeout; window.setTimeout = (fn, ms, ...args) => nativeTimer(fn, ms === 25000 ? 40 : ms, ...args);")
+        self.page.clock.install()
+        self.boot("window.__holdFirstModel = true;")
+        self.page.wait_for_function("typeof window.__releaseOldModel === 'function'")
+        self.page.clock.fast_forward(90001)
         expect(self.page.locator("#kb-loading")).to_contain_text("模型加载超时")
         self.page.locator("#kb-loading button").click()
         expect(self.page.locator("#kb-loading")).to_have_count(0)
         self.page.evaluate("window.__releaseOldModel()")
         self.page.wait_for_function("window.__destroyedModels === 1")
         expect(self.page.locator("#kb-stage canvas")).to_have_count(1)
+
+    def test_cold_model_returning_after_thirty_seconds_is_accepted(self):
+        self.page.clock.install()
+        self.boot("window.__holdFirstModel = true;")
+        self.page.wait_for_function("typeof window.__releaseOldModel === 'function'")
+        self.page.clock.fast_forward(30000)
+        expect(self.page.locator("#kb-loading")).to_contain_text("首次打开可能稍慢")
+        expect(self.page.locator("#kb-stage canvas")).to_have_count(1)
+        self.page.evaluate("window.__releaseOldModel()")
+        expect(self.page.locator("#kb-loading")).to_have_count(0)
+        expect(self.page.locator("#kb-stage canvas")).to_have_count(1)
+        self.assertEqual(self.page.evaluate("window.__destroyedModels"), 0)
 
     def test_script_failure_can_retry_without_reloading(self):
         attempts = []

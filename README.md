@@ -2,7 +2,7 @@
 
 一个深空玻璃风格的个人网站，包含手记、说说、相册、音乐、看板娘与 Limbus 歌词演出。前端使用纯 HTML/CSS/JS，不依赖框架或打包器；Markdown 与图片由 Python 生成，GitHub Actions 在回归检查通过后构建发布。
 
-**线上地址**：[cidneyaurum.github.io](https://cidneyaurum.github.io/)。浏览器直接访问即可，AI 由公网 Worker 提供。**本轮新版正在发布，最终公网验收待完成。**
+**线上地址**：[cidneyaurum.github.io](https://cidneyaurum.github.io/)。新版已上线并通过正式域名浏览器验收，AI 由公网 Worker 提供，直接访问即可使用。
 
 本次维护的功能结果与外部依赖见 [功能验收](docs/functional-acceptance.md)，界面修改位置见 [界面维护](docs/ui-redesign.md)，运行测试和发布设置见 [构建与部署](docs/build-and-deploy.md)。
 
@@ -10,7 +10,7 @@
 
 「问问 Miku」支持 DeepSeek 聊天、文章总结与选段解释、带出处的站内问答、内容与歌曲推荐，以及写作台拟标题、摘要和润色。写作建议先审阅再手动应用，可以撤销；日语短语音用于互动，长回复以文字呈现。
 
-公网网关：[cidney-miku-ai.1562614833.workers.dev](https://cidney-miku-ai.1562614833.workers.dev)。本轮配置为全站每日 100 次（UTC 日），Pages 来源已确认 GitHub Actions；Worker 最终启用与新版页面的公网验证仍待完成。访客不需要运行本机脚本或填写模型密钥；凭据由 Workers Secrets 管理。使用与限额见 [AI 使用说明](docs/ai-api.md)，部署进度见 [公网 AI 部署](server/DEPLOYMENT.md)。
+公网网关：[cidney-miku-ai.1562614833.workers.dev](https://cidney-miku-ai.1562614833.workers.dev)。全站每日 100 次额度已生效（UTC 日），Pages 使用 GitHub Actions 发布；[本次构建与部署](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40171647787)均成功，186 项 CI 检查通过。正式域名的文章总结、真实引用、手机侧栏及写作标题应用/撤销均已验证。访客无需运行本机脚本或填写模型密钥，凭据由 Workers Secrets 管理。使用见 [AI 使用说明](docs/ai-api.md)，发布记录见 [公网 AI 部署](server/DEPLOYMENT.md)。
 
 文章、说说和照片经 GitHub Actions 发布后，Worker 从 Pages 的公共知识索引在线同步，采用 60 秒缓存、到期后由后续请求刷新。日常内容更新无需重启本机服务或重新部署 Worker。
 
@@ -127,7 +127,7 @@ summary: 一句话摘要
 ## 部署说明
 
 - Pages 来源已通过 GET 确认为 **GitHub Actions**（`build_type: workflow`）。
-- 推送到 `main` 后，测试、构建和部署都成功才算上线；本轮新版仍待最终部署与公网验收，进度在 Actions 查看，步骤见 [构建与部署](docs/build-and-deploy.md)。
+- 本轮运行时发布提交为 9e93c7d838a0969a9a833bf44c6120436fa6ddac；[Actions](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40171647787) 的 build/deploy 均成功，公网页面和 AI 链路已验收。日后推送仍以对应提交的部署结果为准，维护步骤见 [构建与部署](docs/build-and-deploy.md)。
 - 公网 AI 使用独立 Worker，后端 Secret 不进入 Pages artifact；内容知识由 Pages 公共索引在线同步。
 - 想绑自定义域名：在仓库根目录加一个 `CNAME` 文件（内容写域名），并在域名处配置解析
 

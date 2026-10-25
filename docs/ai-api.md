@@ -2,7 +2,7 @@
 
 Miku 面向 GitHub Pages 公网访客提供聊天、文章问答、内容推荐和写作建议。页面由 GitHub Pages 提供，AI 在 Cloudflare Worker 执行；访客无需运行本机服务或提供模型密钥。
 
-**本轮发布状态：Pages 来源已确认为 GitHub Actions，公网地址与每日 100 次配置已准备；Worker 最终部署和新版 Pages 的公网验收待完成。**
+**已上线并通过公网验收：** Pages 构建与部署成功，Worker 每日 100 次额度已生效。正式域名已验证文章引用、手机侧栏及写作标题应用/撤销，见 [发布记录](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40171647787)。
 
 - 网站：[cidneyaurum.github.io](https://cidneyaurum.github.io/)
 - AI 网关：[cidney-miku-ai.1562614833.workers.dev](https://cidney-miku-ai.1562614833.workers.dev)
@@ -31,7 +31,7 @@ Miku 面向 GitHub Pages 公网访客提供聊天、文章问答、内容推荐�
 
 ## 连接与故障提示
 
-- 「AI 暂未连接」：先刷新状态或使用重试入口；上线准备期间以部署记录为准。
+- 「AI 暂未连接」：先刷新状态或使用重试入口，再查看状态接口和页面错误提示。
 - 超时、取消或限流：界面会显示状态，可稍后重试。
 - 内容过长：问题最多 4,000 字符，选段最多 8,000 字符，请缩小范围；请求同时受总大小限制。
 - 文章尚未被引用：先确认对应 Pages 部署成功，再等待索引缓存到期后的下一次请求。

@@ -1,16 +1,20 @@
 # 公网 AI 部署与维护
 
-网站：https://cidneyaurum.github.io/  
-网关：https://cidney-miku-ai.1562614833.workers.dev  
+网站：https://cidneyaurum.github.io/
+
+网关：https://cidney-miku-ai.1562614833.workers.dev
+
 状态：https://cidney-miku-ai.1562614833.workers.dev/api/status
 
-## 本轮发布进度
+## 已完成的发布与验收
 
-Pages 来源已通过 GET 确认为 GitHub Actions（build_type=workflow）。Worker 已创建，后端 Secret 已配置，前端 endpoint 已写入实际公网地址。源配置为 workers_dev=true、AI_PUBLIC_ENABLED=true、AI_DAILY_REQUEST_LIMIT=100。
+Pages 来源已通过 GET 确认为 GitHub Actions（build_type=workflow）。公网 Worker 已启用，/api/status 返回 configured=true；workers_dev=true、AI_PUBLIC_ENABLED=true、AI_DAILY_REQUEST_LIMIT=100 已生效。前端使用上面的 HTTPS 公网地址，凭据由 Workers Secrets 托管。
 
-**最终 Worker 部署、新版 Pages 部署及浏览器公网联调仍待验收。** 以上准备状态不替代在线问答、引用和写作操作的最终检查。
+运行时发布提交为 9e93c7d838a0969a9a833bf44c6120436fa6ddac，对应 [Actions](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40171647787) 的 build/deploy 均成功，70 项 Node 与 116 项 Python/Chromium 检查全部通过。Worker 版本为 10e25d47-5b46-49ae-935d-b3e24e8b4750。
 
-页面由 GitHub Pages 提供，推理由 Cloudflare Worker 调用 DeepSeek；访客无需运行本机服务。模型凭据只由 Workers Secrets 管理，不写入前端、公开 JSON 或版本库。
+页面由 GitHub Pages 提供，推理由 Cloudflare Worker 调用 DeepSeek；访客无需运行本机服务。正式域名浏览器的文章总结返回 1 条真实引用，手机侧栏位于视口内，写作标题应用与撤销成功。检查中本机请求、浏览器直连模型供应商、发往网关的鉴权头和 GitHub 写入均为 0，页面脚本错误为空。
+
+本机 8000/8787 服务已停止，本轮 DPAPI 凭据文件已删除。模型凭据由 Workers Secrets 管理，不写入前端、公开 JSON 或版本库。
 
 ## 内容更新与代码部署
 
@@ -48,6 +52,6 @@ wrangler deploy --config server/wrangler.jsonc --var AI_PUBLIC_ENABLED:false --v
 
 ## 已有技术验证
 
-Wrangler 4.146.0 已完成打包检查，本机原生 workerd + SQLite 验证了并发限制、分钟限流、每日额度、lease 释放及重启后计数保留。这些测试未调用付费接口。兼容日期为 2026-10-08，显式 upload_source_maps=false，避免上传带本机路径的 source map。最终公网结果需在本轮部署后补记。
+Wrangler 4.146.0 已完成打包检查，本机原生 workerd + SQLite 验证了并发限制、分钟限流、每日额度、lease 释放及重启后计数保留。原生预算测试未调用付费接口。兼容日期为 2026-10-08，显式 upload_source_maps=false，避免上传带本机路径的 source map。
 
 参考：[SQLite 存储与迁移](https://developers.cloudflare.com/durable-objects/best-practices/access-durable-objects-storage/)、[命名空间绑定](https://developers.cloudflare.com/durable-objects/api/namespace/)、[source map](https://developers.cloudflare.com/workers/observability/source-maps/)、[额度与计量](https://developers.cloudflare.com/durable-objects/platform/pricing/)。

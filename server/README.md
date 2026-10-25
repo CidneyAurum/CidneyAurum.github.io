@@ -2,7 +2,7 @@
 
 公网入口为 https://cidney-miku-ai.1562614833.workers.dev，供 GitHub Pages 网站直接调用。模型凭据由 Workers Secrets 提供，不进入前端、公开 JSON 或 Pages artifact。
 
-**本轮状态：Worker 已创建，源配置为启用、全站每日 100 次；最终远端部署及新版 Pages 的公网联调待验收。** Pages 来源已确认 build_type=workflow。发布与停用流程见 [DEPLOYMENT.md](DEPLOYMENT.md)，访客使用见 [AI 使用指南](../docs/ai-api.md)。
+**公网已启用并完成验收。** Worker 全站每日 100 次额度已生效，/api/status 返回 configured=true，正式域名浏览器已验证真实引用与写作标题应用/撤销。Pages 来源为 workflow，[本次 build/deploy](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40171647787) 均成功。发布与停用流程见 [DEPLOYMENT.md](DEPLOYMENT.md)，访客使用见 [AI 使用指南](../docs/ai-api.md)。
 
 ## 在线知识同步
 
@@ -61,6 +61,8 @@ POST 需要匹配允许列表的 Origin 和 application/json。默认允许本�
 Durable Object 存储哈希客户端标识、计数和短期 lease，不存聊天正文或密钥。请求次数上限不等于金额上限；Cloudflare 与模型服务分别计量。网关代码、模型配置或额度改动需部署 Worker，日常站点内容由在线索引同步。
 
 ## 可选：本机开发
+
+本轮公网验收后，本机 8000/8787 开发服务已停止，本轮 DPAPI 凭据文件已删除；线上仅使用 Cloudflare Secret。以下脚本仅供日后按需自行配置开发环境。
 
 需要 Node.js 24。Windows 开发者可用 tools/configure_ai.ps1 隐藏输入并通过当前用户的 DPAPI 保存开发凭据，再用 tools/start_ai.ps1 启动 127.0.0.1:8787；默认模型 deepseek-flash，可用 -Model 参数调整。
 

@@ -249,6 +249,9 @@
       </div>
     `;
     document.body.appendChild(root);
+    // Keep viewport-fixed chat outside the character's composited render layer.
+    // A transformed ancestor would otherwise anchor the chat to the character.
+    document.body.appendChild(root.querySelector("#kb-chat"));
 
     const min = document.createElement("button");
     min.className = "kanban-min";

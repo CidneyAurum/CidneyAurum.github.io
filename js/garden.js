@@ -166,7 +166,10 @@
       companionLoad = loadScript("js/kanban.js").then(async () => {
         if (!window.MikuCompanion) throw new Error("Miku 暂时没能赶来，请重试。");
         await window.MikuCompanion.ready;
-        companion.hidden = true;
+        companion.hidden = false;
+        companion.disabled = false;
+        companion.title = "叫回 Miku";
+        companion.setAttribute("aria-label", "叫回 Miku 看板娘");
         return window.MikuCompanion;
       }).catch(error => {
         companionLoad = null;

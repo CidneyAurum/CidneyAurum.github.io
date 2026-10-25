@@ -173,7 +173,7 @@ body.light .button-primary { background: var(--accent); color: #fff; border-colo
 .footer-meta i { font-style: normal; }
 .to-top { width: 35px; height: 35px; right: 18px; bottom: 105px; background: var(--card); border-radius: 10px; font-size: 17px; }
 .to-top:hover { box-shadow: none; }
-.companion-toggle { position: fixed; right: 17px; bottom: 150px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 11px; background: var(--card); color: var(--accent); cursor: pointer; z-index: 60; box-shadow: var(--shadow); }
+.companion-toggle { position: fixed; right: 17px; bottom: 150px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 11px; background: var(--card); color: var(--accent); cursor: pointer; z-index: 160; box-shadow: var(--shadow); }
 .companion-toggle svg { width: 18px; height: 18px; }
 .garden-toast { position: fixed; left: 50%; bottom: 110px; transform: translateX(-50%); max-width: calc(100% - 40px); padding: 10px 18px; background: var(--card-deep); color: var(--text); border: 1px solid var(--border); border-radius: 10px; font-size: 12px; z-index: 250; box-shadow: var(--shadow); }
 .gplayer { background: var(--card-deep); border-color: var(--border); box-shadow: 0 -8px 30px #05061025; }
@@ -361,8 +361,11 @@ body[data-page="admin"] .tabs { flex-wrap: wrap; }
 .kb-ai-channel { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 12px; border-bottom:1px solid var(--border); color:var(--text-light); font:10px/1.6 var(--font-body); }
 .kb-ai-channel button { border:0; background:transparent; color:var(--accent); padding:4px 0; font:inherit; cursor:pointer; white-space:nowrap; }
 #kb-cancel { border:1px solid var(--border); background:var(--chip-bg); color:var(--accent); border-radius:7px; padding:6px 8px; font:11px var(--font-body); cursor:pointer; }
-.kanban .kb-chat { position:fixed; top:auto; left:auto; right:24px; bottom:112px; width:min(420px,calc(100vw - 40px)); height:min(570px,calc(100dvh - 100px)); max-height:calc(100dvh - 100px); }
-.kanban:not(.hidden) { transform:none !important; will-change:auto; }
+/* Give the character and its buttons their own scrolling-safe compositor layer.
+   Chat lives directly under body so this transform cannot change its anchor. */
+body > .kanban:not(.hidden) { transform:translate3d(0,0,0); will-change:transform; }
+body > .kb-chat { position:fixed; z-index:91; top:auto; left:auto; right:24px; bottom:112px; width:min(420px,calc(100vw - 40px)); height:min(570px,calc(100dvh - 216px)); max-height:calc(100dvh - 216px); }
+body.miku-room-open > .kb-chat { display:none !important; }
 .kb-msg.mai-answer { max-width:100%; padding:12px; }
 .kb-msg .mai-answer-text { white-space:pre-wrap; }
 .kb-msg .mai-citations, .kb-msg .mai-actions { font-size:11px; }

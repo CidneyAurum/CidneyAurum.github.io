@@ -19,7 +19,7 @@
 .miku-host-actions button:hover { background:#83e4d218; border-color:#8ee7d36b; }
 .miku-host-actions [data-miku-action="listen"] { background:#75d9cc22; color:#b7f1e7; }
 #miku-host-status { min-height:15px; font:9px/1.7 var(--font-body,sans-serif); color:var(--muted,#8d9bb3); margin-top:12px; }
-.miku-dock { position:fixed; bottom:26px; right:24px; width:min(330px,calc(100vw - 32px)); z-index:112; padding:17px 18px; border-radius:20px; border:1px solid #87dcd13c; background:#101c30f2; backdrop-filter:blur(20px); box-shadow:0 12px 40px #0005; color:#e1eef3; }
+.miku-dock { position:fixed; bottom:26px; right:24px; width:min(330px,calc(100vw - 32px)); z-index:85; padding:17px 18px; border-radius:20px; border:1px solid #87dcd13c; background:#101c30f2; backdrop-filter:blur(20px); box-shadow:0 12px 40px #0005; color:#e1eef3; }
 body.music-engaged .miku-dock { bottom:105px; }
 .miku-dock-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; color:#9adcd6; font-size:9px; letter-spacing:1px; }
 .miku-dock-heading button { background:transparent; border:0; font-size:21px; width:25px; height:25px; line-height:1; color:#9eb3c7; }

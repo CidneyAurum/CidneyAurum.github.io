@@ -183,6 +183,107 @@ class KanbanTests(unittest.TestCase):
         self.assertTrue(self.page.evaluate("MikuCompanion.isVisible()"))
         self.assertEqual(self.page.evaluate("__modelLoads"), 1)
 
+    def test_composited_character_and_portal_chat_stay_fixed_after_drag_and_scroll(self):
+        self.page.set_viewport_size({"width": 1440, "height": 1000})
+        self.boot()
+        expect(self.page.locator("#kb-loading")).to_have_count(0)
+        self.assertTrue(self.page.locator("body > #kanban").evaluate("""node=>{
+          const style=getComputedStyle(node);
+          return style.transform!=='none' && style.willChange.includes('transform');
+        }"""))
+        self.page.evaluate("MikuCompanion.openChat()")
+        chat = self.page.locator("body > #kb-chat")
+        expect(chat).to_be_visible()
+        expect(self.page.locator("#kb-input")).to_be_focused()
+        self.assertEqual(chat.evaluate("node=>getComputedStyle(node).position"), "fixed")
+        chat_before = chat.bounding_box()
+        root_before = self.page.locator("#kanban").bounding_box()
+        stage = self.page.locator("#kb-stage").bounding_box()
+        start = (stage["x"] + stage["width"] / 2, stage["y"] + stage["height"] / 2)
+        self.page.mouse.move(*start)
+        self.page.mouse.down()
+        self.page.mouse.move(start[0] + 300, start[1] + 100, steps=4)
+        self.page.mouse.up()
+        self.assert_floating_model_inside()
+        moved = self.page.locator("#kanban").bounding_box()
+        self.assertGreater(moved["x"], root_before["x"] + 200)
+        self.page.evaluate("document.body.style.minHeight='2200px';scrollTo({top:600,behavior:'instant'})")
+        self.page.wait_for_function("scrollY===600")
+        expect(chat).to_be_visible()
+        after = chat.bounding_box()
+        self.assertAlmostEqual(chat_before["x"], after["x"], delta=1)
+        self.assertAlmostEqual(chat_before["y"], after["y"], delta=1)
+        self.assertAlmostEqual(moved["y"], self.page.locator("#kanban").bounding_box()["y"], delta=1)
+        self.page.evaluate("MikuCompanion.hide()")
+        expect(chat).to_be_hidden()
+        self.page.evaluate("MikuCompanion.show()")
+        expect(chat).to_be_hidden()
+        self.assert_floating_model_inside()
+        self.page.evaluate("MikuCompanion.openChat()")
+        expect(chat).to_be_visible()
+        expect(self.page.locator("#kb-input")).to_be_focused()
+        self.assertEqual(self.page.evaluate("__modelLoads"), 1)
+
+    def test_mobile_portal_chat_header_and_input_remain_inside_viewport(self):
+        self.page.set_viewport_size({"width": 390, "height": 650})
+        self.boot()
+        self.page.evaluate("MikuCompanion.openChat()")
+        expect(self.page.locator("body > #kb-chat")).to_be_visible()
+        expect(self.page.locator("#kb-input")).to_be_focused()
+        self.assertTrue(self.page.evaluate("""()=>{
+          const panel=document.querySelector('#kb-chat');
+          return [panel,panel.querySelector('.kb-chat-head'),panel.querySelector('#kb-chat-close'),panel.querySelector('#kb-input')].every(node=>{
+            const r=node.getBoundingClientRect();
+            return r.left>=0 && r.top>=64 && r.right<=innerWidth && r.bottom<=innerHeight;
+          });
+        }"""), "The fixed chat header and close button must clear the mobile navigation")
+
+    def test_visible_dock_cannot_intercept_overlapping_character_chat_button(self):
+        self.page.set_viewport_size({"width": 1024, "height": 700})
+        self.boot('localStorage.setItem("kb_pos", JSON.stringify({left:1300,top:900}));')
+        expect(self.page.locator("#kb-loading")).to_have_count(0)
+        self.page.add_style_tag(url=self.origin + "/css/miku-host.css")
+        self.page.add_script_tag(url=self.origin + "/js/miku-host.js")
+        self.page.evaluate("MikuHost.intent('greet')")
+        expect(self.page.locator(".miku-dock")).to_be_visible()
+        self.assert_floating_model_inside()
+        self.assertTrue(self.page.evaluate("""()=>{
+          const b=document.querySelector('#kb-chat-btn').getBoundingClientRect();
+          const d=document.querySelector('.miku-dock').getBoundingClientRect();
+          const x=b.left+b.width/2,y=b.top+b.height/2;
+          return x>d.left && x<d.right && y>d.top && y<d.bottom;
+        }"""), "This regression must exercise a real dock/button overlap")
+        self.page.locator("#kb-chat-btn").click()
+        expect(self.page.locator("body > #kb-chat")).to_be_visible()
+        expect(self.page.locator("#kb-input")).to_be_focused()
+
+    def test_real_garden_lazy_loader_keeps_recall_button_and_recovers_character(self):
+        self.page.set_viewport_size({"width": 1024, "height": 700})
+        self.context.add_init_script(MODEL_STUB)
+        self.context.add_init_script("window.requestIdleCallback=callback=>setTimeout(callback,0);localStorage.setItem('kb_tts','0')")
+        self.page.goto(self.origin + "/index.html", wait_until="domcontentloaded")
+        self.page.wait_for_function("window.MikuHost && window.MikuLoader")
+        self.assertFalse(self.page.evaluate("Boolean(window.MikuCompanion)"))
+        launcher = self.page.locator(".companion-toggle")
+        launcher.click()
+        self.page.wait_for_function("window.MikuCompanion && window.__modelLoads===1")
+        expect(self.page.locator("#kb-loading")).to_have_count(0)
+        expect(launcher).to_be_visible()
+        expect(launcher).to_be_enabled()
+        expect(launcher).to_have_attribute("aria-label", "叫回 Miku 看板娘")
+        self.page.evaluate("window.savedRecallModel=document.querySelector('#kanban');MikuCompanion.hide()")
+        self.page.evaluate("scrollTo({top:document.documentElement.scrollHeight,behavior:'instant'})")
+        self.page.wait_for_function("scrollY>0")
+        launcher.click()
+        self.assert_floating_model_inside()
+        self.page.evaluate("document.querySelector('#kanban').style.left='3000px';document.querySelector('#kanban').style.top='3000px'")
+        self.assertGreater(self.page.locator("#kb-stage").bounding_box()["y"], 700)
+        launcher.click()
+        self.assert_floating_model_inside()
+        self.assertTrue(self.page.evaluate("savedRecallModel===document.querySelector('#kanban')"))
+        expect(self.page.locator("body > #kanban")).to_have_count(1)
+        self.assertEqual(self.page.evaluate("__modelLoads"), 1)
+
     def test_listening_room_keeps_relative_model_and_restores_floating_bounds(self):
         self.page.set_viewport_size({"width": 390, "height": 844})
         self.boot('localStorage.setItem("kb_pos", JSON.stringify({left:240,top:650}));')
@@ -190,8 +291,13 @@ class KanbanTests(unittest.TestCase):
         self.page.evaluate("window.MikuMusic={getState:()=>({playing:true})}")
         self.page.add_style_tag(url=self.origin + "/css/miku-host.css")
         self.page.add_script_tag(url=self.origin + "/js/miku-host.js")
+        self.page.evaluate("MikuCompanion.openChat()")
+        expect(self.page.locator("body > #kb-chat")).to_be_visible()
+        expect(self.page.locator("#kb-input")).to_be_focused()
         self.page.evaluate("MikuHost.openRoom()")
         expect(self.page.locator(".miku-room-character > #kanban")).to_have_count(1)
+        expect(self.page.locator("body > #kb-chat")).to_be_hidden()
+        self.assertTrue(self.page.evaluate("!document.activeElement.closest('#kb-chat')"))
         saved = self.page.locator("#kanban").evaluate("node=>({left:node.style.left,top:node.style.top})")
         self.page.set_viewport_size({"width": 390, "height": 650})
         self.page.evaluate("MikuCompanion.show();window.dispatchEvent(new Event('resize'));visualViewport.dispatchEvent(new Event('scroll'))")
@@ -201,6 +307,8 @@ class KanbanTests(unittest.TestCase):
         expect(self.page.locator("body > #kanban")).to_have_count(1)
         self.assert_floating_model_inside()
         self.assertEqual(self.page.locator("#kanban").evaluate("node=>getComputedStyle(node).position"), "fixed")
+        expect(self.page.locator("body > #kb-chat")).to_be_visible()
+        expect(self.page.locator("#kb-input")).to_be_focused()
         self.assertEqual(self.page.evaluate("__modelLoads"), 1)
 
     def configure(self, protocol="openai", base="https://chat.example/v1", key="fixture-key", model="fixture-model"):

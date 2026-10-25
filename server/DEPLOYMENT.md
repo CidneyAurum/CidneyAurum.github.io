@@ -10,15 +10,15 @@
 
 Pages 来源已通过 GET 确认为 GitHub Actions（build_type=workflow）。公网 Worker 已启用，/api/status 返回 configured=true；workers_dev=true、AI_PUBLIC_ENABLED=true、AI_DAILY_REQUEST_LIMIT=100 已生效。前端使用上面的 HTTPS 公网地址，凭据由 Workers Secrets 托管。
 
-运行时发布提交为 d0452892574e90b243b780b73c909dfacf952521，对应 [Actions](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40176783139) 的 build/deploy 均成功，83 项 Node 与 122 项 Python/Chromium 检查全部通过。Worker 版本为 e58ef309-a7e1-41b6-9731-262734ab4e8b。
+当前 Pages 运行时发布提交为 2012e8c2d3f9e88a2672cb0fc29b3a97a42ad4bb，对应 [Actions](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40181021376) 的 build/deploy 均成功，83 项 Node 与 127 项 Python/Chromium 共 210 项检查全部通过。正式域名确认脚本版本 2012e8c2d3f9，以真实《勾指起誓》验证整页歌词与跨页续播，详见 [功能验收](../docs/functional-acceptance.md)。本轮没有 Worker 代码或 Secret 变更，无需重新部署；Worker 仍为 e58ef309-a7e1-41b6-9731-262734ab4e8b。
 
-页面由 GitHub Pages 提供，推理由 Cloudflare Worker 调用 DeepSeek；访客无需运行本机服务。正式域名浏览器的文章总结返回 1 条真实引用，手机侧栏位于视口内，写作标题应用与撤销成功。检查中本机请求、浏览器直连模型供应商、发往网关的鉴权头和 GitHub 写入均为 0，页面脚本错误为空。
+页面由 GitHub Pages 提供，推理由 Cloudflare Worker 调用 DeepSeek；访客无需运行本机服务。既有 AI 验收中，正式域名浏览器的文章总结返回 1 条真实引用，手机侧栏位于视口内，写作标题应用与撤销成功；本机 API 请求、浏览器直连模型供应商、发往网关的鉴权头和 GitHub 写入均为 0，页面脚本错误为空。这些是既有 AI 记录，本轮歌词发布未新增付费 AI 验收调用。
 
-本机 8000/8787 服务已停止，本轮 DPAPI 凭据文件已删除。模型凭据由 Workers Secrets 管理，不写入前端、公开 JSON 或版本库。
+此前公网 AI 部署验收结束时，曾停止本机 8000/8787 服务并删除该轮 DPAPI 临时凭据文件；这是历史操作记录，不表示当前开发端口状态。模型凭据由 Workers Secrets 管理，不写入前端、公开 JSON 或版本库。
 
 ## 内容更新与代码部署
 
-文章、说说、照片通过 GitHub Actions 构建并发布公共 data/knowledge.json。Worker 固定读取 Pages 上的索引，缓存 60 秒，到期后由后续请求刷新。日常内容更新无需本机服务、网关重启或重新部署 Worker。
+文章、说说、照片通过 GitHub Actions 构建并发布公共 data/knowledge.json。Worker 固定读取 Pages 上的索引，缓存 60 秒，到期后由后续请求刷新。日常内容更新无需本机服务、网关重启或重新部署 Worker。本轮公网 GET 公共索引返回 200，确认含新版整页背景文案且不含 limbus.html；没有观测 Worker 缓存到期后的读取与刷新。
 
 修改网关代码、模型或预算时，重新构建并部署 Worker：
 

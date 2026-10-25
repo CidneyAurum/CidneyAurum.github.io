@@ -1,8 +1,8 @@
 # CidneyAurum の 小窝 🌌
 
-一个深空玻璃风格的个人网站，包含手记、说说、相册、音乐、看板娘与首页同步歌词演出。前端使用纯 HTML/CSS/JS，不依赖框架或打包器；Markdown 与图片由 Python 生成，GitHub Actions 在回归检查通过后构建发布。
+一个深空玻璃风格的个人网站，包含手记、说说、相册、音乐、看板娘与整页背景歌词演出。前端使用纯 HTML/CSS/JS，不依赖框架或打包器；Markdown 与图片由 Python 生成，GitHub Actions 在回归检查通过后构建发布。
 
-**线上地址**：[cidneyaurum.github.io](https://cidneyaurum.github.io/)。首页自动歌词演出与公网 AI 已上线，本轮已完成正式域名原生音频验收，详见 [功能验收](docs/functional-acceptance.md)。
+**线上地址**：[cidneyaurum.github.io](https://cidneyaurum.github.io/)。本轮整页透明背景歌词已上线，210 项 CI 检查全部通过；正式域名以真实《勾指起誓》验证逐字歌词、换句残影、暂停开关与跨页续播，详见 [功能验收](docs/functional-acceptance.md)。
 
 本次维护的功能结果与外部依赖见 [功能验收](docs/functional-acceptance.md)，界面修改位置见 [界面维护](docs/ui-redesign.md)，运行测试和发布设置见 [构建与部署](docs/build-and-deploy.md)。
 
@@ -10,14 +10,14 @@
 
 「问问 Miku」支持 DeepSeek 聊天、文章总结与选段解释、带出处的站内问答、内容与歌曲推荐，以及写作台拟标题、摘要和润色。写作建议先审阅再手动应用，可以撤销；日语短语音用于互动，长回复以文字呈现。
 
-公网网关：[cidney-miku-ai.1562614833.workers.dev](https://cidney-miku-ai.1562614833.workers.dev)。全站每日 100 次额度保持生效（UTC 日），访客无需运行本机脚本或填写模型密钥。本轮 [Actions](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40176783139) 的 build/deploy 均成功，83 项 Node 与 122 项 Python/Chromium 检查共 205 项通过。站内 AI 已有正式域名引用与写作应用/撤销验证；本轮歌词演出验收没有额外调用付费 AI。使用见 [AI 使用说明](docs/ai-api.md)，维护见 [公网 AI 部署](server/DEPLOYMENT.md)。
+公网网关：[cidney-miku-ai.1562614833.workers.dev](https://cidney-miku-ai.1562614833.workers.dev)。全站每日 100 次额度保持生效（UTC 日），访客无需运行本机脚本或填写模型密钥。本轮背景歌词通过 [Actions](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40181021376) 的 83 项 Node、127 项 Python/Chromium 检查及 build/deploy。站内 AI 已有正式域名引用与写作应用/撤销验证；本轮未修改或重新部署 Worker。使用见 [AI 使用说明](docs/ai-api.md)，维护见 [公网 AI 部署](server/DEPLOYMENT.md)。
 
 文章、说说和照片经 GitHub Actions 发布后，Worker 从 Pages 的公共知识索引在线同步，采用 60 秒缓存、到期后由后续请求刷新。日常内容更新无需重启本机服务或重新部署 Worker。
 
 ## 目录结构
 
 ```
-├── index.html          # 主页（资料卡 / 歌单 / 环境电台 / 同步歌词舞台 / 时钟）
+├── index.html          # 主页（资料卡 / 歌单 / 环境电台 / 时钟）
 ├── blog.html           # 拾光档案：搜索 + 标签 + 时间轴/网格双视图
 ├── says.html           # 说说：朋友圈式时间轴
 ├── photos.html         # 光影画廊：拍立得照片墙
@@ -32,8 +32,8 @@
 ├── js/garden.js        # 主题卡、首页数据、图标和看板娘按需加载
 ├── js/main.js          # 流萤 / 打字横幅 / 时钟 / 归档双视图 / 说说 / 照片墙
 ├── js/music.js         # MikuMusic 点播引擎（歌单 / 歌词 / 真实音频时钟）
-├── js/lyric-stage.js   # 首页同步演出、双语分组、状态与沉浸展开
-├── css/lyric-stage.css # 首页舞台字体、黑金红视觉及减弱动效
+├── js/lyric-stage.js   # 整页背景歌词、真实时钟同步、双语分组与残影
+├── css/lyric-stage.css # 透明背景层、正立字形、倾斜基线与减弱动效
 ├── js/kanban.js        # 看板娘：Live2D + AI 多协议对话 + 点歌联动
 ├── js/player.js        # 环境电台：Web Audio 合成音乐
 ├── js/admin.js         # 写作台逻辑（GitHub Contents API 发布）
@@ -115,24 +115,24 @@ summary: 一句话摘要
 
 > 原理：GitHub Action（`.github/workflows/build.yml`）在 `_posts/` 或 `assets/gallery/` 变化时自动运行 `python tools/build.py`，生成 `posts/*.html`、`posts/posts.json`、`assets/gallery/gallery.json`。本地没有 Python 也没关系，走方式一即可。
 
-## 首页同步歌词演出
+## 整页背景歌词演出
 
-本轮把演出并入首页音乐区，下方保留紧凑的黑金红舞台，移除独立实验室页面和导航入口。选择歌曲后，演出跟随 MikuMusic 当前音频的真实进度自动同步。
+本轮按 Limbus 桌面歌词的呈现行为重做：歌词层直接挂在 body 下，固定覆盖整个视口，背景透明且不占页面布局。鼠标与触摸穿透该层，前景卡片、按钮和导航保持可操作，页面正常滚动。15 项背景回归、原生 WAV/LRC 夹具、Pages 发布及正式域名真实歌曲抽样均已通过。
 
-- 同时间戳的原文与译文配对显示，主句有逐字入场、旧句残影和短促斩击。
-- 暂停、恢复、拖动进度与切歌同步更新舞台；收起沉浸演出不停止音乐。
-- 「动效」开关可关闭演出动画，系统 reduced motion 偏好也会降低动态效果。
-- 「沉浸演出」展开当前舞台，关闭后回到首页；紧凑布局保留日常阅读空间。
-- 歌词加载、无歌词和失败分别显示状态；失败后由「重试歌词」显式重试。
+- 随当前歌曲默认启用；首页音乐卡的「背景演出」与全局播放器的「演」是同一背景效果的专用开关。原「词」按钮只展开或收起可点击跳播的歌词列表，两者独立。
+- 与 MikuMusic 共用真实音频时钟，暂停、恢复、seek、回拖、切歌及同时间戳双语保持同步。
+- 每句根据歌曲与时间戳生成稳定随机落点及约 ±10° 倾斜基线，并避开尚未消失的残影；字形保持正立，沿基线逐字排布，以至少 30ms/字揭示并伴随轻微抖动。
+- CJK 使用粗黑字形与金色偏移阴影，英文使用描边；旧句保留原位置和角度，在约 660ms 内向上移动约 22px 并淡出。
+- 系统 reduced motion 偏好降低动态效果；切歌、无歌词和失败时清理过期句子，避免旧歌词残留。
 
-舞台行为与状态维护在 js/lyric-stage.js，视觉、字体和动效在 css/lyric-stage.css，播放与歌词数据仍由 js/music.js 管理。正式首页已验证《夜明けと蛍》原生播放、38 行 LRC 与当前句匹配，以及暂停、沉浸展开和 Escape 返回；旧实验室地址返回 HTTP 404。完整范围见 [功能验收](docs/functional-acceptance.md)。
+背景层与专用开关逻辑在 js/lyric-stage.js，透明层、字形、基线与残影样式在 css/lyric-stage.css，音频、歌词数据与原歌词列表由 js/music.js 管理。15 项背景回归使用真实 HTMLAudio 与生成的 WAV/LRC，包含小数逐字延迟结束后全字可见的回归；独立本机浏览器检查覆盖手机长句、穿透点击/滚动和 PJAX 续播。正式域名实测《勾指起誓》原生时长 183.536771 秒、35 行 LRC，逐字从 1 字增加到 17 字完整显示，自然换句移动到新位置、旧句原位淡出，暂停、开关及跨页同一音频通过。完整范围见 [功能验收](docs/functional-acceptance.md)。
 
-布局及设计行为参考 [星梦幽灵的小窝](https://xmyl-153.github.io/xingmengyouling-blog/) 和 [YouRanCoder/LimbusLyricSimulator](https://github.com/YouRanCoder/LimbusLyricSimulator)；网页实现由本站维护，没有复制 GPL-3.0 桌面项目代码。
+站点布局参考 [星梦幽灵的小窝](https://xmyl-153.github.io/xingmengyouling-blog/)，歌词行为对照桌面项目的 [歌词窗口](https://github.com/YouRanCoder/LimbusLyricSimulator/blob/main/ui/lyric_window.py) 与 [逐字及残影绘制](https://github.com/YouRanCoder/LimbusLyricSimulator/blob/main/ui/fading_line.py)。本站独立编写 Web 实现，没有复制 GPL-3.0 桌面项目代码。
 
 ## 部署说明
 
 - Pages 来源已通过 GET 确认为 **GitHub Actions**（`build_type: workflow`）。
-- 当前运行时发布提交为 d0452892574e90b243b780b73c909dfacf952521；[Actions](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40176783139) 的 build/deploy 均成功，本轮首页歌曲与同步歌词已通过正式域名实测。日后推送仍以对应提交的部署结果为准，维护步骤见 [构建与部署](docs/build-and-deploy.md)。
+- 本轮运行时发布提交为 2012e8c2d3f9e88a2672cb0fc29b3a97a42ad4bb，[Actions](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40181021376) 的 210 项检查及 build/deploy 均成功；正式域名确认新资源版本与真实歌曲背景演出。日后推送仍以对应提交的部署结果为准，维护步骤见 [构建与部署](docs/build-and-deploy.md)。
 - 公网 AI 使用独立 Worker，后端 Secret 不进入 Pages artifact；内容知识由 Pages 公共索引在线同步。
 - 想绑自定义域名：在仓库根目录加一个 `CNAME` 文件（内容写域名），并在域名处配置解析
 
@@ -144,7 +144,7 @@ Miku 已内置。点击右下角猫形按钮按需加载；资源失败时可以
 
 - 设计风格参考：[xmyl-153/xingmengyouling-blog](https://github.com/xmyl-153/xingmengyouling-blog)（深空玻璃布局、音乐与歌词联动的设计参考）
 - [Tempura3 / Limbus-Like-Lyric-Simulator](https://github.com/TempuraYMY0728/Limbus-Like-Lyric-Simulator) — 歌词演出方案的开山之作
-- [YouRanCoder / LimbusLyricSimulator](https://github.com/YouRanCoder/LimbusLyricSimulator)（GPL-3.0）— 歌词演出的视觉与同步行为参考，未复制其桌面实现
+- [YouRanCoder / LimbusLyricSimulator](https://github.com/YouRanCoder/LimbusLyricSimulator)（GPL-3.0）— 整页透明歌词、倾斜基线排字与上浮残影的设计行为参考，未复制其桌面实现
 - [imsyy/home](https://github.com/imsyy/home)（MIT）— 一言 API 用法
 - 一言 API：[hitokoto.cn](https://hitokoto.cn/)
 

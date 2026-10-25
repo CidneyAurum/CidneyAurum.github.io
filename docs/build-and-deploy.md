@@ -2,7 +2,7 @@
 
 网站通过 GitHub Pages 公开访问，AI 由独立的 Cloudflare Worker 提供。Pages 来源已通过 GET 确认为 GitHub Actions（build_type=workflow）。
 
-**本轮新版已发布并完成公网验收。** 运行时提交 d0452892574e90b243b780b73c909dfacf952521，对应 [Actions](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40176783139) 的 build/deploy 均成功；CI 为 83 项 Node 和 122 项 Python/Chromium 检查，共 205 项通过。正式域名文章引用、手机侧栏及写作标题应用/撤销已验证。
+整页透明背景歌词已由运行时提交 2012e8c2d3f9e88a2672cb0fc29b3a97a42ad4bb 发布，[Actions](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40181021376) 的 83 项 Node、127 项 Python/Chromium 共 210 项检查及 build/deploy 均成功。正式域名确认脚本版本 2012e8c2d3f9，以真实《勾指起誓》验证 17 字完整揭示、换句原位残影、透明穿透、暂停开关与 PJAX 同一音频；独立 390×844 手机界面检查也通过。完整证据范围见 [功能验收](functional-acceptance.md)。正式域名文章引用、手机侧栏及写作标题应用/撤销另有既有验证。
 
 - 网站：https://cidneyaurum.github.io/
 - AI 网关：https://cidney-miku-ai.1562614833.workers.dev
@@ -14,7 +14,7 @@
 
 推送 main 后，.github/workflows/build.yml 运行回归、图片优化、内容构建、资源版本标记和 Pages artifact 部署。Pull Request 只检查和构建。只有对应提交的 build、deploy 成功并能访问新页面，才算上线；写作台也按 github-pages 部署状态显示发布结果。
 
-构建同时生成公共 data/knowledge.json。Worker 从固定的 Pages 索引地址在线同步，缓存 60 秒后由后续请求刷新。因此新文章、说说和照片发布成功后，无需启动本机服务或重新部署 Worker。
+构建同时生成公共 data/knowledge.json。Worker 从固定的 Pages 索引地址在线同步，缓存 60 秒后由后续请求刷新。因此新文章、说说和照片发布成功后，无需启动本机服务或重新部署 Worker。本轮未修改 Worker 代码或 Secret、未重新部署 Worker，也未单独执行缓存到期刷新验收。
 
 流程只发布 _site/ 中的公共 HTML、样式、脚本、资源、索引、RSS、sitemap、manifest 与 Service Worker；Markdown 源稿、server/、工具、测试、仓库文档、凭据和 Git 目录不打包。Worker 的独立部署见 [公网 AI 部署说明](../server/DEPLOYMENT.md)。
 

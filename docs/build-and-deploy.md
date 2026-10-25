@@ -2,6 +2,8 @@
 
 网站通过 GitHub Pages 公开访问，AI 由独立的 Cloudflare Worker 提供。Pages 来源已通过 GET 确认为 GitHub Actions（build_type=workflow）。
 
+当前 Miku 补丁运行时为 ffa76fc7b27fd97185b61446bc25f2fab2784431，[Actions](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40185430352) 的 220 项检查及 build/deploy 成功，正式站真实模型滚动、按钮和常驻召回验收通过，见 [修复记录](miku-visibility-fix.md)。下段保留整页歌词发布基线。
+
 整页透明背景歌词已由运行时提交 2012e8c2d3f9e88a2672cb0fc29b3a97a42ad4bb 发布，[Actions](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40181021376) 的 83 项 Node、127 项 Python/Chromium 共 210 项检查及 build/deploy 均成功。正式域名确认脚本版本 2012e8c2d3f9，以真实《勾指起誓》验证 17 字完整揭示、换句原位残影、透明穿透、暂停开关与 PJAX 同一音频；独立 390×844 手机界面检查也通过。完整证据范围见 [功能验收](functional-acceptance.md)。正式域名文章引用、手机侧栏及写作标题应用/撤销另有既有验证。
 
 - 网站：https://cidneyaurum.github.io/

@@ -1,5 +1,7 @@
 # 界面维护说明
 
+Miku 后续采用独立合成层与 body 直属固定聊天窗口，并保留常驻召回入口；详见 [可见性修复](miku-visibility-fix.md)。下面保留整页背景歌词改版的设计与验收记录。
+
 站点布局参考 [星梦幽灵的小窝](https://xmyl-153.github.io/xingmengyouling-blog/) 的模糊背景、玻璃卡片、资料与音乐双栏及拼贴内容区域。歌词本轮改为覆盖整个视口的透明背景层，直接对照桌面项目的 [歌词窗口](https://github.com/YouRanCoder/LimbusLyricSimulator/blob/main/ui/lyric_window.py) 与 [逐字及残影绘制](https://github.com/YouRanCoder/LimbusLyricSimulator/blob/main/ui/fading_line.py) 的真实设计行为。
 
 本站使用独立的 HTML/CSS/JavaScript 实现，没有复制 GPL-3.0 桌面项目代码；相关致谢保留在 README。个人资料、文章、相册、说说与歌单仍来自本站内容。本轮 210 项 CI、Pages 发布与正式域名《勾指起誓》真实歌曲背景演出验收均已通过。

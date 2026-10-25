@@ -1,5 +1,7 @@
 # CidneyAurum の 小窝 🌌
 
+Miku 可见性补丁已上线：独立渲染层、完整位置边界、陪伴卡遮挡及常驻召回入口已修正，220 项检查通过。真实模型滚动与音乐/背景歌词共同运行的验证见 [修复记录](docs/miku-visibility-fix.md)。
+
 一个深空玻璃风格的个人网站，包含手记、说说、相册、音乐、看板娘与整页背景歌词演出。前端使用纯 HTML/CSS/JS，不依赖框架或打包器；Markdown 与图片由 Python 生成，GitHub Actions 在回归检查通过后构建发布。
 
 **线上地址**：[cidneyaurum.github.io](https://cidneyaurum.github.io/)。本轮整页透明背景歌词已上线，210 项 CI 检查全部通过；正式域名以真实《勾指起誓》验证逐字歌词、换句残影、暂停开关与跨页续播，详见 [功能验收](docs/functional-acceptance.md)。

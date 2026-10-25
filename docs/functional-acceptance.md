@@ -1,5 +1,7 @@
 # 功能验收记录
 
+后续 Miku 可见性修复已由 ffa76fc7b27fd97185b61446bc25f2fab2784431 发布，220 项检查及正式站真实模型验收通过，具体范围与原始现象的复现限制见 [修复记录](miku-visibility-fix.md)。以下保留整页歌词版本 2012e8c 的验收基线。
+
 记录日期：2026-10-25。本轮运行时提交 2012e8c2d3f9e88a2672cb0fc29b3a97a42ad4bb 已上线，[Actions](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40181021376) 的 83 项 Node、127 项 Python/Chromium，共 210 项检查及 build/deploy 全部通过。正式域名以真实《勾指起誓》验证背景歌词，另有独立手机界面验收。原生音频夹具、真实公共歌曲与手机界面的证据范围分别记录如下。
 
 ## 本轮与既有功能状态

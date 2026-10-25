@@ -10,7 +10,7 @@
 
 Pages 来源已通过 GET 确认为 GitHub Actions（build_type=workflow）。公网 Worker 已启用，/api/status 返回 configured=true；workers_dev=true、AI_PUBLIC_ENABLED=true、AI_DAILY_REQUEST_LIMIT=100 已生效。前端使用上面的 HTTPS 公网地址，凭据由 Workers Secrets 托管。
 
-当前 Pages 运行时发布提交为 2012e8c2d3f9e88a2672cb0fc29b3a97a42ad4bb，对应 [Actions](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40181021376) 的 build/deploy 均成功，83 项 Node 与 127 项 Python/Chromium 共 210 项检查全部通过。正式域名确认脚本版本 2012e8c2d3f9，以真实《勾指起誓》验证整页歌词与跨页续播，详见 [功能验收](../docs/functional-acceptance.md)。本轮没有 Worker 代码或 Secret 变更，无需重新部署；Worker 仍为 e58ef309-a7e1-41b6-9731-262734ab4e8b。
+当前 Pages 运行时为 ffa76fc7b27fd97185b61446bc25f2fab2784431，对应 [Actions](https://github.com/CidneyAurum/CidneyAurum.github.io/actions/runs/40185430352) 的 83 项 Node、137 项 Python/Chromium 共 220 项检查及 build/deploy 全部成功。正式域名真实模型、滚动与音乐/歌词共同运行已验证，见 [Miku 修复记录](../docs/miku-visibility-fix.md)。整页歌词版本 2012e8c 的基线另见 [功能验收](../docs/functional-acceptance.md)。本次没有 Worker 代码或 Secret 变更，无需重新部署；Worker 仍为 e58ef309-a7e1-41b6-9731-262734ab4e8b。
 
 页面由 GitHub Pages 提供，推理由 Cloudflare Worker 调用 DeepSeek；访客无需运行本机服务。既有 AI 验收中，正式域名浏览器的文章总结返回 1 条真实引用，手机侧栏位于视口内，写作标题应用与撤销成功；本机 API 请求、浏览器直连模型供应商、发往网关的鉴权头和 GitHub 写入均为 0，页面脚本错误为空。这些是既有 AI 记录，本轮歌词发布未新增付费 AI 验收调用。
 
